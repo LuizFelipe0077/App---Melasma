@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal de Documentação - Clínica Integrativa</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="header-left">
+      <button class="btn-icon btn-menu-toggle" style="display: none;" aria-label="Menu" onclick="toggleMenu()">☰</button>
+      <div class="logo-container">
+        <span class="logo-icon">✨</span>
+        <span>Acompanhamento Clínico</span>
+      </div>
+      <span class="badge-version">v1.2.0</span>
+    </div>
+    
+    <div class="header-right">
+      <button class="btn-icon" title="Modo Escuro / Claro" onclick="toggleTheme()">🌓</button>
+      <button class="btn-icon" title="Imprimir Manual" onclick="window.print()">🖨</button>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Collapsible Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="searchBar" placeholder="Pesquisar manual..." oninput="handleSearch()">
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-group-title">Introdução</div>
+        <a href="index.html" class="nav-link" data-target="sec-intro">Visão Geral</a>
+        <a href="arquitetura.html" class="nav-link" data-target="sec-arquitetura">Arquitetura</a>
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-group-title">Comportamento & Design</div>
+        <a href="psicologia.html" class="nav-link" data-target="sec-psicologia">Psicologia (COM-B)</a>
+        <a href="gamificacao.html" class="nav-link active" data-target="sec-gamificacao">Gamificação</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Segurança & Qualidade</div>
+        <a href="seguranca.html" class="nav-link" data-target="sec-seguranca">Hardening & OWASP</a>
+        <a href="checklist.html" class="nav-link" data-target="sec-checklist">Checklists de Entrega</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Guias de Uso</div>
+        <a href="admin.html" class="nav-link" data-target="sec-admin">Manual do Clínico</a>
+        <a href="api.html" class="nav-link" data-target="sec-api">Documentação da API</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Reader Pane -->
+    <main>
+      <div class="content-wrapper">
+        <section id="sec-gamificacao" class="section-content active">
+          <h1>Gamificação Saudável</h1>
+          <p class="subtitle">Princípios de retenção premium sem criar dependências ou ansiedade competitiva.</p>
+
+          <h2>Streak Freeze e Proteção</h2>
+          <p>O aplicativo oferece uma "Folga Semanal" automática. Caso a paciente esqueça o check-in uma vez, a sequência de dias (Streak) não zera. Isso evita o <em>Efeito "Dane-se"</em>, onde o paciente desiste de todo o tratamento ao falhar uma única vez.</p>
+
+          <h2>Jornada de 90 Dias (Marcos)</h2>
+          <div class="timeline">
+            <div class="timeline-node">
+              <div class="timeline-time">Dia 1</div>
+              <div class="timeline-title">Onboarding e Início</div>
+              <p>Entusiasmo inicial. Progresso doado (5% inicial) para dar o impulso de partida.</p>
+            </div>
+            <div class="timeline-node">
+              <div class="timeline-time">Dia 30</div>
+              <div class="timeline-title">Hábito Construído</div>
+              <p>Primeira renovação celular completa da pele. Entrega da medalha digital "Consistência Prata".</p>
+            </div>
+            <div class="timeline-node">
+              <div class="timeline-time">Dia 90</div>
+              <div class="timeline-title">Conclusão e Maestria</div>
+              <p>Consolidação do novo estilo de vida, liberação do certificado clínico e protocolo de manutenção.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="scripts.js"></script>
+</body>
+</html>

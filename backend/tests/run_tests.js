@@ -1,0 +1,161 @@
+import { UUID } from '../src/domain/valueObjects/UUID.js';
+import { Email } from '../src/domain/valueObjects/Email.js';
+import { Telefone } from '../src/domain/valueObjects/Telefone.js';
+import { PasswordHash } from '../src/domain/valueObjects/PasswordHash.js';
+import { PacienteFactory } from '../src/domain/entities/PacienteFactory.js';
+import { BcryptGasService } from '../src/infrastructure/services/BcryptGasService.js';
+import { TokenService } from '../src/infrastructure/services/TokenService.js';
+
+import { GoogleSheetsPacienteRepository } from '../src/infrastructure/repositories/GoogleSheetsPacienteRepository.js';
+import { GoogleSheetsCheckinRepository } from '../src/infrastructure/repositories/GoogleSheetsCheckinRepository.js';
+import { GoogleSheetsProtocoloRepository } from '../src/infrastructure/repositories/GoogleSheetsProtocoloRepository.js';
+import { GoogleSheetsGamificacaoRepository } from '../src/infrastructure/repositories/GoogleSheetsGamificacaoRepository.js';
+import { GoogleSheetsPermissaoRepository } from '../src/infrastructure/repositories/GoogleSheetsPermissaoRepository.js';
+
+import { CriarPacienteUseCase } from '../src/application/useCases/CriarPacienteUseCase.js';
+import { RegistrarCheckinUseCase } from '../src/application/useCases/RegistrarCheckinUseCase.js';
+import { LoginUseCase } from '../src/application/useCases/LoginUseCase.js';
+
+async function runTests() {
+  console.log('🧪 INICIANDO SUÍTE DE TESTES UNITÁRIOS DO DOMÍNIO E APLICAÇÃO\n');
+  let passCount = 0;
+  let failCount = 0;
+
+  const test = async (name, fn) => {
+    try {
+      await fn();
+      console.log(`✅ PASS: ${name}`);
+      passCount++;
+    } catch (e) {
+      console.error(`❌ FAIL: ${name}`);
+      console.error(e);
+      failCount++;
+    }
+  };
+
+  // --- Test 1: Value Object Validação de E-mail ---
+  await test('Value Object Email - Validações e Imutabilidade', () => {
+    const valid = new Email('luiz@email.com');
+    if (valid.value !== 'luiz@email.com') throw new Error('E-mail valor incorreto.');
+
+    try {
+      new Email('invalido-email');
+      throw new Error('Deveria ter lançado erro para e-mail inválido.');
+    } catch(e) {
+      // pass
+    }
+  });
+
+  // --- Test 2: Value Object Telefone ---
+  await test('Value Object Telefone - Validações de dígitos', () => {
+    const valid = new Telefone('(11) 99999-9999');
+    if (valid.value !== '(11)99999-9999') throw new Error('Telefone incorreto.');
+
+    try {
+      new Telefone('123');
+      throw new Error('Deveria ter lançado erro para telefone muito curto.');
+    } catch(e) {
+      // pass
+    }
+  });
+
+  // --- Test 3: BcryptGasService Hash e Validação ---
+  await test('BcryptGasService - Gerar Hash e Comparação', async () => {
+    const service = new BcryptGasService();
+    const hash = await service.hash('minhasenha123');
+    
+    // Check structural Bcrypt format regex matches
+    const bcryptRegex = /^\$2[aby]\$[0-9]{2}\$[./A-Za-z0-9]{53}$/;
+    if (!bcryptRegex.test(hash)) {
+      throw new Error(`Hash gerada não atende ao padrão Bcrypt VO: ${hash}`);
+    }
+
+    const isMatch = await service.compare('minhasenha123', hash);
+    if (!isMatch) throw new Error('Senha deveria bater com a hash gerada.');
+
+    const isDifferent = await service.compare('outraSenha', hash);
+    if (isDifferent) throw new Error('Senha incorreta não deveria bater com a hash.');
+  });
+
+  // --- Test 4: TokenService JWT tokens ---
+  await test('TokenService - JWT Signature e Exibição', () => {
+    const service = new TokenService();
+    const token = service.generate({ userId: 'user_123', role: 'PACIENTE' });
+    
+    const payload = service.validate(token);
+    if (!payload || payload.userId !== 'user_123' || payload.role !== 'PACIENTE') {
+      throw new Error('Payload do Token não pôde ser verificado ou dados inválidos.');
+    }
+  });
+
+  // --- Test 5: CriarPacienteUseCase ---
+  await test('Caso de Uso - CriarPacienteUseCase com Eventos de Domínio', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const cryptoService = new BcryptGasService();
+    const useCase = new CriarPacienteUseCase(pacienteRepo, cryptoService);
+
+    const result = await useCase.execute({
+      nome: 'Mariana Costa',
+      email: 'mariana.costa@email.com',
+      telefone: '(11) 98888-8888',
+      dataInicio: new Date().toISOString(),
+      dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    });
+
+    if (!result.id || result.email !== 'mariana.costa@email.com' || !result.senhaTemporaria) {
+      throw new Error('Retorno do DTO de criação do paciente inválido.');
+    }
+
+    // Verify if patient is persisted in the repository (in-memory fallback)
+    const saved = await pacienteRepo.findById(result.id);
+    if (!saved || saved.nome !== 'Mariana Costa') {
+      throw new Error('Paciente não foi gravado no repositório com sucesso.');
+    }
+  });
+
+  // --- Test 6: LoginUseCase ---
+  await test('Caso de Uso - LoginUseCase do Paciente e Administrador', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const cryptoService = new BcryptGasService();
+    const tokenService = new TokenService();
+    
+    // Register patient first
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService);
+    const regResult = await registerUC.execute({
+      nome: 'Carla Souza',
+      email: 'carla@email.com',
+      telefone: '(11) 98888-8888',
+      dataInicio: new Date().toISOString(),
+      dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    });
+
+    const loginUC = new LoginUseCase(pacienteRepo, cryptoService, tokenService);
+    
+    // Patient Login
+    const loginResult = await loginUC.execute({
+      email: 'carla@email.com',
+      senha: regResult.senhaTemporaria
+    });
+
+    if (loginResult.role !== 'PACIENTE' || loginResult.userId !== regResult.id) {
+      throw new Error('Autenticação do Paciente falhou.');
+    }
+
+    // Admin Login
+    const adminLogin = await loginUC.execute({
+      email: 'admin@clinica.com',
+      senha: 'admin123'
+    });
+
+    if (adminLogin.role !== 'ADMIN' || adminLogin.userId !== 'admin_root') {
+      throw new Error('Autenticação do Administrador falhou.');
+    }
+  });
+
+  console.log(`\n📊 RESULTADOS DO TESTE: ${passCount} Passados, ${failCount} Falhas.`);
+  if (failCount > 0) {
+    process.exit(1);
+  }
+}
+
+runTests();

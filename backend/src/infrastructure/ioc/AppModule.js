@@ -1,0 +1,84 @@
+import { GoogleSheetsPacienteRepository } from '../repositories/GoogleSheetsPacienteRepository.js';
+import { GoogleSheetsCheckinRepository } from '../repositories/GoogleSheetsCheckinRepository.js';
+import { GoogleSheetsProtocoloRepository } from '../repositories/GoogleSheetsProtocoloRepository.js';
+import { GoogleSheetsGamificacaoRepository } from '../repositories/GoogleSheetsGamificacaoRepository.js';
+import { GoogleSheetsPermissaoRepository } from '../repositories/GoogleSheetsPermissaoRepository.js';
+import { BcryptGasService } from '../services/BcryptGasService.js';
+import { TokenService } from '../services/TokenService.js';
+
+import { LoginUseCase } from '../../application/useCases/LoginUseCase.js';
+import { CriarPacienteUseCase } from '../../application/useCases/CriarPacienteUseCase.js';
+import { RegistrarCheckinUseCase } from '../../application/useCases/RegistrarCheckinUseCase.js';
+import { LiberarEdicaoRetroativaUseCase } from '../../application/useCases/LiberarEdicaoRetroativaUseCase.js';
+import { GerarDashboardUseCase } from '../../application/useCases/GerarDashboardUseCase.js';
+
+/**
+ * AppModule (IoC Container)
+ * 
+ * Centraliza a instanciação de todas as dependências do sistema.
+ * Implementa um padrão Service Locator simples (Singleton) para injeção de dependência.
+ */
+class Container {
+  constructor() {
+    this.services = {};
+    this.useCases = {};
+  }
+
+  getServices() {
+    if (!this.services.initialized) {
+      // Repositories
+      this.services.pacienteRepository = new GoogleSheetsPacienteRepository();
+      this.services.checkinRepository = new GoogleSheetsCheckinRepository();
+      this.services.protocoloRepository = new GoogleSheetsProtocoloRepository();
+      this.services.gamificacaoRepository = new GoogleSheetsGamificacaoRepository();
+      this.services.permissaoRepository = new GoogleSheetsPermissaoRepository();
+
+      // Infrastructure Services
+      this.services.criptografiaService = new BcryptGasService();
+      this.services.tokenService = new TokenService();
+
+      this.services.initialized = true;
+    }
+    return this.services;
+  }
+
+  getUseCases() {
+    if (!this.useCases.initialized) {
+      const s = this.getServices();
+
+      this.useCases.loginUseCase = new LoginUseCase(
+        s.pacienteRepository, 
+        s.criptografiaService, 
+        s.tokenService
+      );
+
+      this.useCases.criarPacienteUseCase = new CriarPacienteUseCase(
+        s.pacienteRepository, 
+        s.criptografiaService
+      );
+
+      this.useCases.registrarCheckinUseCase = new RegistrarCheckinUseCase(
+        s.pacienteRepository, 
+        s.protocoloRepository, 
+        s.checkinRepository, 
+        s.gamificacaoRepository
+      );
+
+      this.useCases.liberarEdicaoRetroativaUseCase = new LiberarEdicaoRetroativaUseCase(
+        s.pacienteRepository, 
+        s.permissaoRepository
+      );
+
+      this.useCases.gerarDashboardUseCase = new GerarDashboardUseCase(
+        s.pacienteRepository, 
+        s.protocoloRepository, 
+        s.checkinRepository
+      );
+
+      this.useCases.initialized = true;
+    }
+    return this.useCases;
+  }
+}
+
+export const AppModule = new Container();

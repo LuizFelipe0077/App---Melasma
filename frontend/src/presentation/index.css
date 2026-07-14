@@ -1,0 +1,214 @@
+/*
+ * index.css
+ * Core design system styling using CSS variables.
+ * Implements WCAG 2.2 AA accessibility contrast, Apple-inspired layout, and Material 3 design philosophy.
+ */
+
+:root {
+  /* Colors - Light Mode (Default) */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --slate-950: #020617;
+
+  --emerald-50: #ecfdf5;
+  --emerald-100: #d1fae5;
+  --emerald-200: #a7f3d0;
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+  --emerald-700: #047857;
+
+  --indigo-500: #6366f1;
+  --indigo-600: #4f46e5;
+
+  --amber-100: #fef3c7;
+  --amber-500: #f59e0b;
+  --amber-700: #b45309;
+
+  --rose-100: #ffe4e6;
+  --rose-500: #f43f5e;
+  --rose-700: #be123c;
+
+  /* Semantic Theme Map (Light) */
+  --bg-primary: var(--slate-50);
+  --bg-card: #ffffff;
+  --border-color: var(--slate-200);
+  --text-main: var(--slate-900);
+  --text-muted: var(--slate-500);
+  --primary: var(--slate-900);
+  --success: var(--emerald-500);
+  --success-dark: var(--emerald-700);
+  --success-light: var(--emerald-100);
+  --warning: var(--amber-500);
+  --warning-light: var(--amber-100);
+  --error: var(--rose-500);
+  --error-light: var(--rose-100);
+
+  /* Layout and Geometry */
+  --border-radius: 16px;
+  --border-radius-sm: 8px;
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --max-width: 480px; /* Ergonomic mobile target width */
+
+  /* Glassmorphism Easing */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-blur: blur(12px);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+/* Dark Mode Overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: var(--slate-950);
+    --bg-card: var(--slate-900);
+    --border-color: var(--slate-800);
+    --text-main: var(--slate-100);
+    --text-muted: var(--slate-400);
+    --primary: #ffffff;
+    --success: var(--emerald-500);
+    --success-light: rgba(16, 185, 129, 0.15);
+    --success-dark: var(--emerald-200);
+    
+    --glass-bg: rgba(15, 23, 42, 0.7);
+    --glass-border: rgba(15, 23, 42, 0.4);
+  }
+}
+
+/* Base Resets */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-sans);
+  background-color: var(--slate-900); /* Dark outer frame */
+  color: var(--text-main);
+  height: 100%;
+  overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* App Container (Emulates a high-end mobile viewport on desktop/tablet) */
+.app-container {
+  width: 100%;
+  max-width: var(--max-width);
+  height: 100vh;
+  background-color: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+/* Smooth Scrolling for App Container */
+.app-container::-webkit-scrollbar {
+  width: 4px;
+}
+.app-container::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 4px;
+}
+
+/* Initial Loader Screen Styles */
+.initial-loader {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-primary);
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  padding: 32px;
+}
+
+.loader-logo {
+  font-size: 3rem;
+  margin-bottom: 24px;
+  animation: pulseLogo 2s infinite ease-in-out;
+}
+
+.loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--success);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+.loader-text {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Touch Targets and Interaction Optimizations */
+button, .clickable {
+  min-height: 48px;
+  min-width: 48px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active, .clickable:active {
+  transform: scale(0.96);
+}
+
+button:focus-visible, input:focus-visible {
+  outline: 2px solid var(--indigo-500);
+  outline-offset: 2px;
+}
+
+/* Base animations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulseLogo {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+/* Accessibility settings for reduced motions */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

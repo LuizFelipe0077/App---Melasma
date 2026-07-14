@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal de Documentação - Clínica Integrativa</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="header-left">
+      <button class="btn-icon btn-menu-toggle" style="display: none;" aria-label="Menu" onclick="toggleMenu()">☰</button>
+      <div class="logo-container">
+        <span class="logo-icon">✨</span>
+        <span>Acompanhamento Clínico</span>
+      </div>
+      <span class="badge-version">v1.2.0</span>
+    </div>
+    
+    <div class="header-right">
+      <button class="btn-icon" title="Modo Escuro / Claro" onclick="toggleTheme()">🌓</button>
+      <button class="btn-icon" title="Imprimir Manual" onclick="window.print()">🖨</button>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Collapsible Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="searchBar" placeholder="Pesquisar manual..." oninput="handleSearch()">
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-group-title">Introdução</div>
+        <a href="index.html" class="nav-link" data-target="sec-intro">Visão Geral</a>
+        <a href="arquitetura.html" class="nav-link" data-target="sec-arquitetura">Arquitetura</a>
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-group-title">Comportamento & Design</div>
+        <a href="psicologia.html" class="nav-link" data-target="sec-psicologia">Psicologia (COM-B)</a>
+        <a href="gamificacao.html" class="nav-link" data-target="sec-gamificacao">Gamificação</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Segurança & Qualidade</div>
+        <a href="seguranca.html" class="nav-link" data-target="sec-seguranca">Hardening & OWASP</a>
+        <a href="checklist.html" class="nav-link active" data-target="sec-checklist">Checklists de Entrega</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Guias de Uso</div>
+        <a href="admin.html" class="nav-link" data-target="sec-admin">Manual do Clínico</a>
+        <a href="api.html" class="nav-link" data-target="sec-api">Documentação da API</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Reader Pane -->
+    <main>
+      <div class="content-wrapper">
+        <section id="sec-checklist" class="section-content active">
+          <h1>Checklist de Lançamento</h1>
+          <p class="subtitle">Verificações de conformidade necessárias antes de empurrar o código para produção.</p>
+
+          <h2>Segurança & Auditoria</h2>
+          <div class="checklist-item">
+            <input type="checkbox" class="checklist-checkbox" id="chk-1" onchange="saveCheck(this)">
+            <label class="checklist-text" for="chk-1">Secrets do JWT e planilhas configurados no PropertiesService (Sem senhas hardcoded).</label>
+          </div>
+          <div class="checklist-item">
+            <input type="checkbox" class="checklist-checkbox" id="chk-2" onchange="saveCheck(this)">
+            <label class="checklist-text" for="chk-2">Mensagens genéricas de erro ativas no login para evitar enumeração de usuários.</label>
+          </div>
+          <div class="checklist-item">
+            <input type="checkbox" class="checklist-checkbox" id="chk-3" onchange="saveCheck(this)">
+            <label class="checklist-text" for="chk-3">CSPRNG ativo para a geração de tokens e salts aleatórios.</label>
+          </div>
+
+          <h2>Persistência & Concorrência</h2>
+          <div class="checklist-item">
+            <input type="checkbox" class="checklist-checkbox" id="chk-4" onchange="saveCheck(this)">
+            <label class="checklist-text" for="chk-4">LockService ativo com timeout de 10s em todas as escritas atômicas do Google Sheets.</label>
+          </div>
+        </section>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="scripts.js"></script>
+</body>
+</html>

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual de Deploy e Configuração - SaaS Clínico</title>
+  <!-- Google Fonts Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-primary: #0F172A;
+      --bg-secondary: #1E293B;
+      --border-color: #334155;
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --accent: #10B981;
+      --accent-hover: #059669;
+      --card-bg: #1E293B;
+      --sidebar-width: 280px;
+      --code-bg: #090D16;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #F8FAFC;
+      --bg-secondary: #F1F5F9;
+      --border-color: #E2E8F0;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --accent: #10B981;
+      --accent-hover: #059669;
+      --card-bg: #FFFFFF;
+      --code-bg: #F1F5F9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Reading Progress Bar */
+    #progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background-color: var(--accent);
+      width: 0%;
+      z-index: 1000;
+    }
+
+    /* Sidebar Navigation */
+    aside {
+      width: var(--sidebar-width);
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      z-index: 100;
+    }
+
+    .brand {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .search-box {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      outline: none;
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent);
+    }
+
+    .nav-menu {
+      list-style: none;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    .nav-item {
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-link {
+      display: block;
+      padding: 0.625rem 0.875rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--text-primary);
+      background-color: var(--bg-primary);
+      border-left: 3px solid var(--accent);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-primary);
+      font-weight: 600;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--accent);
+    }
+
+    /* Main Content Area */
+    main {
+      margin-left: var(--sidebar-width);
+      flex-grow: 1;
+      padding: 3rem 4rem;
+      max-width: 1100px;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 1.75rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+    }
+
+    p {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+      font-size: 1rem;
+    }
+
+    /* Info Cards */
+    .alert-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .alert-card.warning {
+      border-left-color: #F59E0B;
+    }
+
+    .alert-card.danger {
+      border-left-color: #EF4444;
+    }
+
+    .alert-title {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Code Blocks */
+    .code-container {
+      position: relative;
+      margin-bottom: 1.5rem;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    .code-header {
+      background-color: var(--bg-secondary);
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+
+    .copy-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--accent);
+    }
+
+    pre {
+      background-color: var(--code-bg);
+      padding: 1.25rem;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.9rem;
+      color: var(--accent);
+    }
+
+    /* Checklists */
+    .checklist {
+      list-style: none;
+      margin-bottom: 1.5rem;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    .checklist-item input[type="checkbox"] {
+      margin-top: 0.25rem;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .checklist-item label {
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.95rem;
+      user-select: none;
+    }
+
+    .checklist-item input:checked + label {
+      text-decoration: line-through;
+      color: var(--text-secondary);
+      opacity: 0.6;
+    }
+
+    /* Screenshots Placeholders */
+    .screenshot-box {
+      background-color: var(--bg-secondary);
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 4rem 2rem;
+      text-align: center;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* Step-by-step numbers */
+    .step-number {
+      background-color: var(--accent);
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      aside {
+        display: none;
+      }
+      main {
+        margin-left: 0;
+        padding: 2rem 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+
+  <!-- Sidebar Navigation -->
+  <aside>
+    <div class="brand">
+      <span>🍃</span> SaaS Clínico Deploy
+    </div>
+    
+    <div class="search-box">
+      <input type="text" id="search" placeholder="Buscar tópicos..." onkeyup="searchTopics()">
+    </div>
+
+    <ul class="nav-menu">
+      <li class="nav-item"><a href="#git" class="nav-link active">1. Configurar Git</a></li>
+      <li class="nav-item"><a href="#sheets" class="nav-link">2. Configurar Planilha</a></li>
+      <li class="nav-item"><a href="#backend" class="nav-link">3. Publicar Backend</a></li>
+      <li class="nav-item"><a href="#frontend" class="nav-link">4. Configurar Frontend</a></li>
+      <li class="nav-item"><a href="#dns" class="nav-link">5. Configurar Domínio</a></li>
+      <li class="nav-item"><a href="#rollback" class="nav-link">6. Rollback e Testes</a></li>
+      <li class="nav-item"><a href="#faq" class="nav-link">7. FAQ & Troubleshooting</a></li>
+    </ul>
+
+    <button class="theme-toggle" onclick="toggleTheme()">Modo Claro ☀️</button>
+  </aside>
+
+  <!-- Main Content -->
+  <main>
+    <h1>Manual de Deploy e Configuração</h1>
+    <p>Bem-vindo ao guia oficial de publicação do sistema. Este manual foi estruturado passo a passo para garantir que você coloque o SaaS no ar de maneira segura e profissional, mesmo sem experiência prévia em nuvens corporativas.</p>
+
+    <!-- ALERT CARD -->
+    <div class="alert-card">
+      <div class="alert-title">💡 Dica Importante</div>
+      <p>Você pode usar as caixas de seleção interativas para marcar cada tarefa concluída. Seu progresso será mantido caso você recarregue a página!</p>
+    </div>
+
+    <!-- SEÇÃO 1 -->
+    <section id="git">
+      <h2>1. Configurar o Repositório Git Local</h2>
+      <p>O primeiro passo é clonar a base de código do projeto para o seu ambiente de desenvolvimento local utilizando o Git.</p>
+      
+      <div class="code-container">
+        <div class="code-header">
+          <span>Terminal (PowerShell / Bash)</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+        </div>
+        <pre><code># Clonar o repositório do Monorepo
+git clone https://github.com/seu-usuario/protocolo-integrativo.git
+
+# Acessar a pasta do projeto
+cd protocolo-integrativo</code></pre>
+      </div>
+
+      <ul class="checklist" id="check-git">
+        <li class="checklist-item">
+          <input type="checkbox" id="git-1" onchange="saveCheckState(this)">
+          <label for="git-1">Instalou o Git na máquina e configurou nome/e-mail globais.</label>
+        </li>
+        <li class="checklist-item">
+          <input type="checkbox" id="git-2" onchange="saveCheckState(this)">
+          <label for="git-2">Clonou o repositório com sucesso no computador.</label>
+        </li>
+      </ul>
+    </section>
+
+    <!-- SEÇÃO 2 -->
+    <section id="sheets">
+      <h2>2. Configurar Planilha no Google Sheets</h2>
+      <p>A planilha atuará como banco de dados temporário. O utilitário do backend criará as abas automaticamente após o deploy, mas precisamos obter o identificador da planilha.</p>
+      
+      <div class="screenshot-box">
+        [Captura de Tela: URL do Google Sheets destacando o ID da Planilha, localizado entre '/d/' e '/edit']
+      </div>
+
+      <ul class="checklist" id="check-sheets">
+        <li class="checklist-item">
+          <input type="checkbox" id="sheets-1" onchange="saveCheckState(this)">
+          <label for="sheets-1">Criou uma nova planilha vazia no Google Drive.</label>
+        </li>
+        <li class="checklist-item">
+          <input type="checkbox" id="sheets-2" onchange="saveCheckState(this)">
+          <label for="sheets-2">Copiou o ID da Planilha da barra de navegação do seu navegador.</label>
+        </li>
+      </ul>
+    </section>
+
+    <!-- SEÇÃO 3 -->
+    <section id="backend">
+      <h2>3. Publicar o Backend no Google Apps Script</h2>
+      <p>Vamos configurar o código do servidor no Apps Script e disponibilizar a API Web App.</p>
+
+      <ul class="checklist" id="check-backend">
+        <li class="checklist-item">
+          <input type="checkbox" id="backend-1" onchange="saveCheckState(this)">
+          <label for="backend-1">Acessou Extensões > Apps Script na sua Planilha Google.</label>
+        </li>
+        <li class="checklist-item">
+          <input type="checkbox" id="backend-2" onchange="saveCheckState(this)">
+          <label for="backend-2">Colou os arquivos Javascript do backend na aba do editor.</label>
+        </li>
+        <li class="checklist-item">
+          <input type="checkbox" id="backend-3" onchange="saveCheckState(this)">
+          <label for="backend-3">Acessou Configurações do Projeto e definiu SPREADSHEET_ID e JWT_SECRET.</label>
+        </li>
+        <li class="checklist-item">
+          <input type="checkbox" id="backend-4" onchange="saveCheckState(this)">
+          <label for="backend-4">Executou a função "setup" uma vez para criar as tabelas automaticamente.</label>
+        </li>
+        <li class="checklist-item">
+          <input type="checkbox" id="backend-5" onchange="saveCheckState(this)">
+          <label for="backend-5">Clicou em Implantar > Nova Implantação e escolheu Tipo: App da Web.</label>
+        </li>
+      </ul>
+
+      <div class="alert-card warning">
+        <div class="alert-title">⚠️ Atenção na Implantação</div>
+        <p>No painel de deploy do Web App, certifique-se de configurar <strong>Executar como: Eu (sua-conta)</strong> e <strong>Quem tem acesso: Qualquer pessoa (Anyone)</strong>. Caso contrário, o frontend receberá erros de CORS ao tentar comunicar-se com a API.</p>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 4 -->
+    <section id="frontend">
+      <h2>4. Configurar e Publicar o Frontend</h2>
+      <p>Configuração do arquivo de variáveis do Frontend e deploy no GitHub Pages.</p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>frontend/src/shared/config/SystemConfiguration.js</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+        </div>
+        <pre><code>// Substitua pelo endereço gerado no Deploy do seu Apps Script Web App
+export const SystemConfiguration = {
+  API_BASE_URL: 'https://script.google.com/macros/s/SEU_DEPLOY_ID/exec',
+  THEME: 'slate'
+};</code></pre>
+      </div>
+
+      <ul class="checklist" id="check-frontend">
+        <li class="checklist-item">
+          <input type="checkbox" id="frontend-1" onchange="saveCheckState(this)">
+          <label for="frontend-1">Abriu o arquivo SystemConfiguration.js e colou a URL de Execução do Apps Script.</label>
+        </li>
+        <li class="checklist-item">
+          <input type="checkbox" id="frontend-2" onchange="saveCheckState(this)">
+          <label for="frontend-2">Fez push das alterações para o repositório GitHub.</label>
+        </li>
+        <li class="checklist-item">
+          <input type="checkbox" id="frontend-3" onchange="saveCheckState(this)">
+          <label for="frontend-3">Ativou a publicação do GitHub Pages nas configurações do Repositório apontando para a pasta docs/ ou branch gh-pages.</label>
+        </li>
+      </ul>
+    </section>
+
+    <!-- SEÇÃO 5 -->
+    <section id="dns">
+      <h2>5. Configurar Domínio Próprio e HTTPS</h2>
+      <p>Opcionalmente, vincule o sistema ao endereço do site da sua clínica médica.</p>
+
+      <div class="screenshot-box">
+        [Captura de Tela: Configurações de DNS no Cloudflare ou Registro.br, adicionando uma linha CNAME apontando para o GitHub]
+      </div>
+
+      <ul class="checklist" id="check-dns">
+        <li class="checklist-item">
+          <input type="checkbox" id="dns-1" onchange="saveCheckState(this)">
+          <label for="dns-1">Adicionou a CNAME de subdomínio nas configurações de DNS da clínica.</label>
+        </li>
+        <li class="checklist-item">
+          <input type="checkbox" id="dns-2" onchange="saveCheckState(this)">
+          <label for="dns-2">Habilitou a opção "Enforce HTTPS" no painel de configurações do GitHub Pages.</label>
+        </li>
+      </ul>
+    </section>
+
+    <!-- SEÇÃO 6 -->
+    <section id="rollback">
+      <h2>6. Testes e Procedimentos de Rollback</h2>
+      <p>Diretrizes de contingência em caso de bugs críticos em produção.</p>
+
+      <div class="alert-card danger">
+        <div class="alert-title">🚨 Procedimento de Rollback do Servidor</div>
+        <p>Caso ocorra erro no backend após alterações no código:</p>
+        <p>1. Acesse o editor do Apps Script.<br>2. Vá em Implantar > Gerenciar Implantações.<br>3. Selecione a versão estável anterior na lista de edições e clique em Salvar.<br>A URL de produção continuará idêntica, mas executando o código seguro antigo em menos de 10 segundos.</p>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 7 -->
+    <section id="faq">
+      <h2>7. FAQ & Resolução de Problemas</h2>
+      <h3>Q: Recebo erro "CORS Policy Blocked" no console do navegador. Como resolver?</h3>
+      <p>A: Verifique se você configurou o Apps Script para permitir acesso de "Qualquer pessoa" (Anyone) no momento de implantar o Web App. Se o acesso estiver restrito apenas ao proprietário, o navegador bloqueará as chamadas.</p>
+
+      <h3>Q: Os e-mails de alerta não estão chegando nos e-mails dos pacientes.</h3>
+      <p>A: O Google Apps Script limita o envio diário de e-mails via MailApp (100 para contas gratuitas, 1500 para contas Google Workspace). Certifique-se de que a cota diária não foi excedida no console do Google Drive.</p>
+    </section>
+  </main>
+
+  <script>
+    // Theme Toggle Function
+    function toggleTheme() {
+      const body = document.body;
+      const btn = document.querySelector('.theme-toggle');
+      if (body.getAttribute('data-theme') === 'light') {
+        body.removeAttribute('data-theme');
+        btn.textContent = 'Modo Claro ☀️';
+      } else {
+        body.setAttribute('data-theme', 'light');
+        btn.textContent = 'Modo Escuro 🌙';
+      }
+    }
+
+    // Scroll Progress Bar
+    window.onscroll = function() {
+      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      document.getElementById('progress-bar').style.width = scrolled + '%';
+
+      // Highlight active nav item
+      const sections = document.querySelectorAll('section');
+      const navLinks = document.querySelectorAll('.nav-link');
+      let current = '';
+
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= sectionTop - 100) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href').substring(1) === current) {
+          link.classList.add('active');
+        }
+      });
+    };
+
+    // Copy Code Blocks Helper
+    function copyCode(button) {
+      const code = button.parentElement.nextElementSibling.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        button.innerText = 'Copiado!';
+        setTimeout(() => button.innerText = 'Copiar', 2000);
+      });
+    }
+
+    // Save and load checkbox states via LocalStorage
+    function saveCheckState(checkbox) {
+      localStorage.setItem(checkbox.id, checkbox.checked);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach(box => {
+        const checked = localStorage.getItem(box.id) === 'true';
+        box.checked = checked;
+      });
+    });
+
+    // Search filter function
+    function searchTopics() {
+      const input = document.getElementById('search').value.toLowerCase();
+      const sections = document.querySelectorAll('section');
+      
+      sections.forEach(section => {
+        const text = section.innerText.toLowerCase();
+        if (text.includes(input)) {
+          section.style.display = 'block';
+        } else {
+          section.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

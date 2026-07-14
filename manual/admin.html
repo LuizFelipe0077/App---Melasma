@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal de Documentação - Clínica Integrativa</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="header-left">
+      <button class="btn-icon btn-menu-toggle" style="display: none;" aria-label="Menu" onclick="toggleMenu()">☰</button>
+      <div class="logo-container">
+        <span class="logo-icon">✨</span>
+        <span>Acompanhamento Clínico</span>
+      </div>
+      <span class="badge-version">v1.2.0</span>
+    </div>
+    
+    <div class="header-right">
+      <button class="btn-icon" title="Modo Escuro / Claro" onclick="toggleTheme()">🌓</button>
+      <button class="btn-icon" title="Imprimir Manual" onclick="window.print()">🖨</button>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Collapsible Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="searchBar" placeholder="Pesquisar manual..." oninput="handleSearch()">
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-group-title">Introdução</div>
+        <a href="index.html" class="nav-link" data-target="sec-intro">Visão Geral</a>
+        <a href="arquitetura.html" class="nav-link" data-target="sec-arquitetura">Arquitetura</a>
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-group-title">Comportamento & Design</div>
+        <a href="psicologia.html" class="nav-link" data-target="sec-psicologia">Psicologia (COM-B)</a>
+        <a href="gamificacao.html" class="nav-link" data-target="sec-gamificacao">Gamificação</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Segurança & Qualidade</div>
+        <a href="seguranca.html" class="nav-link" data-target="sec-seguranca">Hardening & OWASP</a>
+        <a href="checklist.html" class="nav-link" data-target="sec-checklist">Checklists de Entrega</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Guias de Uso</div>
+        <a href="admin.html" class="nav-link active" data-target="sec-admin">Manual do Clínico</a>
+        <a href="api.html" class="nav-link" data-target="sec-api">Documentação da API</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Reader Pane -->
+    <main>
+      <div class="content-wrapper">
+        <section id="sec-admin" class="section-content active">
+          <h1>Manual do Clínico (Administrador)</h1>
+          <p class="subtitle">Como operar as permissões, criar protocolos e acompanhar o engajamento das pacientes.</p>
+
+          <h2>Acompanhamento de Risco</h2>
+          <p>O administrador do sistema possui acesso ao Painel Comportamental, onde as pacientes são ordenadas de acordo com seu risco de evasão. Se uma paciente ficar sem realizar check-ins por mais de 48 horas, o status é alterado para <strong>Risco de Evasão (Vermelho)</strong>.</p>
+
+          <h2>Liberando Edição Retroativa</h2>
+          <p>Caso a paciente relate dificuldades de sinal de rede ou urgências médicas e precise registrar doses passadas que foram travadas pela regra da meia-noite, siga o passo:</p>
+          <ol>
+            <li>Selecione a paciente na aba de busca rápida.</li>
+            <li>Insira a quantidade de horas liberadas (padrão: 24h ou 48h).</li>
+            <li>Digite a justificativa clínica/operacional para fins de auditoria no log.</li>
+            <li>Clique em "Conceder Acesso Retroativo".</li>
+          </ol>
+        </section>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="scripts.js"></script>
+</body>
+</html>

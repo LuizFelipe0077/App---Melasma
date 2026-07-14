@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal de Documentação - Clínica Integrativa</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="header-left">
+      <button class="btn-icon btn-menu-toggle" style="display: none;" aria-label="Menu" onclick="toggleMenu()">☰</button>
+      <div class="logo-container">
+        <span class="logo-icon">✨</span>
+        <span>Acompanhamento Clínico</span>
+      </div>
+      <span class="badge-version">v1.2.0</span>
+    </div>
+    
+    <div class="header-right">
+      <button class="btn-icon" title="Modo Escuro / Claro" onclick="toggleTheme()">🌓</button>
+      <button class="btn-icon" title="Imprimir Manual" onclick="window.print()">🖨</button>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Collapsible Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="searchBar" placeholder="Pesquisar manual..." oninput="handleSearch()">
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-group-title">Introdução</div>
+        <a href="index.html" class="nav-link active" data-target="sec-intro">Visão Geral</a>
+        <a href="arquitetura.html" class="nav-link" data-target="sec-arquitetura">Arquitetura</a>
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-group-title">Comportamento & Design</div>
+        <a href="psicologia.html" class="nav-link" data-target="sec-psicologia">Psicologia (COM-B)</a>
+        <a href="gamificacao.html" class="nav-link" data-target="sec-gamificacao">Gamificação</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Segurança & Qualidade</div>
+        <a href="seguranca.html" class="nav-link" data-target="sec-seguranca">Hardening & OWASP</a>
+        <a href="checklist.html" class="nav-link" data-target="sec-checklist">Checklists de Entrega</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Guias de Uso</div>
+        <a href="admin.html" class="nav-link" data-target="sec-admin">Manual do Clínico</a>
+        <a href="api.html" class="nav-link" data-target="sec-api">Documentação da API</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Reader Pane -->
+    <main>
+      <div class="content-wrapper">
+        <section id="sec-intro" class="section-content active">
+          <h1>Visão Geral do Sistema</h1>
+          <p class="subtitle">Acompanhamento terapêutico integrativo moderno, escalável e focado em formação de hábitos saudáveis.</p>
+          
+          <h2>Objetivo Geral</h2>
+          <p>Este sistema foi desenvolvido para apoiar pacientes em tratamentos de média e longa duração (melasma, tratamentos anti-inflamatórios e rotinas sistêmicas de 90 dias). Ele atua integrando o monitoramento clínico à psicologia comportamental e economia comportamental, elevando as taxas de adesão sem utilizar de pressões psicológicas, alarmes ou culpa.</p>
+          
+          <div class="callout info">
+            <div class="callout-title">💡 Filosofia da Solução</div>
+            <p>Tratamentos clínicos bem sucedidos dependem 30% da qualidade da prescrição e 70% da consistência diária da paciente. Nosso sistema facilita esse processo.</p>
+          </div>
+
+          <h2>Tecnologias Utilizadas</h2>
+          <ul>
+            <li><strong>Frontend SPA:</strong> HTML5, CSS3 Vanilla e ES Modules (Sem dependências complexas).</li>
+            <li><strong>Backend Server:</strong> Google Apps Script (Arquitetura Hexagonal, DTOs e namespaces isolados).</li>
+            <li><strong>Persistência:</strong> Google Sheets com travamento atômico (LockService).</li>
+          </ul>
+        </section>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="scripts.js"></script>
+</body>
+</html>
