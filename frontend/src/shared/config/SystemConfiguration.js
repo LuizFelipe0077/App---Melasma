@@ -11,20 +11,20 @@ export const SystemConfiguration = {
   // Session Management
   SESSION_TIMEOUT_MINUTES: 120, // 2 hours
 
-  // UI Theme / Design Tokens (Apple Premium inspired Slate & Emerald Green)
+  // UI Theme / Design Tokens (Premium Palette: Melasma Earth tones & Sage Greens)
   THEME: {
-    PRIMARY_COLOR: '#0F172A',      // Slate 900
-    SECONDARY_COLOR: '#10B981',    // Emerald 500
-    ACCENT_COLOR: '#6366F1',       // Indigo 500
-    BACKGROUND_LIGHT: '#F8FAFC',   // Slate 50
-    BACKGROUND_DARK: '#020617',    // Slate 950
+    PRIMARY_COLOR: '#2D3748',      // Charcoal (Text & Headers)
+    SECONDARY_COLOR: '#8FA294',    // Sage Green (Desinflamação - Calm)
+    ACCENT_COLOR: '#C4A484',       // Soft Earth/Camel (Melasma - Elegance)
+    BACKGROUND_LIGHT: '#FAF9F6',   // Off-white/Alabaster
+    BACKGROUND_DARK: '#1A202C',    // Deep Charcoal (Dark mode)
     CARD_BG_LIGHT: '#FFFFFF',
-    CARD_BG_DARK: '#0F172A',       // Slate 900
-    TEXT_MAIN_LIGHT: '#0F172A',
-    TEXT_MAIN_DARK: '#F1F5F9',     // Slate 100
-    TEXT_MUTED_LIGHT: '#64748B',   // Slate 500
-    TEXT_MUTED_DARK: '#94A3B8',    // Slate 400
-    BORDER_RADIUS: '16px',
+    CARD_BG_DARK: '#2D3748',       
+    TEXT_MAIN_LIGHT: '#2D3748',
+    TEXT_MAIN_DARK: '#F7FAFC',     
+    TEXT_MUTED_LIGHT: '#718096',   
+    TEXT_MUTED_DARK: '#A0AEC0',    
+    BORDER_RADIUS: '12px',
     FONT_FAMILY: "'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
   },
 

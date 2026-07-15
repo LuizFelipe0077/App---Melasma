@@ -30,13 +30,14 @@
 </head>
 <body>
   
-  <!-- Main SPA Container -->
-  <div id="app" class="app-container">
+  <!-- Main SPA Container (New CSS Grid Shell) -->
+  <div id="app" class="app-shell">
     <!-- Skeleton Screen / Initial Loading state before JS boots -->
-    <div class="initial-loader">
-      <div class="loader-logo">✨</div>
-      <div class="loader-spinner"></div>
-      <p class="loader-text">Carregando seu plano de saúde...</p>
+    <div class="split-screen" style="height: 100vh;">
+      <div class="split-screen-content">
+        <div class="spinner" style="border-top-color: var(--color-brand-success); margin-bottom: 24px; width: 32px; height: 32px;"></div>
+        <p class="text-p" style="font-weight: 500;">Carregando ambiente seguro...</p>
+      </div>
     </div>
   </div>
 
