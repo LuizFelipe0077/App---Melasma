@@ -118,14 +118,6 @@ export class Paciente {
     if (this.#status === StatusPaciente.SUSPENSO) {
       throw new Error('Esta conta está temporariamente bloqueada por segurança.');
     }
-    
-    const hoje = new Date();
-    if (hoje < this.#dataInicio) {
-      throw new Error('Seu período de tratamento ainda não iniciou.');
-    }
-    if (hoje > this.#dataFim) {
-      throw new Error('Seu período de tratamento já expirou.');
-    }
     return true;
   }
 }
