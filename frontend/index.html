@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Acompanhamento Clínico Integrativo - Tratamento Personalizado</title>
   
   <!-- Security Headers (CWE-1021, CWE-16) -->
@@ -13,9 +13,9 @@
 
   <!-- SEO Meta Tags -->
   <meta name="description" content="Acompanhe seu protocolo de tratamento clínico de forma simples, leve e intuitiva. Gerencie doses, acompanhe sua evolução e conquiste hábitos saudáveis diariamente.">
-  <meta name="theme-color" content="#0F172A">
+  <meta name="theme-color" content="#F5F4F1">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   
   <!-- Google Fonts: Outfit (subset latin for reduced download ~45KB→12KB) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,19 +28,20 @@
   <!-- PWA Manifest -->
   <link rel="manifest" href="./manifest.json">
   
-  <!-- Main CSS -->
+  <!-- Design tokens (cor, espaco, tipo, borda, sombra, motion) -->
+  <link rel="stylesheet" href="./src/presentation/tokens.css">
+
+  <!-- Reset, utilitarios e componentes -->
   <link rel="stylesheet" href="./src/presentation/index.css">
 </head>
 <body>
   
   <!-- Main SPA Container -->
   <div id="app">
-    <!-- Skeleton Screen / Initial Loading state before JS boots -->
-    <div class="split-screen" style="height: 100vh;">
-      <div class="split-screen-content">
-        <div class="spinner" style="border-top-color: var(--color-brand-success); margin-bottom: 24px; width: 32px; height: 32px;"></div>
-        <p class="text-p" style="font-weight: 500;">Carregando ambiente seguro...</p>
-      </div>
+    <!-- Estado inicial, antes do JS assumir -->
+    <div class="boot-screen" role="status" aria-live="polite">
+      <div class="spinner spinner-lg" aria-hidden="true"></div>
+      <p class="boot-screen-label">Preparando seu ambiente seguro</p>
     </div>
   </div>
 

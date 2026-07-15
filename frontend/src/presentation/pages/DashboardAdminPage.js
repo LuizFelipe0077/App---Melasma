@@ -374,6 +374,9 @@ export class DashboardAdminPage {
 
   #setupAdminListeners() {
     const handleLogout = () => {
+      if (!confirm('Tem certeza que deseja encerrar a sua sessão administrativa?')) {
+        return;
+      }
       sessionStorage.clear();
       this.#onLogout();
     };
@@ -600,6 +603,12 @@ export class DashboardAdminPage {
     });
 
     closeRegBtn.addEventListener('click', () => {
+      const nomeInput = document.getElementById('reg-nome')?.value.trim();
+      if (currentStep > 1 || (nomeInput && nomeInput.length > 0)) {
+        if (!confirm('Deseja cancelar o cadastro de paciente? Todos os dados inseridos serão descartados.')) {
+          return;
+        }
+      }
       regModal.classList.remove('active');
       regForm.reset();
       currentStep = 1;
@@ -648,6 +657,9 @@ export class DashboardAdminPage {
     const deletePatientBtn = document.getElementById('btn-delete-patient');
 
     closeManageBtn.addEventListener('click', () => {
+      if (!confirm('Deseja descartar as alterações não salvas da edição do paciente?')) {
+        return;
+      }
       manageModal.classList.remove('active');
       manageForm.reset();
     });

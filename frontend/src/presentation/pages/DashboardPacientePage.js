@@ -109,6 +109,9 @@ export class DashboardPacientePage {
 
     // Bind logout immediately for both buttons
     const handleLogout = () => {
+      if (!confirm('Tem certeza que deseja encerrar a sua sessão?')) {
+        return;
+      }
       document.body.className = '';
       sessionStorage.clear();
       this.#onLogout();

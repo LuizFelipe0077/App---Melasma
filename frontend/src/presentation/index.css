@@ -1,76 +1,9 @@
 /*
- * index.css - CLINICAL TRACKING DESIGN SYSTEM
- * Architecture: Mobile-first, CSS Grid/Flexbox, Utility-driven Tokens.
- * Aesthetics: SaaS Premium (Dark mode focus, Glassmorphism, Clean layout)
+ * index.css — CLINICAL TRACKING · RESET, UTILITARIOS E COMPONENTES
+ * Tokens (cor/espaco/tipo/borda/sombra/motion) vivem em ./tokens.css,
+ * que DEVE ser carregado antes deste arquivo.
  */
 
-/* ==========================================================================
-   1. DESIGN TOKENS (VARIABLES)
-   ========================================================================== */
-:root {
-  /* Scale (Base 8px) */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-8: 48px;
-  --space-10: 64px;
-
-  /* Typography Scale */
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-
-  /* Color Palette - Premium Dark Theme */
-  --color-surface-base: #0B0F19; /* Deep space dark */
-  --color-surface-card: rgba(20, 26, 40, 0.7); /* Translucent dark for glass */
-  --color-surface-hover: rgba(30, 41, 59, 0.8);
-  
-  --color-border-subtle: rgba(255, 255, 255, 0.08);
-  --color-border-strong: rgba(255, 255, 255, 0.15);
-  --color-border-focus: rgba(143, 162, 148, 0.6);
-
-  --color-text-primary: #F8FAFC; 
-  --color-text-secondary: #94A3B8;
-  --color-text-tertiary: #64748B;
-
-  --color-brand-primary: #1E293B; 
-  --color-brand-accent: #C4A484; /* Soft Earth / Melasma */
-  --color-brand-success: #8FA294; /* Sage Green / Desinflamação */
-  --color-brand-success-light: rgba(143, 162, 148, 0.15);
-  --color-brand-danger: #EF4444;
-  --color-brand-danger-light: rgba(239, 68, 68, 0.15);
-  --color-brand-warning: #F59E0B;
-  --color-brand-warning-light: rgba(245, 158, 11, 0.15);
-
-  /* Elevation / Shadows (Premium) */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
-  --shadow-floating: 0 0 0 1px rgba(255,255,255,0.05), 0 10px 30px -10px rgba(0,0,0,0.8);
-  --shadow-glow: 0 0 20px rgba(143, 162, 148, 0.2);
-
-  /* Borders & Blurs */
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --radius-full: 9999px;
-  --glass-blur: blur(16px);
-  --glass-blur-heavy: blur(32px);
-
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-bounce: 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
 
 /* ==========================================================================
    2. RESET & BASE
@@ -90,9 +23,7 @@ html, body {
   color: var(--color-text-primary);
   line-height: 1.5;
   overflow-x: hidden;
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(143, 162, 148, 0.05), transparent 30%),
-    radial-gradient(circle at 85% 30%, rgba(196, 164, 132, 0.05), transparent 30%);
+  background-image: var(--gradient-ambient);
   background-attachment: fixed;
 }
 
@@ -114,7 +45,7 @@ a {
   background: var(--color-surface-base);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-strong);
+  background: var(--color-text-tertiary);
   border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -312,19 +243,20 @@ a {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: radial-gradient(circle at center, rgba(143, 162, 148, 0.1) 0%, transparent 70%);
+    background: var(--color-surface-sunken);
   }
   
   .visual-shape {
     position: absolute;
     width: 70vh;
     height: 70vh;
-    background: linear-gradient(135deg, rgba(143, 162, 148, 0.2), rgba(196, 164, 132, 0.1));
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(135deg,
+                var(--color-surface-hover),
+                var(--color-surface-card));
+    border: 1px solid var(--color-border-subtle);
     border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
     animation: morph 12s ease-in-out infinite alternate;
-    box-shadow: inset 0 0 40px rgba(255,255,255,0.05), var(--shadow-glow);
+    box-shadow: var(--shadow-ambient);
   }
 }
 
@@ -349,8 +281,8 @@ a {
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg), var(--shadow-glow);
-  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: var(--shadow-overlay);
+  border-color: var(--color-border-strong);
 }
 
 .card-stat {
@@ -382,7 +314,7 @@ a {
 .form-input {
   width: 100%;
   appearance: none;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: var(--color-surface-card);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   padding: 14px 16px;
@@ -398,9 +330,9 @@ a {
 
 .form-input:focus {
   outline: none;
-  background-color: rgba(0, 0, 0, 0.4);
-  border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 4px rgba(143, 162, 148, 0.15);
+  background-color: var(--color-surface-card);
+  border-color: var(--color-brand-primary);
+  box-shadow: var(--shadow-focus);
 }
 textarea.form-input {
   resize: vertical;
@@ -429,31 +361,33 @@ textarea.form-input {
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--color-brand-success);
+  outline: 2px solid var(--color-brand-primary);
   outline-offset: 2px;
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%), var(--color-surface-hover);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #FFFFFF;
-  box-shadow: var(--shadow-md);
+  background-color: var(--color-brand-primary);
+  border-color: transparent;
+  color: var(--color-text-on-primary);
+  box-shadow: var(--shadow-ambient);
 }
 
 .btn-primary:hover {
-  background: var(--color-surface-hover);
-  border-color: rgba(255,255,255,0.3);
-  box-shadow: var(--shadow-lg);
+  background-color: var(--color-brand-primary);
+  filter: brightness(1.08);
+  box-shadow: var(--shadow-raised);
 }
 
 .btn-success {
-  background-color: var(--color-brand-success);
-  color: #000000;
-  box-shadow: var(--shadow-md);
+  background-color: var(--color-success);
+  color: var(--color-text-on-success);
+  box-shadow: var(--shadow-ambient);
 }
 
 .btn-success:hover {
-  background-color: #A3B7A9;
+  background-color: var(--color-success);
+  filter: brightness(0.94);
+  box-shadow: var(--shadow-raised);
 }
 
 .btn-outline {
@@ -463,8 +397,8 @@ textarea.form-input {
 }
 
 .btn-outline:hover {
-  background-color: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.3);
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
 }
 
 /* Badges */
@@ -498,7 +432,7 @@ th {
   padding: 16px 24px;
   font-weight: 500;
   color: var(--color-text-secondary);
-  background-color: rgba(0,0,0,0.2);
+  background-color: var(--color-surface-sunken);
   border-bottom: 1px solid var(--color-border-subtle);
   white-space: nowrap;
 }
@@ -511,14 +445,14 @@ tr {
   transition: background var(--transition-fast);
 }
 tbody tr:hover {
-  background-color: rgba(255,255,255,0.02);
+  background-color: var(--color-surface-hover);
 }
 
 /* Modal / Overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: var(--color-shadow-tint-strong);
   backdrop-filter: var(--glass-blur-heavy);
   display: flex;
   align-items: center;
@@ -554,8 +488,7 @@ tbody tr:hover {
   z-index: 9999;
   background: var(--color-surface-hover);
   border: 1px solid var(--color-border-strong);
-  backdrop-filter: var(--glass-blur);
-  color: white;
+  color: var(--color-text-primary);
   padding: 12px 24px;
   border-radius: var(--radius-full);
   display: flex;
@@ -574,8 +507,8 @@ tbody tr:hover {
 .spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid rgba(255,255,255,0.1);
-  border-top-color: var(--color-brand-success);
+  border: 2px solid var(--color-border-subtle);
+  border-top-color: var(--color-brand-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -584,7 +517,7 @@ tbody tr:hover {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background: linear-gradient(90deg, var(--color-surface-sunken) 25%, var(--color-surface-hover) 50%, var(--color-surface-sunken) 75%);
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
   border-radius: var(--radius-sm);
@@ -594,64 +527,32 @@ tbody tr:hover {
   100% { background-position: -200% 0; }
 }
 
+
 /* ==========================================================================
-   8. THEME PROVIDERS (DYNAMIC LUXURY PALETTES)
+   BOOT SCREEN — primeiro frame, antes do JS assumir
+   Substitui os estilos inline do index.html.
    ========================================================================== */
-body.theme-melasma {
-  --color-surface-base: #F8F2EE;
-  --color-surface-card: #FFFDFB;
-  --color-surface-hover: #F3EAE3;
-  
-  --color-border-subtle: rgba(122, 58, 16, 0.08);
-  --color-border-strong: rgba(122, 58, 16, 0.18);
-  --color-border-focus: rgba(122, 58, 16, 0.5);
-
-  --color-text-primary: #3D2415; 
-  --color-text-secondary: #6B4E3D;
-  --color-text-tertiary: #927566;
-
-  --color-brand-primary: #7A3A10; 
-  --color-brand-accent: #A35C2E;
-  --color-brand-success: #7A3A10;
-
-  background-color: var(--color-surface-base);
-  color: var(--color-text-primary);
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(122, 58, 16, 0.04), transparent 40%),
-    radial-gradient(circle at 85% 30%, rgba(163, 92, 46, 0.04), transparent 40%);
+.boot-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--space-6);
+  text-align: center;
 }
 
-body.theme-desinflamacao {
-  --color-surface-base: #F4F8F3;
-  --color-surface-card: #FFFFFF;
-  --color-surface-hover: #E9F1E8;
-  
-  --color-border-subtle: rgba(93, 122, 88, 0.08);
-  --color-border-strong: rgba(93, 122, 88, 0.18);
-  --color-border-focus: rgba(93, 122, 88, 0.5);
-
-  --color-text-primary: #2F4730; 
-  --color-text-secondary: #4A634B;
-  --color-text-tertiary: #708A71;
-
-  --color-brand-primary: #5D7A58; 
-  --color-brand-accent: #7F9B79;
-  --color-brand-success: #5D7A58;
-
-  background-color: var(--color-surface-base);
-  color: var(--color-text-primary);
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(93, 122, 88, 0.04), transparent 40%),
-    radial-gradient(circle at 85% 30%, rgba(127, 155, 121, 0.04), transparent 40%);
+.boot-screen-label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  letter-spacing: var(--tracking-wide);
 }
 
-/* Adjustments for light theme form inputs */
-body.theme-melasma .form-input,
-body.theme-desinflamacao .form-input {
-  background-color: rgba(255, 255, 255, 0.6);
-  color: var(--color-text-primary);
-}
-body.theme-melasma .form-input:focus,
-body.theme-desinflamacao .form-input:focus {
-  background-color: rgba(255, 255, 255, 0.9);
+.spinner-lg {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
 }

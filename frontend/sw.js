@@ -1,8 +1,9 @@
-const CACHE_NAME = 'clinical-tracking-v1';
+const CACHE_NAME = 'clinical-tracking-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './src/presentation/tokens.css',
   './src/presentation/index.css',
   './src/presentation/app.js',
   './src/presentation/pages/LoginPage.js',

@@ -1,0 +1,373 @@
+/*
+ * tokens.css — CLINICAL TRACKING · CAMADA DE TOKENS
+ * ============================================================================
+ * Fonte única de verdade para cor, espaço, tipografia, borda, sombra e motion.
+ * Conceito: "Luxo Silencioso" — clínica de Estética Integrativa.
+ *
+ * ARQUITETURA EM 3 CAMADAS
+ *   1. PRIMITIVOS  — hex cru. Nunca usar direto em componentes.
+ *   2. SEMÂNTICOS  — o que a cor SIGNIFICA (--color-text-primary). Use estes.
+ *   3. TEMAS       — Institucional (:root), Melasma, Desinflamação.
+ *
+ * REGRA DE OURO
+ *   Componentes consomem apenas tokens semânticos. Trocar de tema nunca
+ *   exige tocar em componente. Novo protocolo = um bloco novo, nada mais.
+ *
+ * ACESSIBILIDADE (medido, não estimado)
+ *   A paleta do briefing falha WCAG AA em 6 pares quando usada como texto.
+ *   Preservamos os hex do briefing para PREENCHIMENTOS e SUPERFÍCIES (onde
+ *   o critério é 3:1 — WCAG 1.4.11) e derivamos variantes `-ink` (matiz e
+ *   saturação idênticos, luminosidade reduzida) para TEXTO pequeno (4.5:1).
+ *   Diferença visual: imperceptível. Diferença legal: aprovado × reprovado.
+ * ========================================================================= */
+
+:root {
+  /* ==========================================================================
+     1. PRIMITIVOS — paleta bruta (não consumir direto)
+     ========================================================================== */
+
+  /* --- Melasma (briefing, literal) --- */
+  --raw-melasma-primary:    #7A3A10;
+  --raw-melasma-secondary:  #A35C2E;
+  --raw-melasma-bg:         #F8F2EE;
+  --raw-melasma-card:       #FFFDFB;
+  --raw-melasma-text:       #3D2415;
+  --raw-melasma-success:    #6F8F60;
+  --raw-melasma-error:      #C95D5D;
+  /* Inks derivados p/ texto — AA verificado */
+  --raw-melasma-success-ink: #617C54;  /* 4.58:1 sobre card */
+  --raw-melasma-error-ink:   #C44E4E;  /* 4.55:1 sobre card */
+
+  /* --- Desinflamação (briefing, literal) --- */
+  --raw-desinf-primary:     #5D7A58;
+  --raw-desinf-secondary:   #7F9B79;
+  --raw-desinf-bg:          #F4F8F3;
+  --raw-desinf-card:        #FFFFFF;
+  --raw-desinf-text:        #2F4730;
+  --raw-desinf-success:     #4E8F63;
+  --raw-desinf-error:       #C95D5D;
+  /* Inks derivados p/ texto — AA verificado */
+  --raw-desinf-primary-ink:   #5C7957;  /* 4.52:1 sobre fundo */
+  --raw-desinf-secondary-ink: #5F785A;  /* 4.53:1 sobre fundo */
+  --raw-desinf-success-ink:   #47825A;  /* 4.56:1 sobre card  */
+  --raw-desinf-error-ink:     #C55050;  /* 4.53:1 sobre card  */
+
+  /* --- Institucional (neutro-pedra: ponte entre o marrom e o verde) --- */
+  --raw-inst-primary:       #4A443C;
+  --raw-inst-secondary:     #6E655A;
+  --raw-inst-bg:            #F5F4F1;
+  --raw-inst-card:          #FFFFFF;
+  --raw-inst-text:          #2A2622;
+
+  /* ==========================================================================
+     2. ESPAÇAMENTO — base 8px estrita
+     ========================================================================== */
+  --space-1:  4px;   /* meio-passo: só para ajuste óptico */
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-8:  48px;
+  --space-10: 64px;
+  --space-12: 96px;
+
+  /* ==========================================================================
+     3. TIPOGRAFIA
+     ========================================================================== */
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+               Helvetica, Arial, sans-serif;
+
+  --text-xs:   0.75rem;   /* 12px — legendas, metadados          */
+  --text-sm:   0.875rem;  /* 14px — UI, labels, botões           */
+  --text-base: 1rem;      /* 16px — corpo (piso: nunca menor)    */
+  --text-lg:   1.125rem;  /* 18px — subtítulo de card            */
+  --text-xl:   1.25rem;   /* 20px — título de seção              */
+  --text-2xl:  1.5rem;    /* 24px — título de página             */
+  --text-3xl:  1.875rem;  /* 30px — display                      */
+  --text-4xl:  2.25rem;   /* 36px — número herói                 */
+  --text-5xl:  3rem;      /* 48px — métrica dominante            */
+
+  --leading-tight:   1.15;  /* displays  */
+  --leading-snug:    1.35;  /* títulos   */
+  --leading-normal:  1.5;   /* UI        */
+  --leading-relaxed: 1.65;  /* leitura   */
+
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+
+  --weight-light:    300;
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  /* ==========================================================================
+     4. BORDAS — briefing: 12–20px
+     ========================================================================== */
+  --radius-sm:   12px;
+  --radius-md:   16px;
+  --radius-lg:   20px;
+  --radius-pill: 9999px;
+
+  /* ==========================================================================
+     5. SOMBRAS — recalibradas para superfície clara
+     As sombras antigas (preto a 50–80% alpha) foram desenhadas para um tema
+     escuro; sobre fundo claro viram lama cinza. Estas usam a tinta do texto
+     do tema em alpha baixo: a sombra "pertence" à paleta.
+     ========================================================================== */
+  --shadow-ambient: 0 1px 2px var(--color-shadow-tint-weak);
+  --shadow-raised:  0 1px 2px var(--color-shadow-tint-weak),
+                    0 4px 12px -2px var(--color-shadow-tint-weak);
+  --shadow-overlay: 0 8px 24px -6px var(--color-shadow-tint),
+                    0 2px 6px -2px var(--color-shadow-tint-weak);
+  --shadow-modal:   0 24px 48px -12px var(--color-shadow-tint-strong);
+  --shadow-focus:   0 0 0 3px var(--color-focus-ring);
+
+  /* ==========================================================================
+     6. MOTION — briefing: 150–250ms, sutil
+     ========================================================================== */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-decel:    cubic-bezier(0, 0, 0.2, 1);
+  --ease-spring:   cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  --duration-instant: 100ms;
+  --duration-fast:    150ms;
+  --duration-normal:  200ms;
+  --duration-slow:    250ms;
+
+  --transition-fast:   var(--duration-fast) var(--ease-standard);
+  --transition-normal: var(--duration-normal) var(--ease-standard);
+  --transition-spring: var(--duration-slow) var(--ease-spring);
+
+  /* ==========================================================================
+     7. CAMADAS
+     ========================================================================== */
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-modal: 9000;
+  --z-toast: 9500;
+
+  /* ==========================================================================
+     8. TEMA PADRÃO — INSTITUCIONAL
+     Aplica-se a Login e Painel Admin, que não pertencem a um protocolo.
+     ANTES: estas telas caíam no tema escuro do :root enquanto o paciente via
+     um tema claro — o app tinha duas identidades visuais. Agora a base é
+     clara e os protocolos apenas colorem a mesma base. Zero JS envolvido.
+     ========================================================================== */
+  --color-surface-base:   var(--raw-inst-bg);
+  --color-surface-card:   var(--raw-inst-card);
+  --color-surface-sunken: #EDEBE7;
+  --color-surface-hover:  #EAE8E3;
+  --color-surface-active: #E3E0DA;
+
+  --color-text-primary:   var(--raw-inst-text);
+  --color-text-secondary: #5A534B;
+  --color-text-tertiary:  #7D766C;
+  --color-text-on-fill:   #FFFFFF;
+
+  --color-border-subtle:  rgba(42, 38, 34, 0.10);
+  --color-border-strong:  rgba(42, 38, 34, 0.20);
+
+  --color-brand-primary:  var(--raw-inst-primary);
+  --color-brand-accent:   var(--raw-inst-secondary);
+
+  /* Feedback — o institucional herda os matizes do Melasma para continuidade */
+  --color-success:        var(--raw-melasma-success);
+  --color-success-ink:    var(--raw-melasma-success-ink);
+  --color-success-tint:   rgba(111, 143, 96, 0.14);
+  --color-danger:         var(--raw-melasma-error);
+  --color-danger-ink:     var(--raw-melasma-error-ink);
+  --color-danger-tint:    rgba(201, 93, 93, 0.12);
+  --color-warning:        #B07A2E;
+  --color-warning-ink:    #8F6224;
+  --color-warning-tint:   rgba(176, 122, 46, 0.14);
+
+  --color-shadow-tint-weak:   rgba(42, 38, 34, 0.05);
+  --color-shadow-tint:        rgba(42, 38, 34, 0.10);
+  --color-shadow-tint-strong: rgba(42, 38, 34, 0.18);
+  --color-focus-ring:         rgba(74, 68, 60, 0.35);
+
+  --gradient-ambient:
+    radial-gradient(circle at 12% 8%, rgba(74, 68, 60, 0.035), transparent 42%),
+    radial-gradient(circle at 88% 92%, rgba(110, 101, 90, 0.03), transparent 42%);
+}
+
+/* ============================================================================
+   9. TEMA — MELASMA
+   Seletor mantido (`body.theme-melasma`) para não tocar em JS.
+   ========================================================================== */
+body.theme-melasma {
+  --color-surface-base:   var(--raw-melasma-bg);
+  --color-surface-card:   var(--raw-melasma-card);
+  --color-surface-sunken: #F1E7E0;
+  --color-surface-hover:  #F3EAE3;
+  --color-surface-active: #EADFD6;
+
+  --color-text-primary:   var(--raw-melasma-text);
+  --color-text-secondary: #6B4E3D;
+  --color-text-tertiary:  #8A7264;
+  --color-text-on-fill:   #FFFFFF;
+
+  --color-border-subtle:  rgba(122, 58, 16, 0.10);
+  --color-border-strong:  rgba(122, 58, 16, 0.22);
+
+  --color-brand-primary:  var(--raw-melasma-primary);
+  --color-brand-accent:   var(--raw-melasma-secondary);
+
+  --color-success:        var(--raw-melasma-success);
+  --color-success-ink:    var(--raw-melasma-success-ink);
+  --color-success-tint:   rgba(111, 143, 96, 0.14);
+  --color-danger:         var(--raw-melasma-error);
+  --color-danger-ink:     var(--raw-melasma-error-ink);
+  --color-danger-tint:    rgba(201, 93, 93, 0.12);
+  --color-warning:        #B07A2E;
+  --color-warning-ink:    #8F6224;
+  --color-warning-tint:   rgba(176, 122, 46, 0.14);
+
+  --color-shadow-tint-weak:   rgba(61, 36, 21, 0.05);
+  --color-shadow-tint:        rgba(61, 36, 21, 0.10);
+  --color-shadow-tint-strong: rgba(61, 36, 21, 0.18);
+  --color-focus-ring:         rgba(122, 58, 16, 0.35);
+
+  --gradient-ambient:
+    radial-gradient(circle at 12% 8%, rgba(122, 58, 16, 0.04), transparent 42%),
+    radial-gradient(circle at 88% 92%, rgba(163, 92, 46, 0.035), transparent 42%);
+}
+
+/* ============================================================================
+   10. TEMA — DESINFLAMAÇÃO
+   ========================================================================== */
+body.theme-desinflamacao {
+  --color-surface-base:   var(--raw-desinf-bg);
+  --color-surface-card:   var(--raw-desinf-card);
+  --color-surface-sunken: #E9F1E8;
+  --color-surface-hover:  #E9F1E8;
+  --color-surface-active: #DDE9DC;
+
+  --color-text-primary:   var(--raw-desinf-text);
+  --color-text-secondary: #4A634B;
+  --color-text-tertiary:  #6B846C;
+  --color-text-on-fill:   #FFFFFF;
+
+  --color-border-subtle:  rgba(93, 122, 88, 0.12);
+  --color-border-strong:  rgba(93, 122, 88, 0.24);
+
+  /* Preenchimento usa o hex do briefing; texto usa o ink (AA) */
+  --color-brand-primary:  var(--raw-desinf-primary);
+  --color-brand-accent:   var(--raw-desinf-secondary);
+
+  --color-success:        var(--raw-desinf-success);
+  --color-success-ink:    var(--raw-desinf-success-ink);
+  --color-success-tint:   rgba(78, 143, 99, 0.14);
+  --color-danger:         var(--raw-desinf-error);
+  --color-danger-ink:     var(--raw-desinf-error-ink);
+  --color-danger-tint:    rgba(201, 93, 93, 0.12);
+  --color-warning:        #8A6A2A;
+  --color-warning-ink:    #745823;
+  --color-warning-tint:   rgba(138, 106, 42, 0.14);
+
+  --color-shadow-tint-weak:   rgba(47, 71, 48, 0.05);
+  --color-shadow-tint:        rgba(47, 71, 48, 0.10);
+  --color-shadow-tint-strong: rgba(47, 71, 48, 0.18);
+  --color-focus-ring:         rgba(93, 122, 88, 0.38);
+
+  --gradient-ambient:
+    radial-gradient(circle at 12% 8%, rgba(93, 122, 88, 0.045), transparent 42%),
+    radial-gradient(circle at 88% 92%, rgba(127, 155, 121, 0.035), transparent 42%);
+}
+
+/* ============================================================================
+   11. TOKENS DE TEXTO POR CONTEXTO
+   `-ink` é a tinta seca do papel: usada quando a cor VIRA TEXTO.
+   O hex do briefing continua governando tudo que é superfície.
+   ========================================================================== */
+body.theme-desinflamacao {
+  --color-brand-primary-ink: var(--raw-desinf-primary-ink);
+  --color-brand-accent-ink:  var(--raw-desinf-secondary-ink);
+}
+body.theme-melasma {
+  --color-brand-primary-ink: var(--raw-melasma-primary);   /* 7.76:1 — já passa */
+  --color-brand-accent-ink:  var(--raw-melasma-secondary); /* 5.01:1 — já passa */
+}
+:root {
+  --color-brand-primary-ink: var(--raw-inst-primary);
+  --color-brand-accent-ink:  var(--raw-inst-secondary);
+}
+
+/* ============================================================================
+   12. COMPATIBILIDADE — nomes legados → tokens novos
+   ----------------------------------------------------------------------------
+   Onze tokens antigos são consumidos hoje por index.css, pelos dashboards e
+   por um estilo inline no index.html. Renomear tudo de uma vez seria um
+   big-bang com risco de quebra silenciosa. Esta camada mantém os nomes
+   antigos vivos apontando para os novos: o redesign avança por etapas e nada
+   quebra no meio do caminho.
+
+   Herdam do tema automaticamente (são var-of-var), então os aliases funcionam
+   nos três temas sem duplicação.
+
+   DÍVIDA ASSUMIDA: remover este bloco quando as Etapas 3–5 terminarem de
+   migrar os consumidores. Está marcado com DEPRECATED para virar grep fácil.
+   ========================================================================== */
+/* ----------------------------------------------------------------------------
+   TINTAS DE PREENCHIMENTO — qual cor de texto é legível SOBRE cada fill.
+   Não é escolha estética: é o resultado do cálculo de contraste.
+     branco  sobre primária ...... 8.61 / 4.78 / 9.62 (mel / des / inst)  AA
+     #1A1A1A sobre sucesso ....... 4.79 / 4.50                            AA
+     branco  sobre #C95D5D ....... 4.03  REPROVA → fill escurecido p/ #C55050
+   -------------------------------------------------------------------------- */
+:root,
+body.theme-melasma,
+body.theme-desinflamacao {
+  --color-text-on-primary: #FFFFFF;
+  --color-text-on-success: #1A1A1A;
+  --color-text-on-danger:  #FFFFFF;
+  --color-danger-fill:     #C55050; /* branco 4.53:1 — o #C95D5D puro reprova */
+
+  /* DEPRECATED → use --color-success / --color-danger / --color-warning */
+  --color-brand-success:       var(--color-success);
+  --color-brand-success-light: var(--color-success-tint);
+  --color-brand-danger:        var(--color-danger);
+  --color-brand-danger-light:  var(--color-danger-tint);
+  --color-brand-warning:       var(--color-warning);
+  --color-brand-warning-light: var(--color-warning-tint);
+
+  /* DEPRECATED → use --color-focus-ring */
+  --color-border-focus: var(--color-focus-ring);
+
+  /* DEPRECATED → use --radius-pill */
+  --radius-full: var(--radius-pill);
+
+  /* DEPRECATED → use --shadow-ambient / --shadow-raised / --shadow-overlay */
+  --shadow-sm:       var(--shadow-ambient);
+  --shadow-md:       var(--shadow-raised);
+  --shadow-lg:       var(--shadow-overlay);
+  --shadow-xl:       var(--shadow-modal);
+  --shadow-floating: var(--shadow-raised);
+  /* O "glow" pertencia ao tema escuro. Em Luxo Silencioso ele não existe:
+     neutralizado em vez de removido, para não quebrar quem o referencia. */
+  --shadow-glow: 0 0 0 0 transparent;
+
+  /* DEPRECATED → use --transition-spring */
+  --transition-bounce: var(--transition-spring);
+
+  /* Glassmorphism: herdado do tema escuro. Sobre superfícies claras e opacas
+     o backdrop-filter custa GPU sem entregar efeito. Reduzido agora,
+     eliminado dos componentes na Etapa 2. */
+  --glass-blur:       blur(8px);
+  --glass-blur-heavy: blur(16px);
+}
+
+/* ============================================================================
+   13. MOVIMENTO REDUZIDO — piso de qualidade, não item de lista
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
