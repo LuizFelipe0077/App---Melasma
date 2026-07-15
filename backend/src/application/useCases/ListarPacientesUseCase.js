@@ -1,4 +1,6 @@
 import { Paciente } from '../../domain/entities/Paciente.js';
+import { PacienteMapper } from '../../infrastructure/repositories/PacienteMapper.js';
+import { CheckinMapper } from '../../infrastructure/repositories/CheckinMapper.js';
 
 export class ListarPacientesUseCase {
   #pacienteRepository;
@@ -17,11 +19,9 @@ export class ListarPacientesUseCase {
     // 1. Get all patients
     // A proper implementation would use pagination. For MVP, we get all.
     const rows = this.#pacienteRepository.readAllRows();
-    const { PacienteMapper } = import('../../infrastructure/repositories/PacienteMapper.js');
     const pacientes = rows.map(r => PacienteMapper.toDomain(r)).filter(p => p !== null);
 
     const checkinsRows = this.#checkinRepository.readAllRows();
-    const { CheckinMapper } = import('../../infrastructure/repositories/CheckinMapper.js');
     const checkins = checkinsRows.map(r => CheckinMapper.toDomain(r)).filter(c => c !== null);
 
     // 2. Map patient stats

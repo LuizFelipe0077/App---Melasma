@@ -2,6 +2,7 @@ import { UUID } from '../../domain/valueObjects/UUID.js';
 import { CheckIn, StatusCheckin } from '../../domain/entities/CheckIn.js';
 import { CheckinRealizadoEvent } from '../../domain/events/CheckinRealizadoEvent.js';
 import { eventDispatcher } from '../../domain/events/DomainEventDispatcher.js';
+import { Gamificacao } from '../../domain/entities/Gamificacao.js';
 
 export class RegistrarCheckinUseCase {
   #pacienteRepository;
@@ -91,7 +92,6 @@ export class RegistrarCheckinUseCase {
     let gamificacao = this.#gamificacaoRepository.findByPacienteId(pId.value);
     if (!gamificacao) {
       // Re-create gamification profile if not found
-      const { Gamificacao } = import('../../domain/entities/Gamificacao.js');
       gamificacao = new Gamificacao({
         id: UUID.generate(),
         pacienteId: pId,
