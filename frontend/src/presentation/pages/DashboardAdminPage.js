@@ -220,30 +220,34 @@ export class DashboardAdminPage {
     const tbody = document.getElementById('patient-list-tbody');
     
     try {
-      // Mock patient database fetch for administrative views
-      // Under backend sheets implementation, readAllRows gets all patient data
-      const mockPatients = [
-        { id: 'usr_001', nome: 'Mariana Costa', email: 'mariana@email.com', rate: 94 },
-        { id: 'usr_002', nome: 'Ana Julia Paiva', email: 'anajulia@email.com', rate: 52 },
-        { id: 'usr_003', nome: 'Carla Souza', email: 'carla@email.com', rate: 88 }
-      ];
+      const livePatients = await ApiClient.call('listarPacientes');
+
+      // Helper function for XSS sanitization
+      const escapeHTML = (str) => {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      };
 
       // Update counters
-      document.querySelector('#filter-abandon .stat-num').textContent = mockPatients.filter(p => p.rate < 60).length;
-      document.querySelector('#filter-excellent .stat-num').textContent = mockPatients.filter(p => p.rate >= 90).length;
-      document.getElementById('stat-total').querySelector('.stat-num').textContent = mockPatients.length;
+      document.querySelector('#filter-abandon .stat-num').textContent = livePatients.filter(p => p.rate < 60).length;
+      document.querySelector('#filter-excellent .stat-num').textContent = livePatients.filter(p => p.rate >= 90).length;
+      document.getElementById('stat-total').querySelector('.stat-num').textContent = livePatients.length;
 
-      tbody.innerHTML = mockPatients.map(p => {
+      tbody.innerHTML = livePatients.map(p => {
         const rateClass = p.rate >= 90 ? 'text-success' : (p.rate < 60 ? 'text-danger' : 'text-warning');
         return `
-          <tr data-id="${p.id}">
+          <tr data-id="${escapeHTML(p.id)}">
             <td class="patient-name-cell">
-              <span class="patient-name">${p.nome}</span>
-              <span class="patient-email">${p.email}</span>
+              <span class="patient-name">${escapeHTML(p.nome)}</span>
+              <span class="patient-email">${escapeHTML(p.email)}</span>
             </td>
             <td><strong class="${rateClass}">${p.rate}%</strong></td>
             <td>
-              <button class="btn-table-action btn-release-trigger" data-id="${p.id}">Liberar Retroativo</button>
+              <button class="btn-table-action btn-release-trigger" data-id="${escapeHTML(p.id)}">Liberar Retroativo</button>
             </td>
           </tr>
         `;

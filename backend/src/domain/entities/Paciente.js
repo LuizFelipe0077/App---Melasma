@@ -6,7 +6,8 @@ import { PasswordHash } from '../valueObjects/PasswordHash.js';
 export const StatusPaciente = {
   ATIVO: 'ATIVO',
   INATIVO: 'INATIVO',
-  SUSPENSO: 'SUSPENSO'
+  SUSPENSO: 'SUSPENSO',
+  ANONIMIZADO: 'ANONIMIZADO'
 };
 
 /**
@@ -82,6 +83,19 @@ export class Paciente {
 
   suspender() {
     this.#status = StatusPaciente.SUSPENSO;
+  }
+
+  /**
+   * Applies anonymization data to the domain entity.
+   * This is part of the LGPD compliance workflow.
+   * @param {object} dadosAnonimizados 
+   */
+  atualizarDadosParaAnonimizacao({ nome, email, telefone, senhaHash, status }) {
+    this.#nome = nome;
+    this.#email = new Email(email);
+    this.#telefone = new Telefone(telefone);
+    this.#senhaHash = new PasswordHash(senhaHash);
+    this.#status = status;
   }
 
   vincularProtocolo(protocoloId) {

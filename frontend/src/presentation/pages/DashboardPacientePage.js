@@ -100,21 +100,12 @@ export class DashboardPacientePage {
       document.getElementById('lbl-completion-rate').textContent = `${dashboard.taxaAdesaoGeral}%`;
       document.getElementById('progress-bar-fill').style.width = `${dashboard.taxaAdesaoGeral}%`;
 
-      // Update streak (calls server/mock value)
-      // For sandbox, we simulate reading patient properties or gamification XP
+      // Update streak and XP using the new gamificacao payload from generating dashboard
       let streak = 0;
       let xp = 0;
-      try {
-        // Safe check for mock checkins
-        const gamData = await ApiClient.call('registrarCheckin', {
-          suplementoId: 'MOCK_VAL',
-          dataHoraPrescrita: new Date().toISOString()
-        });
-        streak = gamData.streak;
-        xp = gamData.xpTotal;
-      } catch(e) {
-        // Fallback fallback
-        streak = 5;
+      if (dashboard.gamificacao) {
+        streak = dashboard.gamificacao.streakAtual;
+        xp = dashboard.gamificacao.xpTotal;
       }
       document.getElementById('lbl-streak-days').textContent = streak;
 

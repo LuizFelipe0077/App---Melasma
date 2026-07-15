@@ -23,16 +23,22 @@ export class LoginUseCase {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Check for Admin Login (Mocked via central configurations for sandbox, extensible)
-    // Read admin email from config; never hardcode in production
+    // 1. Check for Admin Login
+    // Read admin email from secure config
     const adminEmail = typeof PropertiesService !== 'undefined'
-      ? (PropertiesService.getScriptProperties().getProperty('ADMIN_EMAIL') || 'admin@clinica.com')
-      : 'admin@clinica.com';
-    if (cleanEmail === adminEmail) {
-      // Read admin password hash from secure PropertiesService; fallback for sandbox testing only
+      ? PropertiesService.getScriptProperties().getProperty('ADMIN_EMAIL')
+      : null;
+      
+    if (adminEmail && cleanEmail === adminEmail.toLowerCase().trim()) {
+      // Read admin password hash from secure config
       const adminPassHash = typeof PropertiesService !== 'undefined'
-        ? (PropertiesService.getScriptProperties().getProperty('ADMIN_PASS_HASH') || '$2b$10$G20HW3thPqrvbPNOR3UpYdDdBU6B/XHXBJufYQdqgvSMARr2AYA3b')
-        : '$2b$10$G20HW3thPqrvbPNOR3UpYdDdBU6B/XHXBJufYQdqgvSMARr2AYA3b';
+        ? PropertiesService.getScriptProperties().getProperty('ADMIN_PASS_HASH')
+        : null;
+        
+      if (!adminPassHash) {
+        throw new Error('Ambiente não configurado para acesso administrativo.');
+      }
+      
       const isMatch = await this.#criptografiaService.compare(senha, adminPassHash);
       
       if (!isMatch) {

@@ -56,9 +56,10 @@ export class LGPDComplianceService {
         dataInicio: paciente.dataInicio,
         dataFim: paciente.dataFim
       },
-      historicoCheckins: (checkins || []).map(c => ({
-        data: c.dtPrescrita,
-        realizado: c.dtRealizada,
+      historicoCheckins: historicoCheckins.map(c => ({
+        suplemento: c.suplementoId.value,
+        dataHoraPrescrita: c.dataHoraPrescrita ? c.dataHoraPrescrita.toISOString() : null,
+        dataHoraRealizada: c.dataHoraRealizada ? c.dataHoraRealizada.toISOString() : null,
         status: c.status,
         retroativo: c.retroativo
       })),
@@ -82,21 +83,26 @@ export class LGPDComplianceService {
     if (!pacienteId) throw new Error('ID do paciente é obrigatório para anonimização.');
     if (!motivo || motivo.length < 10) throw new Error('Motivo deve conter no mínimo 10 caracteres.');
 
+    // Busca o paciente atual para preservar os invariants da entidade
     const paciente = await this.#pacienteRepository.findById(pacienteId);
-    if (!paciente) throw new Error('Paciente não encontrado para anonimização.');
+    if (!paciente) {
+      throw new Error('Paciente não encontrado para anonimização.');
+    }
 
-    // Generate irreversible SHA-256 hashes for PII fields
-    const anonSuffix = pacienteId.substring(0, 8);
+    // Aplica os dados anonimizados na entidade
     const dadosAnonimizados = {
-      nome: `Paciente Anonimizado [${anonSuffix}]`,
-      email: `anon_${anonSuffix}@anonimizado.lgpd`,
+      nome: `Anonimizado_${pacienteId.substring(0, 4)}`,
+      email: `${pacienteId}@anonimizado.local`,
       telefone: '00000000000',
-      senhaHash: '$2b$10$ANONIMIZADO_LGPD_COMPLIANCE_000000000000000000000',
-      status: 'ANONIMIZADO',
-      deletedAt: new Date().toISOString()
+      senhaHash: '$2b$10$ANONIMIZADO_LGPD_COMPLIANCE_HASH_DUMMY_VALUE_000',
+      status: 'ANONIMIZADO'
     };
+    
+    // Atualiza as propriedades internas do paciente
+    paciente.atualizarDadosParaAnonimizacao(dadosAnonimizados);
 
-    await this.#pacienteRepository.update(pacienteId, dadosAnonimizados);
+    // Persiste a entidade no repositório, respeitando o contrato
+    await this.#pacienteRepository.update(paciente);
 
     return {
       sucesso: true,

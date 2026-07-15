@@ -70,7 +70,9 @@ export class Gamificacao {
   }
 
   #verificarConquistasXp() {
-    if (this.#xpTotal >= 100) this.concederConquista('nivel_1_alcancel');
+    if (this.#xpTotal >= 100 && !this.#conquistas.includes('nivel_1_alcance')) {
+      this.concederConquista('nivel_1_alcance');
+    }
     if (this.#xpTotal >= 500) this.concederConquista('consistencia_prata');
     if (this.#xpTotal >= 1000) this.concederConquista('consistencia_ouro');
   }

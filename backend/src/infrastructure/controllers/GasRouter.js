@@ -58,6 +58,11 @@ export class GasRouter {
           dataInicio: payload.dataInicio,
           dataFim: payload.dataFim
         });
+      },
+
+      'listarPacientes': async (payload) => {
+        GasRouter._verifyAdminToken(payload.token, services.tokenService);
+        return await useCases.listarPacientesUseCase.execute();
       }
     };
   }

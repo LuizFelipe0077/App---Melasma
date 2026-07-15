@@ -11,6 +11,7 @@ import { CriarPacienteUseCase } from '../../application/useCases/CriarPacienteUs
 import { RegistrarCheckinUseCase } from '../../application/useCases/RegistrarCheckinUseCase.js';
 import { LiberarEdicaoRetroativaUseCase } from '../../application/useCases/LiberarEdicaoRetroativaUseCase.js';
 import { GerarDashboardUseCase } from '../../application/useCases/GerarDashboardUseCase.js';
+import { ListarPacientesUseCase } from '../../application/useCases/ListarPacientesUseCase.js';
 
 /**
  * AppModule (IoC Container)
@@ -72,6 +73,12 @@ class Container {
       this.useCases.gerarDashboardUseCase = new GerarDashboardUseCase(
         s.pacienteRepository, 
         s.protocoloRepository, 
+        s.checkinRepository,
+        s.gamificacaoRepository
+      );
+
+      this.useCases.listarPacientesUseCase = new ListarPacientesUseCase(
+        s.pacienteRepository,
         s.checkinRepository
       );
 

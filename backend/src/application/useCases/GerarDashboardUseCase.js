@@ -5,11 +5,13 @@ export class GerarDashboardUseCase {
   #pacienteRepository;
   #protocoloRepository;
   #checkinRepository;
+  #gamificacaoRepository;
 
-  constructor(pacienteRepository, protocoloRepository, checkinRepository) {
+  constructor(pacienteRepository, protocoloRepository, checkinRepository, gamificacaoRepository) {
     this.#pacienteRepository = pacienteRepository;
     this.#protocoloRepository = protocoloRepository;
     this.#checkinRepository = checkinRepository;
+    this.#gamificacaoRepository = gamificacaoRepository;
   }
 
   /**
@@ -95,6 +97,10 @@ export class GerarDashboardUseCase {
       ? Math.round((totalRealizado / totalPrescrito) * 100) 
       : 0;
 
+    const gamificacao = this.#gamificacaoRepository 
+      ? await this.#gamificacaoRepository.findByPacienteId(pacienteId)
+      : null;
+
     return {
       pacienteNome: paciente.nome,
       taxaAdesaoGeral,
@@ -102,7 +108,12 @@ export class GerarDashboardUseCase {
       totalConsumido,
       totalAtrasado,
       totalPerdido,
-      historicoAgrupadoPorSuplemento
+      historicoAgrupadoPorSuplemento,
+      gamificacao: gamificacao ? {
+        xpTotal: gamificacao.xpTotal,
+        streakAtual: gamificacao.streakAtual,
+        conquistas: gamificacao.conquistas
+      } : null
     };
   }
 }
