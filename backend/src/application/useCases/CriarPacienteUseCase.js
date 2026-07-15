@@ -16,21 +16,21 @@ export class CriarPacienteUseCase {
    * @param {object} input DTO (nome, email, telefone, dataInicio, dataFim)
    * @returns {Promise<object>} output DTO (id, email, senhaTemporaria)
    */
-  async execute({ nome, email, telefone, dataInicio, dataFim }) {
+  execute({ nome, email, telefone, dataInicio, dataFim }) {
     // 1. Basic validation
     if (!nome || !email || !telefone || !dataInicio || !dataFim) {
       throw new Error('Todos os campos obrigatórios devem ser fornecidos.');
     }
 
     // 2. Uniqueness check
-    const existingPaciente = await this.#pacienteRepository.findByEmail(email);
+    const existingPaciente = this.#pacienteRepository.findByEmail(email);
     if (existingPaciente) {
       throw new Error('Já existe um paciente cadastrado com este e-mail.');
     }
 
     // 3. Generate secure temporary password
     const tempPassword = this.#generateTempPassword();
-    const senhaHashString = await this.#criptografiaService.hash(tempPassword);
+    const senhaHashString = this.#criptografiaService.hash(tempPassword);
 
     // 4. Instantiate Patient via Domain Factory (handles VOs and domain validations)
     const paciente = PacienteFactory.createNew({
@@ -43,7 +43,7 @@ export class CriarPacienteUseCase {
     });
 
     // 5. Persist patient to storage
-    await this.#pacienteRepository.save(paciente);
+    this.#pacienteRepository.save(paciente);
 
     // 6. Dispatch Domain Event for collateral actions (like sending email)
     eventDispatcher.dispatch(new PacienteCriadoEvent(paciente, tempPassword));

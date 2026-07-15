@@ -28,7 +28,7 @@ export class GoogleSheetsRepository {
    * Performance: CacheService layer with 5-min TTL reduces Sheets API calls by ~60%.
    * @returns {Promise<Array<Array<any>>>}
    */
-  async readAllRows() {
+  readAllRows() {
     if (typeof SpreadsheetApp === 'undefined') {
       return memoryDB.get(this.#tabName) || [];
     }
@@ -89,7 +89,7 @@ export class GoogleSheetsRepository {
    * @param {string} idColumnValue Unique identifier value to update existing, or append if new
    * @param {number} idColIndex 0-indexed column position of the ID
    */
-  async writeRow(rowArray, idColumnValue, idColIndex = 0) {
+  writeRow(rowArray, idColumnValue, idColIndex = 0) {
     if (typeof SpreadsheetApp === 'undefined') {
       const data = memoryDB.get(this.#tabName);
       const index = data.findIndex(row => row[idColIndex] === idColumnValue);

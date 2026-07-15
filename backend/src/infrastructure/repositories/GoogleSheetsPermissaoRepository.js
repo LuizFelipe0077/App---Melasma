@@ -5,8 +5,8 @@ export class GoogleSheetsPermissaoRepository extends GoogleSheetsRepository {
     super('PermissoesRetroativas');
   }
 
-  async findActiveByPacienteId(pacienteId) {
-    const rows = await this.readAllRows();
+  findActiveByPacienteId(pacienteId) {
+    const rows = this.readAllRows();
     const now = new Date().getTime();
     
     // Find a permission for the patient that has status ACTIVE and has not expired
@@ -31,7 +31,7 @@ export class GoogleSheetsPermissaoRepository extends GoogleSheetsRepository {
     };
   }
 
-  async save(permissao) {
+  save(permissao) {
     const row = [
       permissao.id,
       permissao.pacienteId,
@@ -42,6 +42,6 @@ export class GoogleSheetsPermissaoRepository extends GoogleSheetsRepository {
       permissao.status,
       permissao.createdAt
     ];
-    await this.writeRow(row, permissao.id, 0);
+    this.writeRow(row, permissao.id, 0);
   }
 }

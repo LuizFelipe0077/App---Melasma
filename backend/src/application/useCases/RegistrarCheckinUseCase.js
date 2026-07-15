@@ -20,21 +20,21 @@ export class RegistrarCheckinUseCase {
    * Registers a supplement check-in for a patient.
    * @param {object} input DTO (pacienteId, suplementoId, dataHoraPrescrita, dataHoraRealizada, forceRetroactive)
    */
-  async execute({ pacienteId, suplementoId, dataHoraPrescrita, dataHoraRealizada, forceRetroactive = false }) {
+  execute({ pacienteId, suplementoId, dataHoraPrescrita, dataHoraRealizada, forceRetroactive = false }) {
     const pId = new UUID(pacienteId);
     const sId = new UUID(suplementoId);
     const datePrescrita = new Date(dataHoraPrescrita);
     const dateRealizada = dataHoraRealizada ? new Date(dataHoraRealizada) : new Date();
 
     // 1. Fetch and validate patient status
-    const paciente = await this.#pacienteRepository.findById(pId.value);
+    const paciente = this.#pacienteRepository.findById(pId.value);
     if (!paciente) {
       throw new Error('Paciente não encontrado.');
     }
     paciente.validarStatusPermissaoLogin(); // Throws if INACTIVE or SUSPENDED
 
     // 2. Fetch supplement to verify it exists
-    const suplemento = await this.#protocoloRepository.findSuplementoById(sId.value);
+    const suplemento = this.#protocoloRepository.findSuplementoById(sId.value);
     if (!suplemento) {
       throw new Error('Suplemento não cadastrado no protocolo.');
     }
@@ -42,7 +42,7 @@ export class RegistrarCheckinUseCase {
     // 3. Prevent duplicate check-ins for the same prescribed slot
     const intervalStart = new Date(datePrescrita.getTime() - 60000);
     const intervalEnd = new Date(datePrescrita.getTime() + 60000);
-    const existingCheckins = await this.#checkinRepository.findByInterval(pId.value, intervalStart, intervalEnd);
+    const existingCheckins = this.#checkinRepository.findByInterval(pId.value, intervalStart, intervalEnd);
     
     const duplicate = existingCheckins.some(c => c.suplementoId.equals(sId));
     if (duplicate) {
@@ -72,13 +72,13 @@ export class RegistrarCheckinUseCase {
     checkin.confirmIngestion(dateRealizada, 60, forceRetroactive);
 
     // 7. Save Check-in
-    await this.#checkinRepository.save(checkin);
+    this.#checkinRepository.save(checkin);
 
     // 8. Update Gamification aggregates
-    let gamificacao = await this.#gamificacaoRepository.findByPacienteId(pId.value);
+    let gamificacao = this.#gamificacaoRepository.findByPacienteId(pId.value);
     if (!gamificacao) {
       // Re-create gamification profile if not found
-      const { Gamificacao } = await import('../../domain/entities/Gamificacao.js');
+      const { Gamificacao } = import('../../domain/entities/Gamificacao.js');
       gamificacao = new Gamificacao({
         id: UUID.generate(),
         pacienteId: pId,
@@ -87,7 +87,7 @@ export class RegistrarCheckinUseCase {
         maiorStreak: 0,
         conquistas: []
       });
-      await this.#gamificacaoRepository.save(gamificacao);
+      this.#gamificacaoRepository.save(gamificacao);
     }
 
     gamificacao.creditarCheckin(checkin.status);
@@ -98,7 +98,7 @@ export class RegistrarCheckinUseCase {
       gamificacao.resetarStreak();
     }
 
-    await this.#gamificacaoRepository.update(gamificacao);
+    this.#gamificacaoRepository.update(gamificacao);
 
     // 9. Dispatch event
     eventDispatcher.dispatch(new CheckinRealizadoEvent(checkin));

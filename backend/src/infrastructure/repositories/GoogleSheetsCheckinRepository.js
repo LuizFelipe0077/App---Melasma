@@ -8,21 +8,21 @@ export class GoogleSheetsCheckinRepository extends GoogleSheetsRepository {
     super('Check_Ins');
   }
 
-  async findById(id) {
-    const rows = await this.readAllRows();
+  findById(id) {
+    const rows = this.readAllRows();
     const row = rows.find(r => r[SheetColumns.CHECKIN.ID] === id);
     if (!row) return null;
     return CheckinMapper.toDomain(row);
   }
 
-  async findByPacienteId(pacienteId) {
-    const rows = await this.readAllRows();
+  findByPacienteId(pacienteId) {
+    const rows = this.readAllRows();
     const matches = rows.filter(r => r[SheetColumns.CHECKIN.PACIENTE_ID] === pacienteId);
     return matches.map(r => CheckinMapper.toDomain(r));
   }
 
-  async findByInterval(pacienteId, startDate, endDate) {
-    const rows = await this.readAllRows();
+  findByInterval(pacienteId, startDate, endDate) {
+    const rows = this.readAllRows();
     const startMs = startDate.getTime();
     const endMs = endDate.getTime();
 
@@ -35,12 +35,12 @@ export class GoogleSheetsCheckinRepository extends GoogleSheetsRepository {
     return matches.map(r => CheckinMapper.toDomain(r));
   }
 
-  async save(checkin) {
+  save(checkin) {
     const row = CheckinMapper.toRow(checkin);
-    await this.writeRow(row, checkin.id.value, 0);
+    this.writeRow(row, checkin.id.value, 0);
   }
 
-  async update(checkin) {
-    await this.save(checkin);
+  update(checkin) {
+    this.save(checkin);
   }
 }

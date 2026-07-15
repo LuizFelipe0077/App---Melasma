@@ -12,16 +12,16 @@ export class GasRouter {
     const services = AppModule.getServices();
 
     return {
-      'login': async (payload) => {
-        return await useCases.loginUseCase.execute({
+      'login': (payload) => {
+        return useCases.loginUseCase.execute({
           email: payload.email,
           senha: payload.rawSenha // Passed separately to avoid logging
         });
       },
 
-      'criarPaciente': async (payload) => {
+      'criarPaciente': (payload) => {
         GasRouter._verifyAdminToken(payload.token, services.tokenService);
-        return await useCases.criarPacienteUseCase.execute({
+        return useCases.criarPacienteUseCase.execute({
           nome: payload.nome,
           email: payload.email,
           telefone: payload.telefone,
@@ -30,9 +30,9 @@ export class GasRouter {
         });
       },
 
-      'registrarCheckin': async (payload) => {
+      'registrarCheckin': (payload) => {
         const user = GasRouter._verifyToken(payload.token, services.tokenService);
-        return await useCases.registrarCheckinUseCase.execute({
+        return useCases.registrarCheckinUseCase.execute({
           pacienteId: user.role === 'ADMIN' ? payload.pacienteId : user.userId,
           suplementoId: payload.suplementoId,
           dataHoraPrescrita: payload.dataHoraPrescrita,
@@ -41,9 +41,9 @@ export class GasRouter {
         });
       },
 
-      'liberarEdicaoRetroativa': async (payload) => {
+      'liberarEdicaoRetroativa': (payload) => {
         const adminUser = GasRouter._verifyAdminToken(payload.token, services.tokenService);
-        return await useCases.liberarEdicaoRetroativaUseCase.execute({
+        return useCases.liberarEdicaoRetroativaUseCase.execute({
           pacienteId: payload.pacienteId,
           horasLiberadas: Number(payload.horasLiberadas),
           motivo: payload.motivo,
@@ -51,18 +51,18 @@ export class GasRouter {
         });
       },
 
-      'gerarDashboard': async (payload) => {
+      'gerarDashboard': (payload) => {
         const authUser = GasRouter._verifyToken(payload.token, services.tokenService);
-        return await useCases.gerarDashboardUseCase.execute({
+        return useCases.gerarDashboardUseCase.execute({
           pacienteId: authUser.role === 'ADMIN' ? payload.pacienteId : authUser.userId,
           dataInicio: payload.dataInicio,
           dataFim: payload.dataFim
         });
       },
 
-      'listarPacientes': async (payload) => {
+      'listarPacientes': (payload) => {
         GasRouter._verifyAdminToken(payload.token, services.tokenService);
-        return await useCases.listarPacientesUseCase.execute();
+        return useCases.listarPacientesUseCase.execute();
       }
     };
   }
@@ -70,7 +70,7 @@ export class GasRouter {
   /**
    * Executa uma ação roteada.
    */
-  static async route(action, payload) {
+  static route(action, payload) {
     const handlers = GasRouter.getHandlers();
     const handler = handlers[action];
     
@@ -78,7 +78,7 @@ export class GasRouter {
       throw new Error(`Ação desconhecida ou inválida: ${action}`);
     }
 
-    return await handler(payload);
+    return handler(payload);
   }
 
   // Helpers de verificação de token transferidos para cá para manter o controlador limpo.

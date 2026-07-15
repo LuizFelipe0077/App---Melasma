@@ -13,7 +13,7 @@ export class LiberarEdicaoRetroativaUseCase {
    * Concedes retroactive check-in permission for a patient.
    * @param {object} input DTO (pacienteId, horasLiberadas, motivo, operadorId)
    */
-  async execute({ pacienteId, horasLiberadas, motivo, operadorId }) {
+  execute({ pacienteId, horasLiberadas, motivo, operadorId }) {
     if (!pacienteId || !horasLiberadas || !motivo || !operadorId) {
       throw new Error('Todos os campos de entrada são obrigatórios.');
     }
@@ -26,7 +26,7 @@ export class LiberarEdicaoRetroativaUseCase {
       throw new Error('Motivo clínico da liberação deve possuir pelo menos 10 caracteres.');
     }
 
-    const paciente = await this.#pacienteRepository.findById(pacienteId);
+    const paciente = this.#pacienteRepository.findById(pacienteId);
     if (!paciente) {
       throw new Error('Paciente não encontrado.');
     }
@@ -47,7 +47,7 @@ export class LiberarEdicaoRetroativaUseCase {
       createdAt: new Date().toISOString()
     };
 
-    await this.#permissaoRepository.save(permissao);
+    this.#permissaoRepository.save(permissao);
 
     return {
       permissaoId: permissao.id,

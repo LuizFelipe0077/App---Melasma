@@ -13,15 +13,15 @@ export class ListarPacientesUseCase {
    * Retrieves a list of all patients and their general adherence rate.
    * @returns {Promise<Array>} Array of patient objects for the dashboard
    */
-  async execute() {
+  execute() {
     // 1. Get all patients
     // A proper implementation would use pagination. For MVP, we get all.
-    const rows = await this.#pacienteRepository.readAllRows();
-    const { PacienteMapper } = await import('../../infrastructure/repositories/PacienteMapper.js');
+    const rows = this.#pacienteRepository.readAllRows();
+    const { PacienteMapper } = import('../../infrastructure/repositories/PacienteMapper.js');
     const pacientes = rows.map(r => PacienteMapper.toDomain(r)).filter(p => p !== null);
 
-    const checkinsRows = await this.#checkinRepository.readAllRows();
-    const { CheckinMapper } = await import('../../infrastructure/repositories/CheckinMapper.js');
+    const checkinsRows = this.#checkinRepository.readAllRows();
+    const { CheckinMapper } = import('../../infrastructure/repositories/CheckinMapper.js');
     const checkins = checkinsRows.map(r => CheckinMapper.toDomain(r)).filter(c => c !== null);
 
     // 2. Map patient stats

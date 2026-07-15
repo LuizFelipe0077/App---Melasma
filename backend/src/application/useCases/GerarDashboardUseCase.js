@@ -18,7 +18,7 @@ export class GerarDashboardUseCase {
    * Generates consolidation metrics for a patient.
    * @param {object} input DTO (pacienteId, dataInicio, dataFim)
    */
-  async execute({ pacienteId, dataInicio, dataFim }) {
+  execute({ pacienteId, dataInicio, dataFim }) {
     const pId = new UUID(pacienteId);
     const start = new Date(dataInicio);
     const end = new Date(dataFim);
@@ -30,7 +30,7 @@ export class GerarDashboardUseCase {
       throw new Error('Período de consulta do dashboard não pode exceder 90 dias.');
     }
 
-    const paciente = await this.#pacienteRepository.findById(pId.value);
+    const paciente = this.#pacienteRepository.findById(pId.value);
     if (!paciente) {
       throw new Error('Paciente não encontrado.');
     }
@@ -47,13 +47,13 @@ export class GerarDashboardUseCase {
       };
     }
 
-    const protocolo = await this.#protocoloRepository.findById(paciente.protocoloId.value);
+    const protocolo = this.#protocoloRepository.findById(paciente.protocoloId.value);
     if (!protocolo) {
       throw new Error('Protocolo clínico associado não encontrado.');
     }
 
     // Fetch all check-ins in the interval
-    const checkins = await this.#checkinRepository.findByInterval(pId.value, start, end);
+    const checkins = this.#checkinRepository.findByInterval(pId.value, start, end);
 
     // Calculate prescribed slots in the period
     let totalPrescrito = 0;
@@ -98,7 +98,7 @@ export class GerarDashboardUseCase {
       : 0;
 
     const gamificacao = this.#gamificacaoRepository 
-      ? await this.#gamificacaoRepository.findByPacienteId(pacienteId)
+      ? this.#gamificacaoRepository.findByPacienteId(pacienteId)
       : null;
 
     return {

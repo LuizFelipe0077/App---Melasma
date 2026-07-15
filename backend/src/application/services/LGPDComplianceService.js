@@ -33,14 +33,14 @@ export class LGPDComplianceService {
    * @param {string} pacienteId
    * @returns {Promise<object>} Complete data export package
    */
-  async exportarDadosPessoais(pacienteId) {
+  exportarDadosPessoais(pacienteId) {
     if (!pacienteId) throw new Error('ID do paciente é obrigatório para exportação LGPD.');
 
-    const paciente = await this.#pacienteRepository.findById(pacienteId);
+    const paciente = this.#pacienteRepository.findById(pacienteId);
     if (!paciente) throw new Error('Paciente não encontrado para exportação de dados.');
 
-    const checkins = await this.#checkinRepository.findByPacienteId(pacienteId);
-    const gamificacao = await this.#gamificacaoRepository.findByPacienteId(pacienteId);
+    const checkins = this.#checkinRepository.findByPacienteId(pacienteId);
+    const gamificacao = this.#gamificacaoRepository.findByPacienteId(pacienteId);
 
     return {
       metadados: {
@@ -79,12 +79,12 @@ export class LGPDComplianceService {
    * @param {string} motivo - Justification for anonymization
    * @returns {Promise<object>} Confirmation of anonymization
    */
-  async anonimizarPaciente(pacienteId, motivo) {
+  anonimizarPaciente(pacienteId, motivo) {
     if (!pacienteId) throw new Error('ID do paciente é obrigatório para anonimização.');
     if (!motivo || motivo.length < 10) throw new Error('Motivo deve conter no mínimo 10 caracteres.');
 
     // Busca o paciente atual para preservar os invariants da entidade
-    const paciente = await this.#pacienteRepository.findById(pacienteId);
+    const paciente = this.#pacienteRepository.findById(pacienteId);
     if (!paciente) {
       throw new Error('Paciente não encontrado para anonimização.');
     }
@@ -102,7 +102,7 @@ export class LGPDComplianceService {
     paciente.atualizarDadosParaAnonimizacao(dadosAnonimizados);
 
     // Persiste a entidade no repositório, respeitando o contrato
-    await this.#pacienteRepository.update(paciente);
+    this.#pacienteRepository.update(paciente);
 
     return {
       sucesso: true,

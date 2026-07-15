@@ -8,27 +8,27 @@ export class GoogleSheetsPacienteRepository extends GoogleSheetsRepository {
     super('Pacientes');
   }
 
-  async findById(id) {
-    const rows = await this.readAllRows();
+  findById(id) {
+    const rows = this.readAllRows();
     const row = rows.find(r => r[SheetColumns.PACIENTE.ID] === id);
     if (!row) return null;
     return PacienteMapper.toDomain(row);
   }
 
-  async findByEmail(email) {
-    const rows = await this.readAllRows();
+  findByEmail(email) {
+    const rows = this.readAllRows();
     const cleanEmail = email.trim().toLowerCase();
     const row = rows.find(r => r[SheetColumns.PACIENTE.EMAIL] && r[SheetColumns.PACIENTE.EMAIL].trim().toLowerCase() === cleanEmail);
     if (!row) return null;
     return PacienteMapper.toDomain(row);
   }
 
-  async save(paciente) {
+  save(paciente) {
     const row = PacienteMapper.toRow(paciente);
-    await this.writeRow(row, paciente.id.value, 0);
+    this.writeRow(row, paciente.id.value, 0);
   }
 
-  async update(paciente) {
-    await this.save(paciente);
+  update(paciente) {
+    this.save(paciente);
   }
 }

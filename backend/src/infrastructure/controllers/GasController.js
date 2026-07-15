@@ -10,7 +10,7 @@ import { AuditLogger } from '../../shared/logging/AuditLogger.js';
  * Refatorado na Sprint 2 para delegar responsabilidades, focando apenas
  * em parsing HTTP, sanitização, controle de taxa e roteamento genérico.
  */
-export async function handlePost(e) {
+export function handlePost(e) {
   let responseData;
   let statusCode = 200;
 
@@ -46,9 +46,8 @@ export async function handlePost(e) {
       }
 
       try {
-        // Pass the raw password via a hidden property to bypass sanitization which might corrupt it
         payload.rawSenha = rawPayload.senha;
-        responseData = await GasRouter.route(action, payload);
+        responseData = GasRouter.route(action, payload);
         
         RateLimiter.recordSuccess(loginKey);
         AuditLogger.logSecurityEvent('SECURITY_LOGIN_SUCCESS', loginKey);
@@ -59,7 +58,7 @@ export async function handlePost(e) {
       }
     } else {
       // Roteamento padrão (Sem ser login)
-      responseData = await GasRouter.route(action, payload);
+      responseData = GasRouter.route(action, payload);
     }
 
   } catch (error) {

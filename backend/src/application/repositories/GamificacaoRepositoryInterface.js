@@ -3,15 +3,15 @@
  * Interface (Contract) for Gamificacao stats persistence operations.
  */
 export class GamificacaoRepositoryInterface {
-  async findByPacienteId(pacienteId) {
+  findByPacienteId(pacienteId) {
     throw new Error('Método findByPacienteId não implementado.');
   }
 
-  async save(gamificacao) {
+  save(gamificacao) {
     throw new Error('Método save não implementado.');
   }
 
-  async update(gamificacao) {
+  update(gamificacao) {
     throw new Error('Método update não implementado.');
   }
 }

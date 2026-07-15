@@ -16,7 +16,7 @@ export class LoginUseCase {
    * @param {object} input DTO (email, senha)
    * @returns {Promise<object>} output DTO (token, role, userId, nome)
    */
-  async execute({ email, senha }) {
+  execute({ email, senha }) {
     if (!email || !senha) {
       throw new Error('E-mail e senha são obrigatórios.');
     }
@@ -39,7 +39,7 @@ export class LoginUseCase {
         throw new Error('Ambiente não configurado para acesso administrativo.');
       }
       
-      const isMatch = await this.#criptografiaService.compare(senha, adminPassHash);
+      const isMatch = this.#criptografiaService.compare(senha, adminPassHash);
       
       if (!isMatch) {
         // Security: Use generic message to prevent user enumeration (CWE-204)
@@ -56,7 +56,7 @@ export class LoginUseCase {
     }
 
     // 2. Patient Login Flow
-    const paciente = await this.#pacienteRepository.findByEmail(cleanEmail);
+    const paciente = this.#pacienteRepository.findByEmail(cleanEmail);
     if (!paciente) {
       // Security: Use generic message to prevent user enumeration (CWE-204)
       throw new Error('Credenciais inválidas.');
@@ -66,7 +66,7 @@ export class LoginUseCase {
     paciente.validarStatusPermissaoLogin();
 
     // Verify Password
-    const passwordMatch = await this.#criptografiaService.compare(senha, paciente.senhaHash.value);
+    const passwordMatch = this.#criptografiaService.compare(senha, paciente.senhaHash.value);
     if (!passwordMatch) {
       // Security: Use generic message identical to 'email not found' (CWE-204)
       throw new Error('Credenciais inválidas.');

@@ -9,8 +9,8 @@ export class GoogleSheetsGamificacaoRepository extends GoogleSheetsRepository {
     super('Gamificacao');
   }
 
-  async findByPacienteId(pacienteId) {
-    const rows = await this.readAllRows();
+  findByPacienteId(pacienteId) {
+    const rows = this.readAllRows();
     const row = rows.find(r => r[SheetColumns.GAMIFICACAO.PACIENTE_ID] === pacienteId);
     if (!row) return null;
 
@@ -31,7 +31,7 @@ export class GoogleSheetsGamificacaoRepository extends GoogleSheetsRepository {
     });
   }
 
-  async save(gamificacao) {
+  save(gamificacao) {
     const row = [];
     row[SheetColumns.GAMIFICACAO.ID] = gamificacao.id.value;
     row[SheetColumns.GAMIFICACAO.PACIENTE_ID] = gamificacao.pacienteId.value;
@@ -39,10 +39,10 @@ export class GoogleSheetsGamificacaoRepository extends GoogleSheetsRepository {
     row[SheetColumns.GAMIFICACAO.STREAK_ATUAL] = gamificacao.streakAtual;
     row[SheetColumns.GAMIFICACAO.MAIOR_STREAK] = gamificacao.maiorStreak;
     row[SheetColumns.GAMIFICACAO.CONQUISTAS] = JSON.stringify(gamificacao.conquistas);
-    await this.writeRow(row, gamificacao.id.value, 0);
+    this.writeRow(row, gamificacao.id.value, 0);
   }
 
-  async update(gamificacao) {
-    await this.save(gamificacao);
+  update(gamificacao) {
+    this.save(gamificacao);
   }
 }

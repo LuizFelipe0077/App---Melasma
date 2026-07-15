@@ -12,13 +12,13 @@ export class GoogleSheetsProtocoloRepository extends GoogleSheetsRepository {
     this.#suplementosSheet = new GoogleSheetsRepository('Suplementos');
   }
 
-  async findById(id) {
-    const pRows = await this.readAllRows();
+  findById(id) {
+    const pRows = this.readAllRows();
     const pRow = pRows.find(r => r[0] === id);
     if (!pRow) return null;
 
     // Load linked supplements
-    const sRows = await this.#suplementosSheet.readAllRows();
+    const sRows = this.#suplementosSheet.readAllRows();
     const supMatches = sRows.filter(r => r[1] === id);
 
     const suplementos = supMatches.map(r => {
@@ -47,8 +47,8 @@ export class GoogleSheetsProtocoloRepository extends GoogleSheetsRepository {
     });
   }
 
-  async findSuplementoById(suplementoId) {
-    const sRows = await this.#suplementosSheet.readAllRows();
+  findSuplementoById(suplementoId) {
+    const sRows = this.#suplementosSheet.readAllRows();
     const r = sRows.find(row => row[0] === suplementoId);
     if (!r) return null;
 
@@ -69,14 +69,14 @@ export class GoogleSheetsProtocoloRepository extends GoogleSheetsRepository {
     });
   }
 
-  async save(protocolo) {
+  save(protocolo) {
     // 1. Save Protocol info
     const pRow = [
       protocolo.id.value,
       protocolo.nome,
       protocolo.duracaoDias
     ];
-    await this.writeRow(pRow, protocolo.id.value, 0);
+    this.writeRow(pRow, protocolo.id.value, 0);
 
     // 2. Save each supplement
     for (const suplemento of protocolo.suplementos) {
@@ -88,12 +88,12 @@ export class GoogleSheetsProtocoloRepository extends GoogleSheetsRepository {
         JSON.stringify(suplemento.horarios),
         suplemento.instrucoes
       ];
-      await this.#suplementosSheet.writeRow(sRow, suplemento.id.value, 0);
+      this.#suplementosSheet.writeRow(sRow, suplemento.id.value, 0);
     }
   }
 
-  async findSuplementosByProtocoloId(protocoloId) {
-    const p = await this.findById(protocoloId);
+  findSuplementosByProtocoloId(protocoloId) {
+    const p = this.findById(protocoloId);
     return p ? p.suplementos : [];
   }
 }
