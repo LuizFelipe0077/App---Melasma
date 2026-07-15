@@ -17,6 +17,10 @@ import { RegistrarCheckinUseCase } from '../src/application/useCases/RegistrarCh
 import { LoginUseCase } from '../src/application/useCases/LoginUseCase.js';
 
 async function runTests() {
+  process.env.ADMIN_EMAIL = 'admin@clinica.com';
+  const cryptoService = new BcryptGasService();
+  process.env.ADMIN_PASS_HASH = cryptoService.hash('admin123');
+
   console.log('🧪 INICIANDO SUÍTE DE TESTES UNITÁRIOS DO DOMÍNIO E APLICAÇÃO\n');
   let passCount = 0;
   let failCount = 0;

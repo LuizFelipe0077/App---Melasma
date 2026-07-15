@@ -23,7 +23,7 @@ export class DashboardAdminPage {
               <button class="btn btn-outline justify-start border-transparent bg-hover font-medium">
                 <span class="opacity-70 mr-2">👥</span> Pacientes Ativos
               </button>
-              <button class="btn btn-outline justify-start border-transparent font-medium" onclick="alert('Configurações em breve')">
+              <button id="btn-admin-config" class="btn btn-outline justify-start border-transparent font-medium">
                 <span class="opacity-70 mr-2">⚙️</span> Configurações (GAS)
               </button>
             </nav>
@@ -185,6 +185,10 @@ export class DashboardAdminPage {
 
     document.getElementById('btn-admin-logout-sidebar')?.addEventListener('click', handleLogout);
     document.getElementById('btn-admin-logout-mobile')?.addEventListener('click', handleLogout);
+
+    document.getElementById('btn-admin-config')?.addEventListener('click', () => {
+      alert('Configurações do Google Apps Script serão integradas nesta área na próxima atualização.');
+    });
 
     const regModal = document.getElementById('register-modal');
     const openRegBtn = document.getElementById('btn-open-register-modal');

@@ -22,10 +22,10 @@ export class DashboardPacientePage {
             </div>
             
             <nav class="flex flex-col gap-2">
-              <button class="btn btn-outline justify-start border-transparent bg-hover font-medium">
+              <button id="btn-paciente-tratamento" class="btn btn-outline justify-start border-transparent bg-hover font-medium">
                 <span class="opacity-70 mr-2">📊</span> Meu Tratamento
               </button>
-              <button class="btn btn-outline justify-start border-transparent font-medium" onclick="alert('Histórico será liberado em breve.')">
+              <button id="btn-paciente-historico" class="btn btn-outline justify-start border-transparent font-medium">
                 <span class="opacity-70 mr-2">🗓️</span> Histórico
               </button>
             </nav>
@@ -107,6 +107,14 @@ export class DashboardPacientePage {
     };
     document.getElementById('btn-logout-sidebar')?.addEventListener('click', handleLogout);
     document.getElementById('btn-logout-mobile')?.addEventListener('click', handleLogout);
+
+    document.getElementById('btn-paciente-tratamento')?.addEventListener('click', () => {
+      alert('Você já está visualizando seu tratamento ativo.');
+    });
+
+    document.getElementById('btn-paciente-historico')?.addEventListener('click', () => {
+      alert('O histórico consolidado das suas doses está sendo processado e será liberado em breve.');
+    });
 
     await this.#loadDashboardData();
   }

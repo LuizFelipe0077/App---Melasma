@@ -40,7 +40,10 @@ export class LoginPage {
 
                 <div class="form-group mb-8">
                   <label for="password" class="form-label">Sua senha de acesso</label>
-                  <input type="password" id="password" class="form-input" required placeholder="••••••••" autocomplete="current-password">
+                  <div class="relative">
+                    <input type="password" id="password" class="form-input" required placeholder="••••••••" autocomplete="current-password" style="padding-right: 48px;">
+                    <button type="button" id="btn-toggle-password" class="absolute cursor-pointer flex items-center justify-center" style="right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 18px; color: var(--color-text-secondary); width: 32px; height: 32px; padding: 0;" aria-label="Mostrar ou ocultar senha">👁️</button>
+                  </div>
                 </div>
 
                 <div id="login-error-msg" class="alert alert-error hidden mb-6"></div>
@@ -86,6 +89,14 @@ export class LoginPage {
     const btnSubmit = document.getElementById('btn-login-submit');
     const btnText = btnSubmit.querySelector('.btn-text');
     const btnSpinner = btnSubmit.querySelector('.btn-spinner');
+
+    // Toggle password visibility listener
+    const btnTogglePassword = document.getElementById('btn-toggle-password');
+    btnTogglePassword.addEventListener('click', () => {
+      const isPassword = passwordInput.getAttribute('type') === 'password';
+      passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+      btnTogglePassword.textContent = isPassword ? '🙈' : '👁️';
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

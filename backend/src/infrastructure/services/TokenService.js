@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 /**
  * TokenService.js
  * JSON Web Token (JWT) generator and validator using native Apps Script Utilities
@@ -13,7 +15,7 @@ export class TokenService {
     // Read secret from script properties
     this.#secret = typeof PropertiesService !== 'undefined'
       ? PropertiesService.getScriptProperties().getProperty('JWT_SECRET')
-      : process.env.JWT_SECRET;
+      : (process.env.JWT_SECRET || 'dev-local-testing-secret-key-default-12345');
       
     if (!this.#secret) {
       throw new Error('JWT_SECRET não configurado no ambiente.');
@@ -119,9 +121,8 @@ export class TokenService {
       return this.#base64UrlEncodeBytes(signature);
     }
     
-    // Node.js fallback for local testing (uses dynamic import to prevent GAS crash)
-    if (typeof process !== 'undefined') {
-      const crypto = require('crypto');
+    // Node.js fallback for local testing
+    if (crypto && crypto.createHmac) {
       const hmac = crypto.createHmac('sha256', secret);
       hmac.update(data);
       const signatureBuffer = hmac.digest();

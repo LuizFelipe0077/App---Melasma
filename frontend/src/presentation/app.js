@@ -15,6 +15,13 @@ class App {
   }
 
   initialize() {
+    // Register Service Worker for PWA (Offline shell caching)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
     // Listen for auth expiration events from ApiClient
     window.addEventListener('app:authExpired', () => {
       sessionStorage.clear();

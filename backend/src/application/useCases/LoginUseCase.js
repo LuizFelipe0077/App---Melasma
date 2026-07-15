@@ -27,13 +27,13 @@ export class LoginUseCase {
     // Read admin email from secure config
     const adminEmail = typeof PropertiesService !== 'undefined'
       ? PropertiesService.getScriptProperties().getProperty('ADMIN_EMAIL')
-      : null;
+      : process.env.ADMIN_EMAIL;
       
     if (adminEmail && cleanEmail === adminEmail.toLowerCase().trim()) {
       // Read admin password hash from secure config
       const adminPassHash = typeof PropertiesService !== 'undefined'
         ? PropertiesService.getScriptProperties().getProperty('ADMIN_PASS_HASH')
-        : null;
+        : process.env.ADMIN_PASS_HASH;
         
       if (!adminPassHash) {
         throw new Error('Ambiente não configurado para acesso administrativo.');

@@ -1,6 +1,7 @@
 {
   "name": "clinical-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Backend Serverless API for Google Apps Script",
   "main": "src/app/main.js",
   "scripts": {

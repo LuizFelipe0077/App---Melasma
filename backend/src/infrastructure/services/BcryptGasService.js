@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 /**
  * BcryptGasService.js
  * Cryptography Service adapted for Google Apps Script.
@@ -116,21 +118,27 @@ export class BcryptGasService {
    * Secure SHA-256 wrapper using Google Apps Script native Utilities (returns Base64).
    */
   #sha256(input) {
-    if (typeof Utilities === 'undefined') {
-      throw new Error('Ambiente não suportado: Utilites.computeDigest é exigido.');
+    if (typeof Utilities !== 'undefined') {
+      const rawDigest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, input, Utilities.Charset.UTF_8);
+      return Utilities.base64Encode(rawDigest);
     }
-    const rawDigest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, input, Utilities.Charset.UTF_8);
-    return Utilities.base64Encode(rawDigest);
+    if (crypto && crypto.createHash) {
+      return crypto.createHash('sha256').update(input).digest('base64');
+    }
+    throw new Error('Ambiente não suportado: Utilites.computeDigest ou crypto.createHash é exigido.');
   }
 
   /**
    * Secure SHA-256 wrapper using Google Apps Script native Utilities (returns Hex).
    */
   #sha256Hex(input) {
-    if (typeof Utilities === 'undefined') {
-      throw new Error('Ambiente não suportado: Utilites.computeDigest é exigido.');
+    if (typeof Utilities !== 'undefined') {
+      const rawDigest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, input, Utilities.Charset.UTF_8);
+      return rawDigest.map(b => (b < 0 ? b + 256 : b).toString(16).padStart(2, '0')).join('');
     }
-    const rawDigest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, input, Utilities.Charset.UTF_8);
-    return rawDigest.map(b => (b < 0 ? b + 256 : b).toString(16).padStart(2, '0')).join('');
+    if (crypto && crypto.createHash) {
+      return crypto.createHash('sha256').update(input).digest('hex');
+    }
+    throw new Error('Ambiente não suportado: Utilites.computeDigest ou crypto.createHash é exigido.');
   }
 }
