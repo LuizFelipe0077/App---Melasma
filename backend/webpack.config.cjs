@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  mode: 'production',
+  mode: 'none',
   entry: './src/app/main.js',
   output: {
     filename: 'bundle.js',
@@ -32,6 +32,7 @@ module.exports = {
     ]
   },
   optimization: {
-    minimize: false
+    minimize: false,
+    usedExports: false
   }
 };

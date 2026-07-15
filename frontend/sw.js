@@ -41,19 +41,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
 
-  // Check if it's a request to Google Apps Script (API base endpoint)
-  if (url.hostname.includes('script.google.com') || e.request.method === 'POST') {
-    // API calls should never be cached - Network Only
-    e.respondWith(
-      fetch(e.request).catch(() => {
-        return new Response(JSON.stringify({
-          statusCode: 503,
-          data: { message: 'Você está offline. Verifique sua conexão para salvar alterações.' }
-        }), {
-          headers: { 'Content-Type': 'application/json' }
-        });
-      })
-    );
+  // Skip intercepting POST requests or external API calls completely (bypass service worker)
+  if (e.request.method !== 'GET' || url.hostname.includes('script.google.com')) {
     return;
   }
 
