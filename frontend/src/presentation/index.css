@@ -593,3 +593,65 @@ tbody tr:hover {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ==========================================================================
+   8. THEME PROVIDERS (DYNAMIC LUXURY PALETTES)
+   ========================================================================== */
+body.theme-melasma {
+  --color-surface-base: #F8F2EE;
+  --color-surface-card: #FFFDFB;
+  --color-surface-hover: #F3EAE3;
+  
+  --color-border-subtle: rgba(122, 58, 16, 0.08);
+  --color-border-strong: rgba(122, 58, 16, 0.18);
+  --color-border-focus: rgba(122, 58, 16, 0.5);
+
+  --color-text-primary: #3D2415; 
+  --color-text-secondary: #6B4E3D;
+  --color-text-tertiary: #927566;
+
+  --color-brand-primary: #7A3A10; 
+  --color-brand-accent: #A35C2E;
+  --color-brand-success: #7A3A10;
+
+  background-color: var(--color-surface-base);
+  color: var(--color-text-primary);
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(122, 58, 16, 0.04), transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(163, 92, 46, 0.04), transparent 40%);
+}
+
+body.theme-desinflamacao {
+  --color-surface-base: #F4F8F3;
+  --color-surface-card: #FFFFFF;
+  --color-surface-hover: #E9F1E8;
+  
+  --color-border-subtle: rgba(93, 122, 88, 0.08);
+  --color-border-strong: rgba(93, 122, 88, 0.18);
+  --color-border-focus: rgba(93, 122, 88, 0.5);
+
+  --color-text-primary: #2F4730; 
+  --color-text-secondary: #4A634B;
+  --color-text-tertiary: #708A71;
+
+  --color-brand-primary: #5D7A58; 
+  --color-brand-accent: #7F9B79;
+  --color-brand-success: #5D7A58;
+
+  background-color: var(--color-surface-base);
+  color: var(--color-text-primary);
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(93, 122, 88, 0.04), transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(127, 155, 121, 0.04), transparent 40%);
+}
+
+/* Adjustments for light theme form inputs */
+body.theme-melasma .form-input,
+body.theme-desinflamacao .form-input {
+  background-color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-primary);
+}
+body.theme-melasma .form-input:focus,
+body.theme-desinflamacao .form-input:focus {
+  background-color: rgba(255, 255, 255, 0.9);
+}

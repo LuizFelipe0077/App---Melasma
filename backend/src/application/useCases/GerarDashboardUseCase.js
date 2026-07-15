@@ -1,6 +1,48 @@
 import { UUID } from '../../domain/valueObjects/UUID.js';
 import { StatusCheckin } from '../../domain/entities/CheckIn.js';
 
+function isDayActive(currentDate, dataInicio, diasSemana) {
+  if (!Array.isArray(diasSemana) || diasSemana.includes('todos') || diasSemana.includes('Todos os dias')) return true;
+  
+  const weekdayMap = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const dayStr = weekdayMap[currentDate.getDay()];
+  
+  // Specific weekdays
+  if (diasSemana.includes(dayStr)) return true;
+  
+  // Weekends
+  if (diasSemana.includes('finais_de_semana') || diasSemana.includes('Finais de semana')) {
+    const dayNum = currentDate.getDay();
+    if (dayNum === 0 || dayNum === 6) return true;
+  }
+  
+  // Alternate days
+  if (diasSemana.includes('dias_alternados') || diasSemana.includes('Dias alternados')) {
+    const diffTime = Math.abs(currentDate.getTime() - dataInicio.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays % 2 === 0) return true;
+  }
+  
+  return false;
+}
+
+function countPrescribedDoses(suplemento, start, end) {
+  let count = 0;
+  const current = new Date(start);
+  const sStart = new Date(suplemento.dataInicio);
+  const sEnd = new Date(suplemento.dataFim);
+
+  while (current <= end) {
+    if (current >= sStart && current <= sEnd) {
+      if (isDayActive(current, sStart, suplemento.diasSemana)) {
+        count += suplemento.horarios.length;
+      }
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return count;
+}
+
 export class GerarDashboardUseCase {
   #pacienteRepository;
   #protocoloRepository;
@@ -60,9 +102,7 @@ export class GerarDashboardUseCase {
     const historicoAgrupadoPorSuplemento = [];
 
     for (const suplemento of protocolo.suplementos) {
-      const timesPerDay = suplemento.horarios.length;
-      // Doses prescribed for this supplement = days * timesPerDay
-      const dosesPrescritas = diffDays * timesPerDay;
+      const dosesPrescritas = countPrescribedDoses(suplemento, start, end);
       totalPrescrito += dosesPrescritas;
 
       // Filter check-ins for this supplement
@@ -80,6 +120,10 @@ export class GerarDashboardUseCase {
         suplementoId: suplemento.id.value,
         nome: suplemento.nome,
         dosagem: suplemento.dosagem,
+        horarios: suplemento.horarios,
+        instrucoes: suplemento.instrucoes,
+        diasSemana: suplemento.diasSemana,
+        tipo: suplemento.tipo,
         prescrito: dosesPrescritas,
         consumido: consumidos,
         atrasado: atrasados,
@@ -101,6 +145,15 @@ export class GerarDashboardUseCase {
       ? this.#gamificacaoRepository.findByPacienteId(pacienteId)
       : null;
 
+    const rawCheckins = checkins.map(c => ({
+      id: c.id.value,
+      suplementoId: c.suplementoId.value,
+      dataHoraPrescrita: c.dataHoraPrescrita.toISOString(),
+      dataHoraRealizada: c.dataHoraRealizada ? c.dataHoraRealizada.toISOString() : null,
+      status: c.status,
+      retroativo: c.retroativo
+    }));
+
     return {
       pacienteNome: paciente.nome,
       taxaAdesaoGeral,
@@ -109,6 +162,7 @@ export class GerarDashboardUseCase {
       totalAtrasado,
       totalPerdido,
       historicoAgrupadoPorSuplemento,
+      rawCheckins,
       gamificacao: gamificacao ? {
         xpTotal: gamificacao.xpTotal,
         streakAtual: gamificacao.streakAtual,

@@ -29,6 +29,8 @@ export class PacienteMapper {
     row[SheetColumns.PACIENTE.STATUS] = paciente.status;
     row[SheetColumns.PACIENTE.DATA_INICIO] = formatDatePtBr(paciente.dataInicio);
     row[SheetColumns.PACIENTE.DATA_FIM] = formatDatePtBr(paciente.dataFim);
+    row[SheetColumns.PACIENTE.OBSERVACOES] = paciente.observacoes;
+    row[SheetColumns.PACIENTE.PROTOCOLO_NOME] = paciente.protocoloNome;
     return row;
   }
 
@@ -48,7 +50,9 @@ export class PacienteMapper {
       protocoloId: row[SheetColumns.PACIENTE.PROTOCOLO_ID] || null,
       status: row[SheetColumns.PACIENTE.STATUS],
       dataInicio: row[SheetColumns.PACIENTE.DATA_INICIO],
-      dataFim: row[SheetColumns.PACIENTE.DATA_FIM]
+      dataFim: row[SheetColumns.PACIENTE.DATA_FIM],
+      observacoes: row[SheetColumns.PACIENTE.OBSERVACOES] || '',
+      protocoloNome: row[SheetColumns.PACIENTE.PROTOCOLO_NOME] || 'Melasma'
     });
   }
 }

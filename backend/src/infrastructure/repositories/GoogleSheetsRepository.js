@@ -202,4 +202,49 @@ export class GoogleSheetsRepository {
       lock.releaseLock();
     }
   }
+
+  /**
+   * Appends multiple rows in a single batch operation.
+   * @param {Array<Array<any>>} rowsArrayOfArrays
+   */
+  writeRowsBatch(rowsArrayOfArrays) {
+    if (rowsArrayOfArrays.length === 0) return;
+
+    if (typeof SpreadsheetApp === 'undefined') {
+      const data = memoryDB.get(this.#tabName);
+      for (const row of rowsArrayOfArrays) {
+        data.push(row);
+      }
+      return;
+    }
+
+    const lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(15000);
+      
+      const ss = SpreadsheetApp.openById(SystemConfiguration.DATABASE_SPREADSHEET_ID);
+      let sheet = ss.getSheetByName(this.#tabName);
+      if (!sheet) {
+        sheet = ss.insertSheet(this.#tabName);
+      }
+
+      const startRow = sheet.getLastRow() + 1;
+      const numRows = rowsArrayOfArrays.length;
+      const numCols = rowsArrayOfArrays[0].length;
+      
+      sheet.getRange(startRow, 1, numRows, numCols).setValues(rowsArrayOfArrays);
+      
+      SpreadsheetApp.flush();
+      
+      if (typeof CacheService !== 'undefined') {
+        try {
+          CacheService.getScriptCache().remove(`sheet_${this.#tabName}`);
+        } catch (e) {}
+      }
+    } catch (error) {
+      throw new Error(`Erro ao gravar lote na planilha [${this.#tabName}]: ${error.message}`);
+    } finally {
+      lock.releaseLock();
+    }
+  }
 }

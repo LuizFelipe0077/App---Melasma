@@ -98,7 +98,12 @@ async function runTests() {
   await test('Caso de Uso - CriarPacienteUseCase com Eventos de Domínio', async () => {
     const pacienteRepo = new GoogleSheetsPacienteRepository();
     const cryptoService = new BcryptGasService();
-    const useCase = new CriarPacienteUseCase(pacienteRepo, cryptoService);
+    const useCase = new CriarPacienteUseCase(
+      pacienteRepo,
+      cryptoService,
+      new GoogleSheetsProtocoloRepository(),
+      new GoogleSheetsCheckinRepository()
+    );
 
     const result = await useCase.execute({
       nome: 'Mariana Costa',
@@ -127,7 +132,12 @@ async function runTests() {
     const tokenService = new TokenService();
     
     // Register patient first
-    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService);
+    const registerUC = new CriarPacienteUseCase(
+      pacienteRepo,
+      cryptoService,
+      new GoogleSheetsProtocoloRepository(),
+      new GoogleSheetsCheckinRepository()
+    );
     const regResult = await registerUC.execute({
       nome: 'Carla Souza',
       email: 'carla@email.com',
@@ -164,7 +174,12 @@ async function runTests() {
   await test('Caso de Uso - EditarPacienteUseCase (Edição e Alteração de Senha)', async () => {
     const pacienteRepo = new GoogleSheetsPacienteRepository();
     const cryptoService = new BcryptGasService();
-    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService);
+    const registerUC = new CriarPacienteUseCase(
+      pacienteRepo,
+      cryptoService,
+      new GoogleSheetsProtocoloRepository(),
+      new GoogleSheetsCheckinRepository()
+    );
     const editarUC = new EditarPacienteUseCase(pacienteRepo, cryptoService);
     const loginUC = new LoginUseCase(pacienteRepo, cryptoService, new TokenService());
 
@@ -230,7 +245,12 @@ async function runTests() {
   await test('Caso de Uso - ExcluirPacienteUseCase', async () => {
     const pacienteRepo = new GoogleSheetsPacienteRepository();
     const cryptoService = new BcryptGasService();
-    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService);
+    const registerUC = new CriarPacienteUseCase(
+      pacienteRepo,
+      cryptoService,
+      new GoogleSheetsProtocoloRepository(),
+      new GoogleSheetsCheckinRepository()
+    );
     const excluirUC = new ExcluirPacienteUseCase(pacienteRepo);
 
     const reg = await registerUC.execute({

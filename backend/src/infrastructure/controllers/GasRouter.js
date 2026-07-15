@@ -27,7 +27,10 @@ export class GasRouter {
           telefone: payload.telefone,
           senha: payload.senha,
           dataInicio: payload.dataInicio,
-          dataFim: payload.dataFim
+          dataFim: payload.dataFim,
+          protocoloNome: payload.protocoloNome,
+          observacoes: payload.observacoes,
+          suplementos: payload.suplementos
         });
       },
 

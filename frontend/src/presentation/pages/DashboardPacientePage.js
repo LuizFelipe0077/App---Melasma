@@ -11,7 +11,14 @@ export class DashboardPacientePage {
   }
 
   async render() {
-    this.#appContainer.innerHTML = `
+    const protocol = sessionStorage.getItem('USER_PROTOCOL') || 'Melasma';
+    document.body.className = ''; // Reset
+    if (protocol.toLowerCase().includes('desinflamacao') || protocol.toLowerCase().includes('desinflamação')) {
+      document.body.classList.add('theme-desinflamacao');
+    } else {
+      document.body.classList.add('theme-melasma');
+    }
+
     this.#appContainer.innerHTML = `
       <div class="app-shell">
         <!-- Sidebar Navigation -->
@@ -56,7 +63,7 @@ export class DashboardPacientePage {
             <div class="bento-grid mt-6">
               
               <!-- Bento Item: Gamification/Stats -->
-              <section class="card justify-center" style="background: linear-gradient(135deg, var(--color-brand-accent), #B39270); color: white; border: none; min-height: 200px;">
+              <section class="card justify-center" style="background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-accent)); color: white; border: none; min-height: 200px;">
                 <p class="text-sm font-medium mb-2" style="opacity: 0.9;">Adesão Geral ao Protocolo</p>
                 <div class="flex items-baseline gap-3 mb-4">
                   <h2 id="lbl-completion-rate" class="font-light" style="font-size: 3.5rem; line-height: 1;">--%</h2>
@@ -72,7 +79,7 @@ export class DashboardPacientePage {
 
               <!-- Bento Item: Today's Tasks -->
               <section class="card" style="grid-column: 1 / -1; grid-row: span 2;">
-                <h3 class="text-h1 text-lg mb-4">Doses Prescritas para Hoje</h3>
+                <h3 class="text-h1 text-lg mb-4" style="color: var(--color-text-primary);">Doses Prescritas para Hoje</h3>
                 <div id="doses-container" class="flex flex-col gap-3">
                   <div class="skeleton w-full" style="height: 80px;"></div>
                   <div class="skeleton w-full" style="height: 80px;"></div>
@@ -81,7 +88,7 @@ export class DashboardPacientePage {
 
               <!-- Bento Item: Weekly Calendar -->
               <section class="card">
-                <h3 class="text-h1 text-lg mb-4">Evolução Semanal</h3>
+                <h3 class="text-h1 text-lg mb-4" style="color: var(--color-text-primary);">Evolução Semanal</h3>
                 <div id="weekly-calendar-slots" class="flex justify-between items-center h-full">
                   <!-- Dynamically rendered -->
                   <div class="skeleton w-full" style="height: 40px;"></div>
@@ -102,6 +109,7 @@ export class DashboardPacientePage {
 
     // Bind logout immediately for both buttons
     const handleLogout = () => {
+      document.body.className = '';
       sessionStorage.clear();
       this.#onLogout();
     };
@@ -152,64 +160,82 @@ export class DashboardPacientePage {
       }
       document.getElementById('lbl-streak-days').textContent = streak;
 
-      // Render supplements mock listings
-      // For demonstration of UI layout, if no real protocol exist, mock standard Melasma care protocol
-      const mockSuplementos = [
-        { id: 'sup_01', nome: 'Melasma Care (Antioxidante)', dosagem: '1 Cápsula', horarios: ['08:00'], instrucoes: 'Tomar junto ao café da manhã' },
-        { id: 'sup_02', nome: 'Magnésio Inositol', dosagem: '1 Sachê', horarios: ['22:00'], instrucoes: 'Diluir em 150ml de água morna à noite' }
-      ];
-
-      // Retrieve checkins
-      const checkins = dashboard.historicoAgrupadoPorSuplemento || [];
-
+      // Retrieve supplements from protocol
+      const activeSuplementos = dashboard.historicoAgrupadoPorSuplemento || [];
+      const rawCheckins = dashboard.rawCheckins || [];
+      
       dosesContainer.innerHTML = '';
       
       const binders = [];
 
-      for (const sup of mockSuplementos) {
-        // Mock a checkin date structure for today
-        const prescribedToday = new Date();
-        const timeParts = sup.horarios[0].split(':');
-        prescribedToday.setHours(Number(timeParts[0]), Number(timeParts[1]), 0, 0);
+      if (activeSuplementos.length === 0) {
+        dosesContainer.innerHTML = '<p class="text-xs text-tertiary text-center py-6">Nenhum suplemento prescrito para o seu tratamento.</p>';
+      } else {
+        const todayStr = new Date().toDateString();
 
-        // Find if check-in is done in returned dataset
-        const checkinInfo = checkins.find(c => c.suplementoId === sup.id) || { status: 'PENDENTE' };
-        
-        const cardObj = CardSuplemento.render(
-          sup,
-          {
-            suplementoId: sup.id,
-            status: checkinInfo.prescrito && checkinInfo.consumido > 0 ? 'CONCLUIDO' : 'PENDENTE',
-            dataHoraPrescrita: prescribedToday,
-            dataHoraRealizada: new Date()
-          },
-          // On Check-in Action
-          async (supplement, checkin) => {
-            try {
-              const res = await ApiClient.call('registrarCheckin', {
-                suplementoId: supplement.id,
-                dataHoraPrescrita: checkin.dataHoraPrescrita.toISOString()
-              });
-              
-              // Trigger temporary undo toast
-              this.#triggerUndoToast(supplement, checkin);
-              
-              // Reload
-              await this.#loadDashboardData();
-            } catch (err) {
-              alert(err.message);
-            }
-          },
-          // On Revert Ingestion Click
-          async (supplement, checkin) => {
-            this.#triggerUndoToast(supplement, checkin, true);
+        for (const sup of activeSuplementos) {
+          for (const slot of sup.horarios) {
+            const prescribedTime = new Date();
+            const [hours, minutes] = slot.split(':');
+            prescribedTime.setHours(Number(hours), Number(minutes), 0, 0);
+
+            // Find matching check-in in the database
+            const match = rawCheckins.find(c => {
+              if (c.suplementoId !== sup.suplementoId) return false;
+              const cDate = new Date(c.dataHoraPrescrita);
+              return cDate.toDateString() === todayStr &&
+                     cDate.getHours() === Number(hours) &&
+                     cDate.getMinutes() === Number(minutes);
+            });
+
+            const checkinInfo = match ? {
+              id: match.id,
+              status: match.status,
+              dataHoraPrescrita: prescribedTime,
+              dataHoraRealizada: match.dataHoraRealizada ? new Date(match.dataHoraRealizada) : null
+            } : {
+              status: 'PENDENTE',
+              dataHoraPrescrita: prescribedTime,
+              dataHoraRealizada: null
+            };
+
+            const cardObj = CardSuplemento.render(
+              {
+                id: sup.suplementoId,
+                nome: sup.nome,
+                dosagem: sup.dosagem,
+                instrucoes: sup.instrucoes
+              },
+              checkinInfo,
+              // On Check-in Action
+              async (supplement, chk) => {
+                try {
+                  await ApiClient.call('registrarCheckin', {
+                    suplementoId: supplement.id,
+                    dataHoraPrescrita: chk.dataHoraPrescrita.toISOString()
+                  });
+                  
+                  // Trigger temporary undo toast
+                  this.#triggerUndoToast(supplement, chk);
+                  
+                  // Reload
+                  await this.#loadDashboardData();
+                } catch (err) {
+                  alert(err.message);
+                }
+              },
+              // On Revert Ingestion Click
+              async (supplement, chk) => {
+                this.#triggerUndoToast(supplement, chk, true);
+              }
+            );
+
+            const cardWrapper = document.createElement('div');
+            cardWrapper.innerHTML = cardObj.html;
+            dosesContainer.appendChild(cardWrapper.firstElementChild);
+            binders.push(cardObj.bindEvents);
           }
-        );
-
-        const cardWrapper = document.createElement('div');
-        cardWrapper.innerHTML = cardObj.html;
-        dosesContainer.appendChild(cardWrapper.firstElementChild);
-        binders.push(cardObj.bindEvents);
+        }
       }
 
       // Run event binders

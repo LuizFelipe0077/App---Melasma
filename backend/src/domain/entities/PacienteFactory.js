@@ -29,7 +29,7 @@ export class PacienteFactory {
    * Creates a new Paciente instance with a random UUID.
    * Typically used when registering a new patient.
    */
-  static createNew({ nome, email, telefone, senhaHashString, dataInicio, dataFim }) {
+  static createNew({ nome, email, telefone, senhaHashString, dataInicio, dataFim, protocoloNome, observacoes }) {
     const id = UUID.generate();
     const emailVO = new Email(email);
     const telefoneVO = new Telefone(telefone);
@@ -47,14 +47,16 @@ export class PacienteFactory {
       protocoloId: null,
       status: StatusPaciente.ATIVO,
       dataInicio: start,
-      dataFim: end
+      dataFim: end,
+      protocoloNome: protocoloNome || 'Melasma',
+      observacoes: observacoes || ''
     });
   }
 
   /**
    * Reconstitutes an existing Paciente from persistent storage data (Google Sheets row).
    */
-  static reconstitute({ id, nome, email, telefone, senhaHash, protocoloId, status, dataInicio, dataFim }) {
+  static reconstitute({ id, nome, email, telefone, senhaHash, protocoloId, status, dataInicio, dataFim, protocoloNome, observacoes }) {
     return new Paciente({
       id: new UUID(id),
       nome,
@@ -64,7 +66,9 @@ export class PacienteFactory {
       protocoloId: protocoloId ? new UUID(protocoloId) : null,
       status,
       dataInicio: safeParseDate(dataInicio),
-      dataFim: safeParseDate(dataFim)
+      dataFim: safeParseDate(dataFim),
+      protocoloNome: protocoloNome || 'Melasma',
+      observacoes: observacoes || ''
     });
   }
 }

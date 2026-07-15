@@ -40,6 +40,12 @@ export class GoogleSheetsCheckinRepository extends GoogleSheetsRepository {
     this.writeRow(row, checkin.id.value, 0);
   }
 
+  saveAll(checkins) {
+    if (!checkins || checkins.length === 0) return;
+    const rows = checkins.map(c => CheckinMapper.toRow(c));
+    this.writeRowsBatch(rows);
+  }
+
   update(checkin) {
     this.save(checkin);
   }

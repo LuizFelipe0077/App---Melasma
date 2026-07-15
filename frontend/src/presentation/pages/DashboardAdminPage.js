@@ -102,42 +102,169 @@ export class DashboardAdminPage {
 
         <!-- Register Paciente Modal -->
         <div id="register-modal" class="modal-overlay">
-          <div class="card modal-content" style="max-width: 500px;">
-            <h3 class="text-h1 text-xl mb-2">Cadastrar Novo Paciente</h3>
-            <p class="text-p mb-5">Preencha os dados básicos para gerar as credenciais de acesso do paciente.</p>
+          <div class="card modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-h1 text-xl" id="wizard-title">Cadastrar Novo Paciente (Etapa 1/5)</h3>
+              <span class="text-xs font-semibold px-2 py-1 rounded bg-hover" id="wizard-progress-badge" style="color: var(--color-text-primary);">20%</span>
+            </div>
             
             <form id="register-patient-form">
-              <div class="form-group">
-                <label for="reg-nome" class="form-label">Nome Completo</label>
-                <input type="text" id="reg-nome" class="form-input" required placeholder="Ex: Mariana Costa">
-              </div>
-              <div class="form-group">
-                <label for="reg-email" class="form-label">E-mail (Login)</label>
-                <input type="email" id="reg-email" class="form-input" required placeholder="Ex: mariana@email.com">
-              </div>
-              <div class="form-group">
-                <label for="reg-telefone" class="form-label">WhatsApp</label>
-                <input type="tel" id="reg-telefone" class="form-input" required placeholder="Ex: (11) 99999-9999">
-              </div>
-              <div class="form-group">
-                <label for="reg-senha" class="form-label">Senha de Acesso (Manual)</label>
-                <input type="password" id="reg-senha" class="form-input" required placeholder="Ex: Maria@2026">
-              </div>
-              
-              <div class="grid grid-cols-2 gap-4">
+              <!-- Etapa 1: Dados Pessoais -->
+              <div id="step-1-container" class="wizard-step-container">
+                <h4 class="font-semibold text-sm mb-3 text-secondary">Etapa 1: Dados Pessoais & Acesso</h4>
                 <div class="form-group">
-                  <label for="reg-datainicio" class="form-label">Início do Protocolo</label>
-                  <input type="date" id="reg-datainicio" class="form-input" required>
+                  <label for="reg-nome" class="form-label">Nome Completo</label>
+                  <input type="text" id="reg-nome" class="form-input" placeholder="Ex: Mariana Costa">
                 </div>
                 <div class="form-group">
-                  <label for="reg-datafim" class="form-label">Fim (Previsão)</label>
-                  <input type="date" id="reg-datafim" class="form-input" required>
+                  <label for="reg-email" class="form-label">E-mail (Login)</label>
+                  <input type="email" id="reg-email" class="form-input" placeholder="Ex: mariana@email.com">
+                </div>
+                <div class="form-group">
+                  <label for="reg-telefone" class="form-label">WhatsApp</label>
+                  <input type="tel" id="reg-telefone" class="form-input" placeholder="Ex: (11) 99999-9999">
+                </div>
+                <div class="form-group">
+                  <label for="reg-senha" class="form-label">Senha de Acesso (Manual)</label>
+                  <input type="password" id="reg-senha" class="form-input" placeholder="Ex: Maria@2026">
+                </div>
+                <div class="form-group">
+                  <label for="reg-observacoes" class="form-label">Observações Administrativas (Opcional)</label>
+                  <textarea id="reg-observacoes" class="form-input" style="min-height: 80px;" placeholder="Histórico clínico breve do paciente..."></textarea>
                 </div>
               </div>
 
-              <div class="flex gap-3 justify-end mt-4">
+              <!-- Etapa 2: Protocolo -->
+              <div id="step-2-container" class="wizard-step-container hidden">
+                <h4 class="font-semibold text-sm mb-3 text-secondary">Etapa 2: Escolha do Protocolo Clínico</h4>
+                <div class="form-group">
+                  <label for="reg-protocolo" class="form-label">Protocolo Base</label>
+                  <select id="reg-protocolo" class="form-input" style="background: rgba(0,0,0,0.2); border: 1px solid var(--color-border-strong); color: var(--color-text-primary);">
+                    <option value="Melasma" style="background: var(--color-surface-base);">MELASMA (Identidade Luxuosa Terracota)</option>
+                    <option value="Desinflamação" style="background: var(--color-surface-base);">DESINFLAMAÇÃO (Identidade Herbal Wellness)</option>
+                  </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="form-group">
+                    <label for="reg-datainicio" class="form-label">Início do Tratamento</label>
+                    <input type="date" id="reg-datainicio" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label for="reg-datafim" class="form-label">Fim (Previsão)</label>
+                    <input type="date" id="reg-datafim" class="form-input">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Etapa 3: Suplementação -->
+              <div id="step-3-container" class="wizard-step-container hidden">
+                <h4 class="font-semibold text-sm mb-3 text-secondary">Etapa 3: Prescrever Suplementos Customizados</h4>
+                
+                <!-- Sub-form to Add a Supplement -->
+                <div class="card p-4 mb-4" style="background: rgba(0,0,0,0.15); border: 1px dashed var(--color-border-strong);">
+                  <h5 class="font-semibold text-xs mb-2">Prescrever Novo Item</h5>
+                  
+                  <div class="grid grid-cols-2 gap-2 mb-2">
+                    <div class="form-group m-0">
+                      <label for="sup-nome" class="form-label">Nome do Suplemento</label>
+                      <input type="text" id="sup-nome" class="form-input" placeholder="Ex: Vitamina C">
+                    </div>
+                    <div class="form-group m-0">
+                      <label for="sup-dosagem" class="form-label">Dosagem</label>
+                      <input type="text" id="sup-dosagem" class="form-input" placeholder="Ex: 500mg (1 cápsula)">
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2 mb-2">
+                    <div class="form-group m-0">
+                      <label for="sup-quantidade" class="form-label">Quantidade Prescrita</label>
+                      <input type="number" id="sup-quantidade" class="form-input" value="1" min="1">
+                    </div>
+                    <div class="form-group m-0">
+                      <label for="sup-tipo" class="form-label">Tipo</label>
+                      <select id="sup-tipo" class="form-input" style="background: rgba(0,0,0,0.2); border: 1px solid var(--color-border-strong); color: var(--color-text-primary);">
+                        <option value="Manipulado" style="background: var(--color-surface-base);">Manipulado</option>
+                        <option value="Industrializado" style="background: var(--color-surface-base);">Industrializado</option>
+                        <option value="Fitoterápico" style="background: var(--color-surface-base);">Fitoterápico</option>
+                        <option value="Vitamina" style="background: var(--color-surface-base);">Vitamina</option>
+                        <option value="Mineral" style="background: var(--color-surface-base);">Mineral</option>
+                        <option value="Outro" style="background: var(--color-surface-base);">Outro</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group mb-2">
+                    <label for="sup-horarios" class="form-label">Horários (Separados por vírgula)</label>
+                    <input type="text" id="sup-horarios" class="form-input" placeholder="Ex: 08:00, 13:00, 22:00">
+                  </div>
+
+                  <div class="form-group mb-2">
+                    <label for="sup-rep-preset" class="form-label">Regra de Repetição</label>
+                    <select id="sup-rep-preset" class="form-input" style="background: rgba(0,0,0,0.2); border: 1px solid var(--color-border-strong); color: var(--color-text-primary);">
+                      <option value="todos" style="background: var(--color-surface-base);">Todos os dias</option>
+                      <option value="dias_alternados" style="background: var(--color-surface-base);">Dias alternados</option>
+                      <option value="finais_de_semana" style="background: var(--color-surface-base);">Finais de semana</option>
+                      <option value="Seg,Qua,Sex" style="background: var(--color-surface-base);">Segunda, Quarta e Sexta</option>
+                      <option value="Ter,Qui" style="background: var(--color-surface-base);">Terça e Quinta</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group mb-3">
+                    <label for="sup-instrucoes" class="form-label">Instruções de Uso (Observações)</label>
+                    <input type="text" id="sup-instrucoes" class="form-input" placeholder="Ex: Tomar com estômago cheio">
+                  </div>
+
+                  <button type="button" id="btn-add-supplement-to-list" class="btn btn-primary w-full" style="padding: 10px 16px;">
+                    ➕ Adicionar Item à Prescrição
+                  </button>
+                </div>
+
+                <!-- Prescribed Items List -->
+                <div class="border rounded p-3 bg-hover" style="border-color: var(--color-border-strong);">
+                  <h5 class="font-semibold text-xs mb-2" style="color: var(--color-text-primary);">Itens Prescritos nesta Sessão:</h5>
+                  <div id="wizard-supplements-list-container" class="flex flex-col gap-2">
+                    <p class="text-xs text-tertiary text-center py-2" id="lbl-no-supplements">Nenhum suplemento adicionado ainda.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Etapa 4: Notificações -->
+              <div id="step-4-container" class="wizard-step-container hidden">
+                <h4 class="font-semibold text-sm mb-3 text-secondary">Etapa 4: Agendamento & Notificações</h4>
+                <p class="text-xs text-tertiary mb-4">Escolha a regra de aviso no celular do paciente para as doses:</p>
+                <div id="wizard-notifications-mapping-container" class="flex flex-col gap-3">
+                  <!-- Generated dynamically based on supplements added in step 3 -->
+                  <p class="text-xs text-tertiary text-center py-2">Adicione suplementos na etapa anterior primeiro.</p>
+                </div>
+              </div>
+
+              <!-- Etapa 5: Resumo -->
+              <div id="step-5-container" class="wizard-step-container hidden">
+                <h4 class="font-semibold text-sm mb-3 text-secondary">Etapa 5: Confirmar Dados e Finalizar</h4>
+                <div class="border rounded p-4 bg-hover mb-4" style="border-color: var(--color-border-strong); font-size: var(--text-sm); line-height: 1.6;">
+                  <div class="mb-3">
+                    <strong style="color: var(--color-text-primary);">Paciente:</strong> <span id="summary-nome">--</span><br>
+                    <strong style="color: var(--color-text-primary);">Acesso:</strong> <span id="summary-email">--</span> (<span id="summary-telefone">--</span>)<br>
+                    <strong style="color: var(--color-text-primary);">Protocolo:</strong> <span id="summary-protocolo">--</span> (<span id="summary-datas">--</span>)
+                  </div>
+                  <div class="border-t pt-3" style="border-color: var(--color-border-subtle);">
+                    <strong style="color: var(--color-text-primary);">Suplementos Prescritos:</strong>
+                    <ul id="summary-supplements-ul" class="list-disc pl-5 mt-1 flex flex-col gap-1 text-xs">
+                      <li>Nenhum item adicionado.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigation Controls -->
+              <div class="flex gap-3 justify-between mt-6">
+                <button type="button" id="btn-wizard-prev" class="btn btn-outline hidden">Voltar</button>
                 <button type="button" id="btn-close-register" class="btn btn-outline">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Confirmar Cadastro</button>
+                
+                <div class="flex gap-2">
+                  <button type="button" id="btn-wizard-next" class="btn btn-primary">Avançar</button>
+                  <button type="submit" id="btn-wizard-submit" class="btn btn-success hidden">Confirmar e Salvar</button>
+                </div>
               </div>
             </form>
           </div>
@@ -263,13 +390,221 @@ export class DashboardAdminPage {
     const closeRegBtn = document.getElementById('btn-close-register');
     const regForm = document.getElementById('register-patient-form');
 
+    let currentStep = 1;
+    let currentSuplementos = [];
+
+    const updateWizard = () => {
+      document.querySelectorAll('.wizard-step-container').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`step-${currentStep}-container`).classList.remove('hidden');
+      
+      const titleEl = document.getElementById('wizard-title');
+      const badgeEl = document.getElementById('wizard-progress-badge');
+      titleEl.textContent = `Cadastrar Novo Paciente (Etapa ${currentStep}/5)`;
+      badgeEl.textContent = `${currentStep * 20}%`;
+
+      const btnPrev = document.getElementById('btn-wizard-prev');
+      const btnNext = document.getElementById('btn-wizard-next');
+      const btnSubmit = document.getElementById('btn-wizard-submit');
+
+      if (currentStep === 1) {
+        btnPrev.classList.add('hidden');
+        btnNext.classList.remove('hidden');
+        btnSubmit.classList.add('hidden');
+      } else if (currentStep === 5) {
+        btnPrev.classList.remove('hidden');
+        btnNext.classList.add('hidden');
+        btnSubmit.classList.remove('hidden');
+      } else {
+        btnPrev.classList.remove('hidden');
+        btnNext.classList.remove('hidden');
+        btnSubmit.classList.add('hidden');
+      }
+    };
+
+    const renderSupplementsList = () => {
+      const container = document.getElementById('wizard-supplements-list-container');
+      if (currentSuplementos.length === 0) {
+        container.innerHTML = `<p class="text-xs text-tertiary text-center py-2" id="lbl-no-supplements">Nenhum suplemento adicionado ainda.</p>`;
+        return;
+      }
+
+      container.innerHTML = currentSuplementos.map((s, idx) => `
+        <div class="flex justify-between items-center bg-base p-2 rounded border animate-fade-in" style="border-color: var(--color-border-subtle); font-size: var(--text-xs); margin-bottom: 4px;">
+          <div>
+            <strong style="color: var(--color-text-primary);">${s.nome}</strong> - ${s.dosagem} (${s.quantidade} cáps)<br>
+            <span class="text-secondary">Horários: ${s.horarios.join(', ')} | Repetição: ${s.diasSemana.join(', ')}</span>
+          </div>
+          <button type="button" class="btn btn-outline text-danger btn-remove-sup-wizard" data-idx="${idx}" style="padding: 4px 8px; font-size: 10px; border-color: rgba(239, 68, 68, 0.2);">Excluir</button>
+        </div>
+      `).join('');
+
+      container.querySelectorAll('.btn-remove-sup-wizard').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const index = parseInt(btn.getAttribute('data-idx'), 10);
+          currentSuplementos.splice(index, 1);
+          renderSupplementsList();
+        });
+      });
+    };
+
+    const btnAddSup = document.getElementById('btn-add-supplement-to-list');
+    btnAddSup.addEventListener('click', () => {
+      const nome = document.getElementById('sup-nome').value.trim();
+      const dosagem = document.getElementById('sup-dosagem').value.trim();
+      const quantidade = parseInt(document.getElementById('sup-quantidade').value, 10) || 1;
+      const tipo = document.getElementById('sup-tipo').value;
+      const horariosRaw = document.getElementById('sup-horarios').value.trim();
+      const rep = document.getElementById('sup-rep-preset').value;
+      const instrucoes = document.getElementById('sup-instrucoes').value.trim();
+
+      if (!nome || !dosagem || !horariosRaw) {
+        alert('Por favor, preencha Nome, Dosagem e Horários para adicionar.');
+        return;
+      }
+
+      const horarios = horariosRaw.split(',').map(h => h.trim()).filter(h => {
+        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+        return timeRegex.test(h);
+      });
+
+      if (horarios.length === 0) {
+        alert('Horários inválidos. Use formato HH:MM (ex: 08:00, 20:00).');
+        return;
+      }
+
+      const diasSemana = rep === 'todos' ? ['todos'] : rep.split(',');
+
+      currentSuplementos.push({
+        nome,
+        dosagem,
+        quantidade,
+        tipo,
+        horarios,
+        diasSemana,
+        instrucoes
+      });
+
+      document.getElementById('sup-nome').value = '';
+      document.getElementById('sup-dosagem').value = '';
+      document.getElementById('sup-quantidade').value = '1';
+      document.getElementById('sup-horarios').value = '';
+      document.getElementById('sup-instrucoes').value = '';
+
+      renderSupplementsList();
+    });
+
+    const renderNotificationsStep = () => {
+      const container = document.getElementById('wizard-notifications-mapping-container');
+      if (currentSuplementos.length === 0) {
+        container.innerHTML = `<p class="text-xs text-tertiary text-center py-2">Prescreva suplementos na etapa anterior primeiro.</p>`;
+        return;
+      }
+
+      container.innerHTML = currentSuplementos.map((s, idx) => `
+        <div class="flex flex-col gap-1 bg-base p-3 rounded border" style="border-color: var(--color-border-subtle); font-size: var(--text-xs);">
+          <span style="font-weight: 600; color: var(--color-text-primary);">${s.nome} (${s.dosagem})</span>
+          <div class="flex items-center gap-2">
+            <label for="notif-select-${idx}" class="form-label m-0" style="font-size: 11px;">Notificação:</label>
+            <select id="notif-select-${idx}" class="form-input" style="padding: 6px 12px; font-size: var(--text-xs); background: rgba(0,0,0,0.2); border: 1px solid var(--color-border-strong); color: var(--color-text-primary); flex: 1;">
+              <option value="no_horario">No horário exato</option>
+              <option value="5min_antes">5 minutos antes</option>
+              <option value="15min_antes">15 minutos antes</option>
+              <option value="30min_antes">30 minutos antes</option>
+              <option value="5min_depois">5 minutos depois</option>
+            </select>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    const renderSummaryStep = () => {
+      document.getElementById('summary-nome').textContent = document.getElementById('reg-nome').value || '--';
+      document.getElementById('summary-email').textContent = document.getElementById('reg-email').value || '--';
+      document.getElementById('summary-telefone').textContent = document.getElementById('reg-telefone').value || '--';
+      document.getElementById('summary-protocolo').textContent = document.getElementById('reg-protocolo').value || '--';
+      
+      const startVal = document.getElementById('reg-datainicio').value;
+      const endVal = document.getElementById('reg-datafim').value;
+      document.getElementById('summary-datas').textContent = `${startVal || '--'} a ${endVal || '--'}`;
+
+      const ul = document.getElementById('summary-supplements-ul');
+      if (currentSuplementos.length === 0) {
+        ul.innerHTML = `<li>Nenhum suplemento adicionado.</li>`;
+        return;
+      }
+
+      ul.innerHTML = currentSuplementos.map(s => `
+        <li><strong>${s.nome}</strong>: ${s.dosagem} (${s.quantidade} cáps) nos horários [${s.horarios.join(', ')}] [Repetição: ${s.diasSemana.join(', ')}]</li>
+      `).join('');
+    };
+
+    const btnNext = document.getElementById('btn-wizard-next');
+    const btnPrev = document.getElementById('btn-wizard-prev');
+
+    btnNext.addEventListener('click', () => {
+      if (currentStep === 1) {
+        const nome = document.getElementById('reg-nome').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const telefone = document.getElementById('reg-telefone').value.trim();
+        const senha = document.getElementById('reg-senha').value.trim();
+
+        if (!nome || !email || !telefone || !senha) {
+          alert('Por favor, preencha todos os dados pessoais e de acesso.');
+          return;
+        }
+      } else if (currentStep === 2) {
+        const start = document.getElementById('reg-datainicio').value;
+        const end = document.getElementById('reg-datafim').value;
+
+        if (!start || !end) {
+          alert('Por favor, selecione as datas de início e fim do tratamento.');
+          return;
+        }
+        if (new Date(end) < new Date(start)) {
+          alert('A data de fim não pode ser anterior à data de início.');
+          return;
+        }
+      } else if (currentStep === 3) {
+        if (currentSuplementos.length === 0) {
+          alert('Adicione pelo menos um suplemento ao tratamento do paciente.');
+          return;
+        }
+      }
+
+      currentStep++;
+      if (currentStep === 4) {
+        renderNotificationsStep();
+      } else if (currentStep === 5) {
+        currentSuplementos.forEach((s, idx) => {
+          const select = document.getElementById(`notif-select-${idx}`);
+          if (select) {
+            s.notificacao = select.value;
+          }
+        });
+        renderSummaryStep();
+      }
+
+      updateWizard();
+    });
+
+    btnPrev.addEventListener('click', () => {
+      currentStep--;
+      updateWizard();
+    });
+
     openRegBtn.addEventListener('click', () => {
+      currentStep = 1;
+      currentSuplementos = [];
+      updateWizard();
       regModal.classList.add('active');
     });
 
     closeRegBtn.addEventListener('click', () => {
       regModal.classList.remove('active');
       regForm.reset();
+      currentStep = 1;
+      currentSuplementos = [];
+      updateWizard();
     });
 
     regForm.addEventListener('submit', async (e) => {
@@ -279,6 +614,8 @@ export class DashboardAdminPage {
       const email = document.getElementById('reg-email').value;
       const telefone = document.getElementById('reg-telefone').value;
       const senha = document.getElementById('reg-senha').value;
+      const observacoes = document.getElementById('reg-observacoes').value;
+      const protocoloNome = document.getElementById('reg-protocolo').value;
       const dataInicio = new Date(document.getElementById('reg-datainicio').value).toISOString();
       const dataFim = new Date(document.getElementById('reg-datafim').value).toISOString();
 
@@ -289,7 +626,10 @@ export class DashboardAdminPage {
           telefone,
           senha,
           dataInicio,
-          dataFim
+          dataFim,
+          protocoloNome,
+          observacoes,
+          suplementos: currentSuplementos
         });
 
         alert(`Paciente cadastrado com sucesso!`);

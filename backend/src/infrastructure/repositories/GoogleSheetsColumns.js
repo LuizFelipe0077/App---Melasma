@@ -16,7 +16,9 @@ export const SheetColumns = {
     SENHA_HASH: 5,
     STATUS: 6,
     DATA_INICIO: 7,
-    DATA_FIM: 8
+    DATA_FIM: 8,
+    OBSERVACOES: 9,
+    PROTOCOLO_NOME: 10
   },
   GAMIFICACAO: {
     ID: 0,

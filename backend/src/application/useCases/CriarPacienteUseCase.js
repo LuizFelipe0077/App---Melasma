@@ -1,22 +1,54 @@
 import { PacienteFactory } from '../../domain/entities/PacienteFactory.js';
 import { PacienteCriadoEvent } from '../../domain/events/PacienteCriadoEvent.js';
 import { eventDispatcher } from '../../domain/events/DomainEventDispatcher.js';
+import { UUID } from '../../domain/valueObjects/UUID.js';
+import { Protocolo } from '../../domain/entities/Protocolo.js';
+import { Suplemento } from '../../domain/entities/Suplemento.js';
+import { CheckIn, StatusCheckin } from '../../domain/entities/CheckIn.js';
+
+function isDayActive(currentDate, dataInicio, diasSemana) {
+  if (!Array.isArray(diasSemana) || diasSemana.includes('todos') || diasSemana.includes('Todos os dias')) return true;
+  
+  const weekdayMap = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const dayStr = weekdayMap[currentDate.getDay()];
+  
+  // Specific weekdays
+  if (diasSemana.includes(dayStr)) return true;
+  
+  // Weekends
+  if (diasSemana.includes('finais_de_semana') || diasSemana.includes('Finais de semana')) {
+    const dayNum = currentDate.getDay();
+    if (dayNum === 0 || dayNum === 6) return true;
+  }
+  
+  // Alternate days
+  if (diasSemana.includes('dias_alternados') || diasSemana.includes('Dias alternados')) {
+    const diffTime = Math.abs(currentDate.getTime() - dataInicio.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays % 2 === 0) return true;
+  }
+  
+  return false;
+}
 
 export class CriarPacienteUseCase {
   #pacienteRepository;
   #criptografiaService;
+  #protocoloRepository;
+  #checkinRepository;
 
-  constructor(pacienteRepository, criptografiaService) {
+  constructor(pacienteRepository, criptografiaService, protocoloRepository, checkinRepository) {
     this.#pacienteRepository = pacienteRepository;
     this.#criptografiaService = criptografiaService;
+    this.#protocoloRepository = protocoloRepository;
+    this.#checkinRepository = checkinRepository;
   }
 
   /**
    * Executes the creation of a new patient.
-   * @param {object} input DTO (nome, email, telefone, dataInicio, dataFim)
-   * @returns {Promise<object>} output DTO (id, email, senhaTemporaria)
+   * @param {object} input DTO
    */
-  execute({ nome, email, telefone, senha, dataInicio, dataFim }) {
+  execute({ nome, email, telefone, senha, dataInicio, dataFim, protocoloNome, observacoes, suplementos }) {
     // 1. Basic validation
     if (!nome || !email || !telefone || !senha || !dataInicio || !dataFim) {
       throw new Error('Todos os campos obrigatórios (incluindo senha) devem ser fornecidos.');
@@ -45,16 +77,89 @@ export class CriarPacienteUseCase {
       telefone,
       senhaHashString,
       dataInicio,
-      dataFim
+      dataFim,
+      protocoloNome,
+      observacoes
     });
 
-    // 5. Persist patient to storage
+    // 5. Create protocol custom ID and link to patient
+    const protocoloId = UUID.generate();
+    paciente.vincularProtocolo(protocoloId);
+
+    // 6. Map and create Supplements
+    const durationMs = Math.abs(new Date(dataFim) - new Date(dataInicio));
+    const duracaoDias = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
+
+    const supplementEntities = (suplementos || []).map(s => {
+      return new Suplemento({
+        id: UUID.generate(),
+        protocoloId: protocoloId,
+        nome: s.nome,
+        dosagem: s.dosagem,
+        horarios: s.horarios,
+        instrucoes: s.instrucoes || '',
+        quantidade: s.quantidade,
+        diasSemana: s.diasSemana,
+        dataInicio: new Date(s.dataInicio || dataInicio),
+        dataFim: new Date(s.dataFim || dataFim),
+        tipo: s.tipo,
+        notificacao: s.notificacao
+      });
+    });
+
+    const protocolo = new Protocolo({
+      id: protocoloId,
+      nome: protocoloNome || 'Melasma',
+      suplementos: supplementEntities,
+      duracaoDias: Math.max(1, Math.min(duracaoDias, 365))
+    });
+
+    // 7. Save custom Protocol and Supplements
+    if (this.#protocoloRepository) {
+      this.#protocoloRepository.save(protocolo);
+    }
+
+    // 8. Generate automated Checkins
+    const generatedCheckins = [];
+    for (const sup of supplementEntities) {
+      const sStart = new Date(sup.dataInicio);
+      const sEnd = new Date(sup.dataFim);
+
+      let current = new Date(sStart);
+      while (current <= sEnd) {
+        if (isDayActive(current, sStart, sup.diasSemana)) {
+          for (const slot of sup.horarios) {
+            const prescribedTime = new Date(current);
+            const [h, m] = slot.split(':');
+            prescribedTime.setHours(Number(h), Number(m), 0, 0);
+
+            generatedCheckins.push(new CheckIn({
+              id: UUID.generate(),
+              pacienteId: paciente.id,
+              suplementoId: sup.id,
+              dataHoraPrescrita: prescribedTime,
+              dataHoraRealizada: null,
+              status: StatusCheckin.PENDENTE,
+              retroativo: false
+            }));
+          }
+        }
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    // 9. Batch save checkins
+    if (this.#checkinRepository && generatedCheckins.length > 0) {
+      this.#checkinRepository.saveAll(generatedCheckins);
+    }
+
+    // 10. Persist patient to storage
     this.#pacienteRepository.save(paciente);
 
-    // 6. Dispatch Domain Event for collateral actions
+    // 11. Dispatch Domain Event
     eventDispatcher.dispatch(new PacienteCriadoEvent(paciente, cleanSenha));
 
-    // 7. Return safe Output DTO
+    // 12. Return safe Output DTO
     return {
       id: paciente.id.value,
       email: paciente.email.value,

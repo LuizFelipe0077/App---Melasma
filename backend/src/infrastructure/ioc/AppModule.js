@@ -57,14 +57,17 @@ class Container {
 
       this.useCases.criarPacienteUseCase = new CriarPacienteUseCase(
         s.pacienteRepository, 
-        s.criptografiaService
+        s.criptografiaService,
+        s.protocoloRepository,
+        s.checkinRepository
       );
 
       this.useCases.registrarCheckinUseCase = new RegistrarCheckinUseCase(
         s.pacienteRepository, 
         s.protocoloRepository, 
         s.checkinRepository, 
-        s.gamificacaoRepository
+        s.gamificacaoRepository,
+        s.permissaoRepository
       );
 
       this.useCases.liberarEdicaoRetroativaUseCase = new LiberarEdicaoRetroativaUseCase(

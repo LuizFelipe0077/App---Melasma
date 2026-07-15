@@ -8,12 +8,14 @@ export class RegistrarCheckinUseCase {
   #protocoloRepository;
   #checkinRepository;
   #gamificacaoRepository;
+  #permissaoRepository;
 
-  constructor(pacienteRepository, protocoloRepository, checkinRepository, gamificacaoRepository) {
+  constructor(pacienteRepository, protocoloRepository, checkinRepository, gamificacaoRepository, permissaoRepository) {
     this.#pacienteRepository = pacienteRepository;
     this.#protocoloRepository = protocoloRepository;
     this.#checkinRepository = checkinRepository;
     this.#gamificacaoRepository = gamificacaoRepository;
+    this.#permissaoRepository = permissaoRepository;
   }
 
   /**
@@ -52,8 +54,19 @@ export class RegistrarCheckinUseCase {
     // 4. Check for retroactive blocks (midnight rule)
     const todayStr = new Date().toDateString();
     const prescribedStr = datePrescrita.toDateString();
-    if (prescribedStr !== todayStr && !forceRetroactive) {
-      throw new Error('Não é possível realizar check-ins retroativos de dias anteriores sem liberação do clínico.');
+    let isAllowedRetroactive = forceRetroactive;
+
+    if (prescribedStr !== todayStr && !isAllowedRetroactive) {
+      if (this.#permissaoRepository) {
+        const activePerm = this.#permissaoRepository.findActiveByPacienteId(pId.value);
+        if (activePerm) {
+          isAllowedRetroactive = true;
+        }
+      }
+
+      if (!isAllowedRetroactive) {
+        throw new Error('Não é possível realizar check-ins retroativos de dias anteriores sem liberação do clínico.');
+      }
     }
 
     // 5. Instantiate Check-in
@@ -64,12 +77,12 @@ export class RegistrarCheckinUseCase {
       dataHoraPrescrita: datePrescrita,
       dataHoraRealizada: null,
       status: StatusCheckin.PENDENTE,
-      retroativo: forceRetroactive
+      retroativo: isAllowedRetroactive
     });
 
     // 6. Process Ingestion & window tolerance (within the Entity boundary)
     // Default tolerance window is 60 minutes.
-    checkin.confirmIngestion(dateRealizada, 60, forceRetroactive);
+    checkin.confirmIngestion(dateRealizada, 60, isAllowedRetroactive);
 
     // 7. Save Check-in
     this.#checkinRepository.save(checkin);

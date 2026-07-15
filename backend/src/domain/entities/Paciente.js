@@ -24,8 +24,10 @@ export class Paciente {
   #status;
   #dataInicio;
   #dataFim;
+  #protocoloNome;
+  #observacoes;
 
-  constructor({ id, nome, email, telefone, senhaHash, protocoloId, status, dataInicio, dataFim }) {
+  constructor({ id, nome, email, telefone, senhaHash, protocoloId, status, dataInicio, dataFim, protocoloNome, observacoes }) {
     if (!(id instanceof UUID)) throw new Error('ID do Paciente deve ser uma instância de UUID.');
     if (!nome || typeof nome !== 'string' || nome.trim().length < 3) {
       throw new Error('Nome do Paciente inválido (mínimo de 3 caracteres).');
@@ -59,6 +61,8 @@ export class Paciente {
     this.#status = status;
     this.#dataInicio = dataInicio;
     this.#dataFim = dataFim;
+    this.#protocoloNome = protocoloNome || 'Melasma';
+    this.#observacoes = observacoes || '';
   }
 
   // Getters
@@ -71,6 +75,8 @@ export class Paciente {
   get status() { return this.#status; }
   get dataInicio() { return this.#dataInicio; }
   get dataFim() { return this.#dataFim; }
+  get protocoloNome() { return this.#protocoloNome; }
+  get observacoes() { return this.#observacoes; }
 
   // Domain Actions
   ativar() {

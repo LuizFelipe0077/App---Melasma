@@ -102,7 +102,8 @@ export class LoginUseCase {
       token,
       role: 'PACIENTE',
       userId: paciente.id.value,
-      nome: paciente.nome
+      nome: paciente.nome,
+      protocoloNome: paciente.protocoloNome
     };
   }
 }

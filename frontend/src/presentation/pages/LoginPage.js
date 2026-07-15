@@ -118,6 +118,7 @@ export class LoginPage {
         sessionStorage.setItem('USER_ROLE', result.role);
         sessionStorage.setItem('USER_ID', result.userId);
         sessionStorage.setItem('USER_NAME', result.nome);
+        sessionStorage.setItem('USER_PROTOCOL', result.protocoloNome || 'Melasma');
 
         // Redirect/Navigate
         this.#onLoginSuccess(result.role);

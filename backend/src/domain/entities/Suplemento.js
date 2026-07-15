@@ -11,8 +11,14 @@ export class Suplemento {
   #dosagem;
   #horarios; // Array of "HH:MM" strings
   #instrucoes;
+  #quantidade;
+  #diasSemana; // Array of strings (e.g. ["Seg", "Ter"] or ["todos"])
+  #dataInicio;
+  #dataFim;
+  #tipo;
+  #notificacao;
 
-  constructor({ id, protocoloId, nome, dosagem, horarios, instrucoes }) {
+  constructor({ id, protocoloId, nome, dosagem, horarios, instrucoes, quantidade, diasSemana, dataInicio, dataFim, tipo, notificacao }) {
     if (!(id instanceof UUID)) throw new Error('ID do Suplemento deve ser UUID.');
     if (!(protocoloId instanceof UUID)) throw new Error('ID do Protocolo do Suplemento deve ser UUID.');
     if (!nome || typeof nome !== 'string' || nome.trim().length === 0) {
@@ -33,6 +39,12 @@ export class Suplemento {
     this.#dosagem = dosagem.trim();
     this.#horarios = Object.freeze([...horarios]); // Immutable array
     this.#instrucoes = (instrucoes || '').trim();
+    this.#quantidade = quantidade !== undefined ? Number(quantidade) : 1;
+    this.#diasSemana = Array.isArray(diasSemana) ? Object.freeze([...diasSemana]) : Object.freeze(['todos']);
+    this.#dataInicio = dataInicio instanceof Date ? dataInicio : new Date(dataInicio || Date.now());
+    this.#dataFim = dataFim instanceof Date ? dataFim : new Date(dataFim || Date.now());
+    this.#tipo = tipo || 'Outro';
+    this.#notificacao = notificacao || 'no_horario';
   }
 
   get id() { return this.#id; }
@@ -41,6 +53,12 @@ export class Suplemento {
   get dosagem() { return this.#dosagem; }
   get horarios() { return this.#horarios; }
   get instrucoes() { return this.#instrucoes; }
+  get quantidade() { return this.#quantidade; }
+  get diasSemana() { return this.#diasSemana; }
+  get dataInicio() { return this.#dataInicio; }
+  get dataFim() { return this.#dataFim; }
+  get tipo() { return this.#tipo; }
+  get notificacao() { return this.#notificacao; }
 
   #validateHorarios(horarios) {
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
