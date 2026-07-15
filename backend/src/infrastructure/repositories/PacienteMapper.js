@@ -12,6 +12,13 @@ export class PacienteMapper {
    * @returns {Array<any>}
    */
   static toRow(paciente) {
+    const formatDatePtBr = (d) => {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    };
+
     const row = [];
     row[SheetColumns.PACIENTE.ID] = paciente.id.value;
     row[SheetColumns.PACIENTE.NOME] = paciente.nome;
@@ -20,8 +27,8 @@ export class PacienteMapper {
     row[SheetColumns.PACIENTE.SENHA_HASH] = paciente.senhaHash.value;
     row[SheetColumns.PACIENTE.PROTOCOLO_ID] = paciente.protocoloId ? paciente.protocoloId.value : '';
     row[SheetColumns.PACIENTE.STATUS] = paciente.status;
-    row[SheetColumns.PACIENTE.DATA_INICIO] = paciente.dataInicio.toISOString();
-    row[SheetColumns.PACIENTE.DATA_FIM] = paciente.dataFim.toISOString();
+    row[SheetColumns.PACIENTE.DATA_INICIO] = formatDatePtBr(paciente.dataInicio);
+    row[SheetColumns.PACIENTE.DATA_FIM] = formatDatePtBr(paciente.dataFim);
     return row;
   }
 

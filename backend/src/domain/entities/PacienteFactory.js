@@ -4,6 +4,21 @@ import { Email } from '../valueObjects/Email.js';
 import { Telefone } from '../valueObjects/Telefone.js';
 import { PasswordHash } from '../valueObjects/PasswordHash.js';
 
+function safeParseDate(val) {
+  if (val instanceof Date) return val;
+  if (!val) return new Date();
+  
+  const str = String(val).trim();
+  const match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const year = parseInt(match[3], 10);
+    return new Date(year, month, day);
+  }
+  return new Date(val);
+}
+
 /**
  * PacienteFactory.js
  * Factory to safely instantiate a new Paciente Aggregate Root,
@@ -20,8 +35,8 @@ export class PacienteFactory {
     const telefoneVO = new Telefone(telefone);
     const passwordVO = new PasswordHash(senhaHashString);
     
-    const start = dataInicio instanceof Date ? dataInicio : new Date(dataInicio);
-    const end = dataFim instanceof Date ? dataFim : new Date(dataFim);
+    const start = safeParseDate(dataInicio);
+    const end = safeParseDate(dataFim);
 
     return new Paciente({
       id,
@@ -48,8 +63,8 @@ export class PacienteFactory {
       senhaHash: new PasswordHash(senhaHash),
       protocoloId: protocoloId ? new UUID(protocoloId) : null,
       status,
-      dataInicio: new Date(dataInicio),
-      dataFim: new Date(dataFim)
+      dataInicio: safeParseDate(dataInicio),
+      dataFim: safeParseDate(dataFim)
     });
   }
 }
