@@ -18,4 +18,10 @@ function setup() { return App.setup(); }
 content = content + '\n' + entryPoints;
 fs.writeFileSync(bundlePath, content, 'utf8');
 
+console.log('Copying appsscript.json to dist...');
+fs.copyFileSync(
+  path.join(__dirname, 'appsscript.json'),
+  path.join(__dirname, 'dist', 'appsscript.json')
+);
+
 console.log('Build complete!');
