@@ -5,11 +5,12 @@
  */
 export const SystemConfiguration = {
   // Database / Sheets Config
-  // This will be read from PropertiesService at runtime in Apps Script,
-  // falling back to a default sandbox sheet for local/staging testing.
-  DATABASE_SPREADSHEET_ID: typeof PropertiesService !== 'undefined' 
-    ? PropertiesService.getScriptProperties().getProperty('DATABASE_SPREADSHEET_ID') 
-    : 'SANDBOX_SPREADSHEET_ID_DEFAULT',
+  // Read dynamically from PropertiesService to allow self-healing on the fly.
+  get DATABASE_SPREADSHEET_ID() {
+    return typeof PropertiesService !== 'undefined' 
+      ? PropertiesService.getScriptProperties().getProperty('DATABASE_SPREADSHEET_ID') 
+      : 'SANDBOX_SPREADSHEET_ID_DEFAULT';
+  },
 
   // Clinical Rules & Window Tolerances
   CHECKIN_WINDOW_TOLERANCE_MINUTES: 60, // Window of ±60 minutes around prescribed time
@@ -28,7 +29,9 @@ export const SystemConfiguration = {
   XP_LEVEL_BASE: 100,                   // Leveling base divider formula: XP_Needed = level * base
 
   // Environment and Meta
-  ENV: typeof PropertiesService !== 'undefined'
-    ? PropertiesService.getScriptProperties().getProperty('ENV') || 'production'
-    : 'development'
+  get ENV() {
+    return typeof PropertiesService !== 'undefined'
+      ? PropertiesService.getScriptProperties().getProperty('ENV') || 'production'
+      : 'development';
+  }
 };

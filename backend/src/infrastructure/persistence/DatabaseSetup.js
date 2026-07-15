@@ -29,7 +29,7 @@ export class DatabaseSetup {
     const schema = {
       'Pacientes': [
         'id', 'protocoloId', 'nome', 'email', 'telefone', 
-        'senhaHash', 'status', 'dataInicio', 'dataFim', 'deletedAt'
+        'senhaHash', 'status', 'dataInicio', 'dataFim', 'observacoes', 'protocoloNome'
       ],
       'Protocolos': [
         'id', 'nome', 'duracaoDias'

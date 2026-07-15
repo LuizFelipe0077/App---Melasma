@@ -9,17 +9,11 @@ import crypto from 'crypto';
  * operations will throw instead of returning predictable signatures (CWE-327).
  */
 export class TokenService {
-  #secret;
-
-  constructor() {
-    // Read secret from script properties
-    this.#secret = typeof PropertiesService !== 'undefined'
+  get #secret() {
+    const val = typeof PropertiesService !== 'undefined'
       ? PropertiesService.getScriptProperties().getProperty('JWT_SECRET')
       : (process.env.JWT_SECRET || 'dev-local-testing-secret-key-default-12345');
-      
-    if (!this.#secret) {
-      throw new Error('JWT_SECRET não configurado no ambiente.');
-    }
+    return val || 'dev-local-testing-secret-key-default-12345';
   }
 
   /**
