@@ -41,6 +41,12 @@ export class BcryptGasService {
   compare(password, hash) {
     if (!password || !hash) return false;
     
+    // Suporte simplificado para Hashes SHA-256 (64 caracteres) colados direto no Apps Script
+    if (hash.length === 64 && !hash.startsWith('$2b$')) {
+      const sha256Hex = this.#sha256Hex(password);
+      return this.#constantTimeEquals(hash.toLowerCase(), sha256Hex);
+    }
+
     // Bcrypt format: $2b$10$[22-char salt][31-char hash]
     if (!hash.startsWith('$2b$10$') || hash.length !== 60) {
       return false;
@@ -107,7 +113,7 @@ export class BcryptGasService {
   }
 
   /**
-   * Secure SHA-256 wrapper using Google Apps Script native Utilities.
+   * Secure SHA-256 wrapper using Google Apps Script native Utilities (returns Base64).
    */
   #sha256(input) {
     if (typeof Utilities === 'undefined') {
@@ -115,5 +121,16 @@ export class BcryptGasService {
     }
     const rawDigest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, input, Utilities.Charset.UTF_8);
     return Utilities.base64Encode(rawDigest);
+  }
+
+  /**
+   * Secure SHA-256 wrapper using Google Apps Script native Utilities (returns Hex).
+   */
+  #sha256Hex(input) {
+    if (typeof Utilities === 'undefined') {
+      throw new Error('Ambiente não suportado: Utilites.computeDigest é exigido.');
+    }
+    const rawDigest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, input, Utilities.Charset.UTF_8);
+    return rawDigest.map(b => (b < 0 ? b + 256 : b).toString(16).padStart(2, '0')).join('');
   }
 }

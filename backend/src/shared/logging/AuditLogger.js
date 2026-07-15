@@ -28,9 +28,10 @@ export class AuditLogger {
    * @param {string} [params.motivo] - Human-readable justification
    */
   static log({ operadorId, tabela, registroId, tipoAcao, dadosAntigos = null, dadosNovos = null, ip = 'N/A', dispositivo = 'N/A', motivo = '' }) {
+    const dataHoraBrasil = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     const entry = {
       id: UUID.generate().value,
-      timestamp: new Date().toISOString(),
+      timestamp: dataHoraBrasil,
       operadorId: operadorId || 'SYSTEM',
       tabela,
       registroId: registroId || 'N/A',
