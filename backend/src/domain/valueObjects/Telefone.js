@@ -6,10 +6,11 @@ export class Telefone {
   #value;
 
   constructor(value) {
-    if (!value || typeof value !== 'string') {
+    const stringValue = typeof value === 'number' ? String(value) : value;
+    if (!stringValue || typeof stringValue !== 'string') {
       throw new Error('Telefone deve ser uma string preenchida.');
     }
-    const cleanValue = value.replace(/\s+/g, ''); // strip spaces
+    const cleanValue = stringValue.replace(/\s+/g, ''); // strip spaces
     this.#validate(cleanValue);
     this.#value = cleanValue;
     Object.freeze(this);
