@@ -13,24 +13,24 @@ export class DashboardAdminPage {
     this.#appContainer.innerHTML = `
       <div class="app-shell">
         <!-- Sidebar Navigation (Admin) -->
-        <aside style="background-color: var(--color-surface-card); border-right: 1px solid var(--color-border-subtle); padding: var(--space-5); display: flex; flex-direction: column; justify-content: space-between;" class="hidden-mobile">
+        <aside class="bg-card border-r p-5 hidden-mobile flex-col justify-between" style="display: flex;">
           <div>
-            <div class="brand-logo" style="margin-bottom: var(--space-8);">
-              ✨ <span style="font-weight: 300;">Clinical</span> Admin
+            <div class="brand-logo mb-8">
+              ✨ <span class="font-light">Clinical</span> Admin
             </div>
             
-            <nav style="display: flex; flex-direction: column; gap: var(--space-2);">
-              <a href="#" class="btn btn-outline" style="justify-content: flex-start; border-color: transparent; background: var(--color-surface-hover); font-weight: 500;">
-                <span style="opacity: 0.7; margin-right: 8px;">👥</span> Pacientes Ativos
-              </a>
-              <a href="#" class="btn btn-outline" style="justify-content: flex-start; border-color: transparent; font-weight: 500;">
-                <span style="opacity: 0.7; margin-right: 8px;">⚙️</span> Configurações (GAS)
-              </a>
+            <nav class="flex flex-col gap-2">
+              <button class="btn btn-outline justify-start border-transparent bg-hover font-medium">
+                <span class="opacity-70 mr-2">👥</span> Pacientes Ativos
+              </button>
+              <button class="btn btn-outline justify-start border-transparent font-medium" onclick="alert('Configurações em breve')">
+                <span class="opacity-70 mr-2">⚙️</span> Configurações (GAS)
+              </button>
             </nav>
           </div>
           
-          <div style="border-top: 1px solid var(--color-border-subtle); padding-top: var(--space-4);">
-            <button id="btn-admin-logout-sidebar" class="btn btn-outline" style="width: 100%; border-color: transparent; justify-content: flex-start; color: var(--color-brand-danger);">
+          <div class="border-t pt-4">
+            <button id="btn-admin-logout-sidebar" class="btn btn-outline w-full justify-start border-transparent text-danger">
               Encerrar Sessão
             </button>
           </div>
@@ -38,61 +38,61 @@ export class DashboardAdminPage {
 
         <!-- Main Content Area -->
         <main class="main-content">
-          <div class="container" style="max-width: 1400px;">
+          <div class="container">
             <!-- Header -->
-            <header class="header" style="border: none; padding-bottom: 0;">
+            <header class="header">
               <div>
-                <h1 class="text-h1" style="font-size: var(--text-2xl);">Painel de Monitoramento Clínico</h1>
+                <h1 class="text-h1 text-2xl">Painel de Monitoramento Clínico</h1>
                 <p class="text-p">Gestão de adesão e cadastros de pacientes do consultório.</p>
               </div>
               
-              <div style="display: flex; gap: var(--space-3);">
+              <div class="flex gap-3">
                 <button id="btn-open-register-modal" class="btn btn-primary">
-                  <span style="font-size: 1.2rem;">+</span> Novo Paciente
+                  <span class="text-xl leading-none">+</span> Novo Paciente
                 </button>
-                <button id="btn-admin-logout-mobile" class="btn btn-outline hidden-desktop" style="padding: 8px 16px;">Sair</button>
+                <button id="btn-admin-logout-mobile" class="btn btn-outline hidden-desktop px-4">Sair</button>
               </div>
             </header>
 
             <!-- High Density Stats -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4); margin-top: var(--space-6); margin-bottom: var(--space-6);">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 mb-6">
               
-              <div class="card" id="filter-abandon" style="cursor: pointer; border-left: 4px solid var(--color-brand-danger);">
-                <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 8px;">Alerta de Abandono (<60%)</p>
-                <h3 class="stat-num" style="font-size: var(--text-3xl); font-weight: 600; color: var(--color-brand-danger);">--</h3>
+              <div class="card cursor-pointer card-stat" id="filter-abandon" style="--stat-color: var(--color-brand-danger);">
+                <p class="text-sm text-secondary mb-2">Alerta de Abandono (<60%)</p>
+                <h3 class="stat-num text-3xl font-semibold text-danger">--</h3>
               </div>
 
-              <div class="card" id="filter-excellent" style="cursor: pointer; border-left: 4px solid var(--color-brand-success);">
-                <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 8px;">Adesão Excelente (>90%)</p>
-                <h3 class="stat-num" style="font-size: var(--text-3xl); font-weight: 600; color: var(--color-brand-success);">--</h3>
+              <div class="card cursor-pointer card-stat" id="filter-excellent" style="--stat-color: var(--color-brand-success);">
+                <p class="text-sm text-secondary mb-2">Adesão Excelente (>90%)</p>
+                <h3 class="stat-num text-3xl font-semibold text-success">--</h3>
               </div>
 
-              <div class="card" id="stat-total" style="border-left: 4px solid var(--color-brand-primary);">
-                <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 8px;">Total de Pacientes Ativos</p>
-                <h3 class="stat-num" style="font-size: var(--text-3xl); font-weight: 600; color: var(--color-text-primary);">--</h3>
+              <div class="card card-stat" id="stat-total" style="--stat-color: var(--color-brand-primary);">
+                <p class="text-sm text-secondary mb-2">Total de Pacientes Ativos</p>
+                <h3 class="stat-num text-3xl font-semibold text-primary">--</h3>
               </div>
 
             </div>
 
             <!-- Patient Data Table (High Density) -->
-            <section class="card" style="padding: 0; overflow: hidden;">
-              <div style="padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border-subtle); display: flex; justify-content: space-between; align-items: center; background: var(--color-surface-base);">
-                <h3 class="text-h1" style="font-size: var(--text-lg); margin: 0;">Lista de Acompanhamento</h3>
-                <input type="text" id="input-search-patient" class="form-input" style="max-width: 300px; padding: 8px 12px; font-size: var(--text-sm);" placeholder="Buscar por nome ou email...">
+            <section class="card p-0 overflow-hidden">
+              <div class="p-4 px-5 border-b flex justify-between items-center bg-base">
+                <h3 class="text-h1 text-lg m-0">Lista de Acompanhamento</h3>
+                <input type="text" id="input-search-patient" class="form-input" style="max-width: 300px; padding: 8px 12px;" placeholder="Buscar por nome ou email...">
               </div>
               
-              <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: var(--text-sm);">
-                  <thead style="background-color: var(--color-surface-hover); border-bottom: 1px solid var(--color-border-subtle);">
+              <div class="table-wrapper border-transparent rounded-none">
+                <table>
+                  <thead class="bg-hover">
                     <tr>
-                      <th style="padding: 12px 24px; font-weight: 500; color: var(--color-text-secondary);">Paciente / Contato</th>
-                      <th style="padding: 12px 24px; font-weight: 500; color: var(--color-text-secondary);">Taxa de Adesão</th>
-                      <th style="padding: 12px 24px; font-weight: 500; color: var(--color-text-secondary); text-align: right;">Ações de Controle</th>
+                      <th>Paciente / Contato</th>
+                      <th>Taxa de Adesão</th>
+                      <th class="text-right">Ações de Controle</th>
                     </tr>
                   </thead>
                   <tbody id="patient-list-tbody">
                     <!-- Loaded dynamically -->
-                    <tr><td colspan="3" style="padding: 24px; text-align: center;"><div class="skeleton" style="height: 20px; width: 100%;"></div></td></tr>
+                    <tr><td colspan="3" class="text-center p-6"><div class="skeleton w-full" style="height: 20px;"></div></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -100,11 +100,11 @@ export class DashboardAdminPage {
           </div>
         </main>
 
-        <!-- Register Paciente Modal (Card Overlay) -->
-        <div id="register-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999;">
-          <div class="card" style="max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
-            <h3 class="text-h1" style="font-size: var(--text-xl); margin-bottom: var(--space-2);">Cadastrar Novo Paciente</h3>
-            <p class="text-p" style="margin-bottom: var(--space-5);">Preencha os dados básicos para gerar as credenciais de acesso do paciente.</p>
+        <!-- Register Paciente Modal -->
+        <div id="register-modal" class="modal-overlay">
+          <div class="card modal-content" style="max-width: 500px;">
+            <h3 class="text-h1 text-xl mb-2">Cadastrar Novo Paciente</h3>
+            <p class="text-p mb-5">Preencha os dados básicos para gerar as credenciais de acesso do paciente.</p>
             
             <form id="register-patient-form">
               <div class="form-group">
@@ -120,7 +120,7 @@ export class DashboardAdminPage {
                 <input type="tel" id="reg-telefone" class="form-input" required placeholder="Ex: (11) 99999-9999">
               </div>
               
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+              <div class="grid grid-cols-2 gap-4">
                 <div class="form-group">
                   <label for="reg-datainicio" class="form-label">Início do Protocolo</label>
                   <input type="date" id="reg-datainicio" class="form-input" required>
@@ -131,7 +131,7 @@ export class DashboardAdminPage {
                 </div>
               </div>
 
-              <div style="display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-4);">
+              <div class="flex gap-3 justify-end mt-4">
                 <button type="button" id="btn-close-register" class="btn btn-outline">Cancelar</button>
                 <button type="submit" class="btn btn-primary">Confirmar Cadastro</button>
               </div>
@@ -140,9 +140,9 @@ export class DashboardAdminPage {
         </div>
 
         <!-- Concede Retroactive Release Modal -->
-        <div id="release-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999;">
-          <div class="card" style="max-width: 500px; width: 90%;">
-            <h3 class="text-h1" style="font-size: var(--text-xl);">Liberar Edição Retroativa</h3>
+        <div id="release-modal" class="modal-overlay">
+          <div class="card modal-content" style="max-width: 500px;">
+            <h3 class="text-h1 text-xl">Liberar Edição Retroativa</h3>
             <p class="text-p">Conceder autorização temporária para o paciente preencher check-ins antigos que esqueceu de registrar.</p>
             
             <form id="release-form">
@@ -151,17 +151,23 @@ export class DashboardAdminPage {
                 <label for="release-hours" class="form-label">Janela de Liberação (Em horas)</label>
                 <input type="number" id="release-hours" class="form-input" min="1" max="72" value="24" required>
               </div>
-              <div class="form-group" style="margin-bottom: var(--space-5);">
+              <div class="form-group mb-5">
                 <label for="release-reason" class="form-label">Justificativa Clínica/Operacional</label>
-                <textarea id="release-reason" class="form-input" minlength="10" required placeholder="Ex: Paciente esqueceu de registrar o consumo do suplemento matinal ontem." style="min-height: 80px; resize: vertical;"></textarea>
+                <textarea id="release-reason" class="form-input" minlength="10" required placeholder="Ex: Paciente esqueceu de registrar o consumo do suplemento matinal ontem."></textarea>
               </div>
               
-              <div style="display: flex; gap: var(--space-3); justify-content: flex-end;">
+              <div class="flex gap-3 justify-end">
                 <button type="button" id="btn-close-release" class="btn btn-outline">Cancelar</button>
                 <button type="submit" class="btn btn-success">Autorizar Liberação</button>
               </div>
             </form>
           </div>
+        </div>
+
+        <!-- Toast notifications overlay -->
+        <div id="toast-overlay" class="toast-overlay">
+          <span id="toast-message" class="font-medium text-sm">Ação realizada!</span>
+          <button id="btn-toast-undo" class="btn" style="background: rgba(255,255,255,0.2); padding: 4px 12px;">Desfazer</button>
         </div>
 
       </div>
@@ -183,11 +189,11 @@ export class DashboardAdminPage {
     const regForm = document.getElementById('register-patient-form');
 
     openRegBtn.addEventListener('click', () => {
-      regModal.classList.remove('hidden');
+      regModal.classList.add('active');
     });
 
     closeRegBtn.addEventListener('click', () => {
-      regModal.classList.add('hidden');
+      regModal.classList.remove('active');
       regForm.reset();
     });
 
@@ -210,7 +216,7 @@ export class DashboardAdminPage {
         });
 
         alert(`Paciente cadastrado com sucesso!\nSenha Temporária gerada: ${res.senhaTemporaria}`);
-        regModal.classList.add('hidden');
+        regModal.classList.remove('active');
         regForm.reset();
         await this.#loadPatientsList();
       } catch (err) {
@@ -224,7 +230,7 @@ export class DashboardAdminPage {
     const releaseForm = document.getElementById('release-form');
 
     closeReleaseBtn.addEventListener('click', () => {
-      releaseModal.classList.add('hidden');
+      releaseModal.classList.remove('active');
       releaseForm.reset();
     });
 
@@ -242,7 +248,7 @@ export class DashboardAdminPage {
         });
 
         alert('Permissão de edição retroativa concedida com sucesso!');
-        releaseModal.classList.add('hidden');
+        releaseModal.classList.remove('active');
         releaseForm.reset();
       } catch (err) {
         alert(`Erro ao conceder liberação: ${err.message}`);
@@ -325,7 +331,7 @@ export class DashboardAdminPage {
           e.stopPropagation();
           const pId = e.target.getAttribute('data-id');
           document.getElementById('release-patient-id').value = pId;
-          document.getElementById('release-modal').classList.remove('hidden');
+          document.getElementById('release-modal').classList.add('active');
         });
       });
 

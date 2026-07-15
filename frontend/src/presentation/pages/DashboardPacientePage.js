@@ -12,26 +12,27 @@ export class DashboardPacientePage {
 
   async render() {
     this.#appContainer.innerHTML = `
+    this.#appContainer.innerHTML = `
       <div class="app-shell">
         <!-- Sidebar Navigation -->
-        <aside style="background-color: var(--color-surface-card); border-right: 1px solid var(--color-border-subtle); padding: var(--space-5); display: flex; flex-direction: column; justify-content: space-between;" class="hidden-mobile">
+        <aside class="bg-card border-r p-5 hidden-mobile flex-col justify-between" style="display: flex;">
           <div>
-            <div class="brand-logo" style="margin-bottom: var(--space-8);">
-              ✨ <span style="font-weight: 300;">Clinical</span> Tracking
+            <div class="brand-logo mb-8">
+              ✨ <span class="font-light">Clinical</span> Tracking
             </div>
             
-            <nav style="display: flex; flex-direction: column; gap: var(--space-2);">
-              <a href="#" class="btn btn-outline" style="justify-content: flex-start; border-color: transparent; background: var(--color-surface-hover); font-weight: 500;">
-                <span style="opacity: 0.7; margin-right: 8px;">📊</span> Meu Tratamento
-              </a>
-              <a href="#" class="btn btn-outline" style="justify-content: flex-start; border-color: transparent; font-weight: 500;">
-                <span style="opacity: 0.7; margin-right: 8px;">🗓️</span> Histórico
-              </a>
+            <nav class="flex flex-col gap-2">
+              <button class="btn btn-outline justify-start border-transparent bg-hover font-medium">
+                <span class="opacity-70 mr-2">📊</span> Meu Tratamento
+              </button>
+              <button class="btn btn-outline justify-start border-transparent font-medium" onclick="alert('Histórico será liberado em breve.')">
+                <span class="opacity-70 mr-2">🗓️</span> Histórico
+              </button>
             </nav>
           </div>
           
-          <div style="border-top: 1px solid var(--color-border-subtle); padding-top: var(--space-4);">
-            <button id="btn-logout-sidebar" class="btn btn-outline" style="width: 100%; border-color: transparent; justify-content: flex-start; color: var(--color-brand-danger);">
+          <div class="border-t pt-4">
+            <button id="btn-logout-sidebar" class="btn btn-outline w-full justify-start border-transparent text-danger">
               Sair da conta
             </button>
           </div>
@@ -41,49 +42,49 @@ export class DashboardPacientePage {
         <main class="main-content">
           <div class="container">
             <!-- Header -->
-            <header class="header" style="border: none; padding-bottom: 0;">
+            <header class="header">
               <div>
-                <h1 class="text-h1" style="font-size: var(--text-2xl);">Olá, <span id="lbl-patient-name" style="font-weight: 300;">Paciente</span></h1>
+                <h1 class="text-h1 text-2xl">Olá, <span id="lbl-patient-name" class="font-light">Paciente</span></h1>
                 <p class="text-p">Aqui está o resumo da sua saúde hoje.</p>
               </div>
               
               <!-- Mobile Logout (Hidden on Desktop if sidebar is visible) -->
-              <button id="btn-logout-mobile" class="btn btn-outline" style="padding: 8px 16px; font-size: var(--text-xs);">Sair</button>
+              <button id="btn-logout-mobile" class="btn btn-outline hidden-desktop px-4">Sair</button>
             </header>
 
             <!-- Bento Grid Layout -->
-            <div class="bento-grid" style="margin-top: var(--space-6);">
+            <div class="bento-grid mt-6">
               
               <!-- Bento Item: Gamification/Stats -->
-              <section class="card" style="background: linear-gradient(135deg, var(--color-brand-accent), #B39270); color: white; border: none; justify-content: center;">
-                <p style="font-size: var(--text-sm); opacity: 0.9; margin-bottom: 8px; font-weight: 500;">Adesão Geral ao Protocolo</p>
-                <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px;">
-                  <h2 id="lbl-completion-rate" style="font-size: 3rem; font-weight: 300; line-height: 1;">--%</h2>
+              <section class="card justify-center" style="background: linear-gradient(135deg, var(--color-brand-accent), #B39270); color: white; border: none; min-height: 200px;">
+                <p class="text-sm font-medium mb-2" style="opacity: 0.9;">Adesão Geral ao Protocolo</p>
+                <div class="flex items-baseline gap-3 mb-4">
+                  <h2 id="lbl-completion-rate" class="font-light" style="font-size: 3.5rem; line-height: 1;">--%</h2>
                   <span class="badge" style="background: rgba(255,255,255,0.2); color: white;">
                     🔥 <span id="lbl-streak-days">0</span> dias seguidos
                   </span>
                 </div>
                 <!-- Progress Bar Base -->
-                <div style="width: 100%; height: 6px; background: rgba(0,0,0,0.2); border-radius: 4px; overflow: hidden;">
-                  <div id="progress-bar-fill" style="width: 0%; height: 100%; background: white; transition: width 1s ease-out;"></div>
+                <div class="w-full rounded-full overflow-hidden" style="height: 6px; background: rgba(0,0,0,0.2);">
+                  <div id="progress-bar-fill" class="h-full" style="width: 0%; background: white; transition: width 1s ease-out;"></div>
                 </div>
               </section>
 
               <!-- Bento Item: Today's Tasks -->
               <section class="card" style="grid-column: 1 / -1; grid-row: span 2;">
-                <h3 class="text-h1" style="font-size: var(--text-lg); margin-bottom: var(--space-4);">Doses Prescritas para Hoje</h3>
-                <div id="doses-container" style="display: flex; flex-direction: column; gap: var(--space-3);">
-                  <div class="skeleton" style="height: 80px; width: 100%;"></div>
-                  <div class="skeleton" style="height: 80px; width: 100%;"></div>
+                <h3 class="text-h1 text-lg mb-4">Doses Prescritas para Hoje</h3>
+                <div id="doses-container" class="flex flex-col gap-3">
+                  <div class="skeleton w-full" style="height: 80px;"></div>
+                  <div class="skeleton w-full" style="height: 80px;"></div>
                 </div>
               </section>
 
               <!-- Bento Item: Weekly Calendar -->
               <section class="card">
-                <h3 class="text-h1" style="font-size: var(--text-lg); margin-bottom: var(--space-4);">Evolução Semanal</h3>
-                <div id="weekly-calendar-slots" style="display: flex; justify-content: space-between; align-items: center; height: 100%;">
+                <h3 class="text-h1 text-lg mb-4">Evolução Semanal</h3>
+                <div id="weekly-calendar-slots" class="flex justify-between items-center h-full">
                   <!-- Dynamically rendered -->
-                  <div class="skeleton" style="height: 40px; width: 100%;"></div>
+                  <div class="skeleton w-full" style="height: 40px;"></div>
                 </div>
               </section>
 
@@ -93,9 +94,9 @@ export class DashboardPacientePage {
       </div>
 
       <!-- Toast notifications overlay -->
-      <div id="toast-overlay" class="hidden" style="position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 9999; background: var(--color-brand-primary); color: white; padding: 12px 24px; border-radius: 30px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow-xl);">
-        <span id="toast-message" style="font-weight: 500; font-size: var(--text-sm);">Ação realizada!</span>
-        <button id="btn-toast-undo" style="background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 20px; padding: 4px 12px; font-size: var(--text-xs); cursor: pointer; transition: background 0.2s;">Desfazer</button>
+      <div id="toast-overlay" class="toast-overlay" style="background: var(--color-brand-primary);">
+        <span id="toast-message" class="font-medium text-sm">Ação realizada!</span>
+        <button id="btn-toast-undo" class="btn" style="background: rgba(255,255,255,0.2); color: white; padding: 4px 12px;">Desfazer</button>
       </div>
     `;
 
@@ -251,12 +252,12 @@ export class DashboardPacientePage {
       undoBtn.textContent = 'Desfazer (4s)';
     }
 
-    toast.classList.remove('hidden');
+    toast.classList.add('active');
 
     let timeoutId;
     
     const hideToast = () => {
-      toast.classList.add('hidden');
+      toast.classList.remove('active');
       undoBtn.replaceWith(undoBtn.cloneNode(true)); // remove event listeners
     };
 

@@ -11,13 +11,13 @@ export class LoginPage {
 
   render() {
     this.#appContainer.innerHTML = `
-      <div class="split-screen">
+      <div class="split-screen bg-base">
         <!-- Visual Art Side (Desktop Only) -->
-        <div class="split-screen-visual">
+        <div class="split-screen-visual hidden lg:flex">
           <div class="visual-shape"></div>
-          <div style="position: relative; z-index: 10; text-align: center; color: white;">
-            <h2 style="font-size: 2.5rem; font-weight: 300; margin-bottom: 16px;">Clinical Tracking</h2>
-            <p style="font-weight: 300; opacity: 0.9; font-size: 1.1rem; max-width: 300px; margin: 0 auto;">
+          <div class="relative text-center flex flex-col items-center justify-center px-6" style="z-index: 10; width: 100%;">
+            <h2 class="text-4xl font-light mb-4 text-primary" style="letter-spacing: -0.02em;">Clinical Tracking</h2>
+            <p class="font-light text-lg text-secondary" style="max-width: 320px; line-height: 1.6;">
               O luxo de uma saúde integrativa, conectada e baseada em precisão científica.
             </p>
           </div>
@@ -25,50 +25,50 @@ export class LoginPage {
 
         <!-- Form Side -->
         <div class="split-screen-content">
-          <div style="width: 100%; max-width: 400px;">
-            <header style="margin-bottom: var(--space-6); text-align: left;">
+          <div class="w-full" style="max-width: 400px;">
+            <header class="mb-8 text-left">
               <h1 class="text-h1">Acolhimento Clínico</h1>
-              <p class="text-p">Seu espaço de evolução e cuidado integrativo.</p>
+              <p class="text-p text-secondary">Seu espaço de evolução e cuidado integrativo.</p>
             </header>
 
             <main>
               <form id="login-form">
-                <div class="form-group">
+                <div class="form-group mb-6">
                   <label for="email" class="form-label">E-mail corporativo ou paciente</label>
                   <input type="email" id="email" class="form-input" required placeholder="nome@email.com" autocomplete="email">
                 </div>
 
-                <div class="form-group" style="margin-bottom: var(--space-6);">
+                <div class="form-group mb-8">
                   <label for="password" class="form-label">Sua senha de acesso</label>
                   <input type="password" id="password" class="form-input" required placeholder="••••••••" autocomplete="current-password">
                 </div>
 
-                <div id="login-error-msg" class="alert alert-error hidden"></div>
+                <div id="login-error-msg" class="alert alert-error hidden mb-6"></div>
 
-                <button type="submit" class="btn btn-primary" id="btn-login-submit" style="width: 100%;">
-                  <span class="btn-text">Acessar meu tratamento</span>
+                <button type="submit" class="btn btn-primary w-full" id="btn-login-submit">
+                  <span class="btn-text">Entrar no Tratamento</span>
                   <span class="btn-spinner spinner hidden"></span>
                 </button>
               </form>
             </main>
 
-            <footer style="margin-top: var(--space-8); text-align: center;">
-              <button id="btn-config-url" class="btn btn-outline" style="font-size: var(--text-xs); padding: 8px 16px;">
-                Configurações de Conexão (GAS)
+            <footer class="mt-8 text-center">
+              <button id="btn-config-url" class="btn btn-outline" style="padding: 8px 16px;">
+                <span class="text-xs">⚙️ Configurações de Conexão (GAS)</span>
               </button>
             </footer>
           </div>
         </div>
 
-        <!-- URL Configuration Modal (Card Style) -->
-        <div id="config-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999;">
-          <div class="card" style="max-width: 400px; width: 90%;">
-            <h3 class="text-h1" style="font-size: var(--text-xl);">Endpoint da API</h3>
-            <p class="text-p">Insira a URL de execução do seu Google Apps Script:</p>
-            <input type="url" id="input-gas-url" class="form-input" style="margin-bottom: var(--space-4);" placeholder="https://script.google.com/macros/s/.../exec">
-            <div style="display: flex; gap: var(--space-3); justify-content: flex-end;">
+        <!-- URL Configuration Modal (Premium Glassmorphism) -->
+        <div id="config-modal" class="modal-overlay">
+          <div class="card modal-content">
+            <h3 class="text-h1 text-xl mb-2">Endpoint da API</h3>
+            <p class="text-p mb-6">Insira a URL de execução do seu Google Apps Script:</p>
+            <input type="url" id="input-gas-url" class="form-input mb-6" placeholder="https://script.google.com/macros/s/.../exec">
+            <div class="flex justify-end gap-3">
               <button id="btn-close-modal" class="btn btn-outline">Cancelar</button>
-              <button id="btn-save-url" class="btn btn-success">Salvar</button>
+              <button id="btn-save-url" class="btn btn-success">Salvar Conexão</button>
             </div>
           </div>
         </div>
@@ -134,18 +134,18 @@ export class LoginPage {
 
     configBtn.addEventListener('click', () => {
       urlInput.value = localStorage.getItem('API_BASE_URL') || '';
-      modal.classList.remove('hidden');
+      modal.classList.add('active');
     });
 
     closeModalBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
+      modal.classList.remove('active');
     });
 
     saveUrlBtn.addEventListener('click', () => {
       const url = urlInput.value.trim();
       if (url.startsWith('https://script.google.com/')) {
         ApiClient.setApiBaseUrl(url);
-        modal.classList.add('hidden');
+        modal.classList.remove('active');
         alert('Endpoint configurado com sucesso!');
       } else {
         alert('URL inválida. Deve iniciar com https://script.google.com/');
