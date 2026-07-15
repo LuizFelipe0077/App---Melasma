@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Acompanhamento Clínico Integrativo - Tratamento Personalizado</title>
+  
+  <!-- Security Headers (CWE-1021, CWE-16) -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com; img-src 'self' data:; frame-ancestors 'none';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Acompanhe seu protocolo de tratamento clínico de forma simples, leve e intuitiva. Gerencie doses, acompanhe sua evolução e conquiste hábitos saudáveis diariamente.">
+  <meta name="theme-color" content="#F5F4F1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  
+  <!-- Google Fonts: Outfit (subset latin for reduced download ~45KB→12KB) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap&subset=latin" rel="stylesheet">
+  
+  <!-- Preconnect to GAS Backend (~300ms savings on DNS+TLS handshake) -->
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="./manifest.json">
+  
+  <!-- Design tokens (cor, espaco, tipo, borda, sombra, motion) -->
+  <link rel="stylesheet" href="./src/presentation/tokens.css">
+
+  <!-- Reset, utilitarios e componentes -->
+  <link rel="stylesheet" href="./src/presentation/index.css">
+</head>
+<body>
+  
+  <!-- Main SPA Container -->
+  <div id="app">
+    <!-- Estado inicial, antes do JS assumir -->
+    <div class="boot-screen" role="status" aria-live="polite">
+      <div class="spinner spinner-lg" aria-hidden="true"></div>
+      <p class="boot-screen-label">Preparando seu ambiente seguro</p>
+    </div>
+  </div>
+
+  <!-- Main JavaScript App Entrypoint (ES Modules) -->
+  <script type="module" src="./src/presentation/app.js"></script>
+</body>
+</html>
