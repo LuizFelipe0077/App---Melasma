@@ -178,10 +178,13 @@ export class DashboardAdminPage {
   }
 
   #setupAdminListeners() {
-    document.getElementById('btn-admin-logout').addEventListener('click', () => {
+    const handleLogout = () => {
       sessionStorage.clear();
       this.#onLogout();
-    });
+    };
+
+    document.getElementById('btn-admin-logout-sidebar')?.addEventListener('click', handleLogout);
+    document.getElementById('btn-admin-logout-mobile')?.addEventListener('click', handleLogout);
 
     const regModal = document.getElementById('register-modal');
     const openRegBtn = document.getElementById('btn-open-register-modal');
