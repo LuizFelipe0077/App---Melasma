@@ -40,6 +40,11 @@ export class ListarPacientesUseCase {
         id: paciente.id.value,
         nome: paciente.nome,
         email: paciente.email.value,
+        telefone: paciente.telefone.value,
+        status: paciente.status,
+        dataInicio: paciente.dataInicio.toISOString().split('T')[0],
+        dataFim: paciente.dataFim.toISOString().split('T')[0],
+        senhaHash: paciente.senhaHash.value,
         rate: rate
       };
     });

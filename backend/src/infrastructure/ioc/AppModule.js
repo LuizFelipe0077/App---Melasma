@@ -12,6 +12,8 @@ import { RegistrarCheckinUseCase } from '../../application/useCases/RegistrarChe
 import { LiberarEdicaoRetroativaUseCase } from '../../application/useCases/LiberarEdicaoRetroativaUseCase.js';
 import { GerarDashboardUseCase } from '../../application/useCases/GerarDashboardUseCase.js';
 import { ListarPacientesUseCase } from '../../application/useCases/ListarPacientesUseCase.js';
+import { EditarPacienteUseCase } from '../../application/useCases/EditarPacienteUseCase.js';
+import { ExcluirPacienteUseCase } from '../../application/useCases/ExcluirPacienteUseCase.js';
 
 /**
  * AppModule (IoC Container)
@@ -80,6 +82,15 @@ class Container {
       this.useCases.listarPacientesUseCase = new ListarPacientesUseCase(
         s.pacienteRepository,
         s.checkinRepository
+      );
+
+      this.useCases.editarPacienteUseCase = new EditarPacienteUseCase(
+        s.pacienteRepository,
+        s.criptografiaService
+      );
+
+      this.useCases.excluirPacienteUseCase = new ExcluirPacienteUseCase(
+        s.pacienteRepository
       );
 
       this.useCases.initialized = true;

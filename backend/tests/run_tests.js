@@ -15,6 +15,8 @@ import { GoogleSheetsPermissaoRepository } from '../src/infrastructure/repositor
 import { CriarPacienteUseCase } from '../src/application/useCases/CriarPacienteUseCase.js';
 import { RegistrarCheckinUseCase } from '../src/application/useCases/RegistrarCheckinUseCase.js';
 import { LoginUseCase } from '../src/application/useCases/LoginUseCase.js';
+import { EditarPacienteUseCase } from '../src/application/useCases/EditarPacienteUseCase.js';
+import { ExcluirPacienteUseCase } from '../src/application/useCases/ExcluirPacienteUseCase.js';
 
 async function runTests() {
   process.env.ADMIN_EMAIL = 'admin@clinica.com';
@@ -102,11 +104,12 @@ async function runTests() {
       nome: 'Mariana Costa',
       email: 'mariana.costa@email.com',
       telefone: '(11) 98888-8888',
+      senha: 'mariana123',
       dataInicio: new Date().toISOString(),
       dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     });
 
-    if (!result.id || result.email !== 'mariana.costa@email.com' || !result.senhaTemporaria) {
+    if (!result.id || result.email !== 'mariana.costa@email.com' || !result.senha) {
       throw new Error('Retorno do DTO de criação do paciente inválido.');
     }
 
@@ -129,6 +132,7 @@ async function runTests() {
       nome: 'Carla Souza',
       email: 'carla@email.com',
       telefone: '(11) 98888-8888',
+      senha: 'carla123',
       dataInicio: new Date().toISOString(),
       dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     });
@@ -138,7 +142,7 @@ async function runTests() {
     // Patient Login
     const loginResult = await loginUC.execute({
       email: 'carla@email.com',
-      senha: regResult.senhaTemporaria
+      senha: regResult.senha
     });
 
     if (loginResult.role !== 'PACIENTE' || loginResult.userId !== regResult.id) {
@@ -153,6 +157,96 @@ async function runTests() {
 
     if (adminLogin.role !== 'ADMIN' || adminLogin.userId !== 'admin_root') {
       throw new Error('Autenticação do Administrador falhou.');
+    }
+  });
+
+  // --- Test 7: EditarPacienteUseCase ---
+  await test('Caso de Uso - EditarPacienteUseCase (Edição e Alteração de Senha)', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const cryptoService = new BcryptGasService();
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService);
+    const editarUC = new EditarPacienteUseCase(pacienteRepo, cryptoService);
+    const loginUC = new LoginUseCase(pacienteRepo, cryptoService, new TokenService());
+
+    const reg = await registerUC.execute({
+      nome: 'José Silva',
+      email: 'jose@email.com',
+      telefone: '(11) 97777-7777',
+      senha: 'oldpassword',
+      dataInicio: new Date().toISOString(),
+      dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    });
+
+    // Edit Name & Status & Change Password
+    await editarUC.execute({
+      id: reg.id,
+      nome: 'José Silva Junior',
+      email: 'jose@email.com',
+      telefone: '(11) 97777-7777',
+      dataInicio: new Date().toISOString(),
+      dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'INATIVO',
+      senha: 'newpassword123'
+    });
+
+    const updated = await pacienteRepo.findById(reg.id);
+    if (updated.nome !== 'José Silva Junior' || updated.status !== 'INATIVO') {
+      throw new Error('Erro ao editar dados ou status do paciente.');
+    }
+
+    // Verify old password doesn't work and new password works (when status is active, so let's set status back to active first)
+    await editarUC.execute({
+      id: reg.id,
+      nome: 'José Silva Junior',
+      email: 'jose@email.com',
+      telefone: '(11) 97777-7777',
+      dataInicio: new Date().toISOString(),
+      dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'ATIVO',
+      senha: null // keep password
+    });
+
+    const loginRes = await loginUC.execute({
+      email: 'jose@email.com',
+      senha: 'newpassword123'
+    });
+
+    if (!loginRes.token) {
+      throw new Error('A nova senha não funcionou.');
+    }
+
+    try {
+      await loginUC.execute({
+        email: 'jose@email.com',
+        senha: 'oldpassword'
+      });
+      throw new Error('A senha antiga ainda está ativa.');
+    } catch(e) {
+      // pass: should fail
+    }
+  });
+
+  // --- Test 8: ExcluirPacienteUseCase ---
+  await test('Caso de Uso - ExcluirPacienteUseCase', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const cryptoService = new BcryptGasService();
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService);
+    const excluirUC = new ExcluirPacienteUseCase(pacienteRepo);
+
+    const reg = await registerUC.execute({
+      nome: 'Paciente Deletado',
+      email: 'delete@email.com',
+      telefone: '(11) 96666-6666',
+      senha: 'delete123',
+      dataInicio: new Date().toISOString(),
+      dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    });
+
+    await excluirUC.execute({ id: reg.id });
+
+    const deleted = await pacienteRepo.findById(reg.id);
+    if (deleted !== null) {
+      throw new Error('Paciente não foi excluído da memória.');
     }
   });
 

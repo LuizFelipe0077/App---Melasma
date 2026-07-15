@@ -9,11 +9,11 @@
 export const SheetColumns = {
   PACIENTE: {
     ID: 0,
-    NOME: 1,
-    EMAIL: 2,
-    TELEFONE: 3,
-    SENHA_HASH: 4,
-    PROTOCOLO_ID: 5,
+    PROTOCOLO_ID: 1,
+    NOME: 2,
+    EMAIL: 3,
+    TELEFONE: 4,
+    SENHA_HASH: 5,
     STATUS: 6,
     DATA_INICIO: 7,
     DATA_FIM: 8

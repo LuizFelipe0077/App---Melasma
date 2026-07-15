@@ -31,4 +31,8 @@ export class GoogleSheetsPacienteRepository extends GoogleSheetsRepository {
   update(paciente) {
     this.save(paciente);
   }
+
+  delete(id) {
+    this.deleteRow(id, 0);
+  }
 }

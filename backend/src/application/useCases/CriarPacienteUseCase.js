@@ -16,26 +16,32 @@ export class CriarPacienteUseCase {
    * @param {object} input DTO (nome, email, telefone, dataInicio, dataFim)
    * @returns {Promise<object>} output DTO (id, email, senhaTemporaria)
    */
-  execute({ nome, email, telefone, dataInicio, dataFim }) {
+  execute({ nome, email, telefone, senha, dataInicio, dataFim }) {
     // 1. Basic validation
-    if (!nome || !email || !telefone || !dataInicio || !dataFim) {
-      throw new Error('Todos os campos obrigatórios devem ser fornecidos.');
+    if (!nome || !email || !telefone || !senha || !dataInicio || !dataFim) {
+      throw new Error('Todos os campos obrigatórios (incluindo senha) devem ser fornecidos.');
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanSenha = senha.trim();
+
+    if (cleanSenha.length < 4) {
+      throw new Error('A senha deve possuir pelo menos 4 caracteres.');
     }
 
     // 2. Uniqueness check
-    const existingPaciente = this.#pacienteRepository.findByEmail(email);
+    const existingPaciente = this.#pacienteRepository.findByEmail(cleanEmail);
     if (existingPaciente) {
       throw new Error('Já existe um paciente cadastrado com este e-mail.');
     }
 
-    // 3. Generate secure temporary password
-    const tempPassword = this.#generateTempPassword();
-    const senhaHashString = this.#criptografiaService.hash(tempPassword);
+    // 3. Hash the manual password
+    const senhaHashString = this.#criptografiaService.hash(cleanSenha);
 
     // 4. Instantiate Patient via Domain Factory (handles VOs and domain validations)
     const paciente = PacienteFactory.createNew({
       nome,
-      email,
+      email: cleanEmail,
       telefone,
       senhaHashString,
       dataInicio,
@@ -45,14 +51,14 @@ export class CriarPacienteUseCase {
     // 5. Persist patient to storage
     this.#pacienteRepository.save(paciente);
 
-    // 6. Dispatch Domain Event for collateral actions (like sending email)
-    eventDispatcher.dispatch(new PacienteCriadoEvent(paciente, tempPassword));
+    // 6. Dispatch Domain Event for collateral actions
+    eventDispatcher.dispatch(new PacienteCriadoEvent(paciente, cleanSenha));
 
     // 7. Return safe Output DTO
     return {
       id: paciente.id.value,
       email: paciente.email.value,
-      senhaTemporaria: tempPassword
+      senha: cleanSenha
     };
   }
 

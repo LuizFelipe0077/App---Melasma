@@ -148,4 +148,58 @@ export class GoogleSheetsRepository {
       lock.releaseLock();
     }
   }
+
+  /**
+   * Deletes a row.
+   * @param {string} idColumnValue
+   * @param {number} idColIndex
+   */
+  deleteRow(idColumnValue, idColIndex = 0) {
+    if (typeof SpreadsheetApp === 'undefined') {
+      const data = memoryDB.get(this.#tabName);
+      const index = data.findIndex(row => row[idColIndex] === idColumnValue);
+      if (index >= 0) {
+        data.splice(index, 1);
+      }
+      return;
+    }
+
+    const lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(10000);
+      
+      const ss = SpreadsheetApp.openById(SystemConfiguration.DATABASE_SPREADSHEET_ID);
+      let sheet = ss.getSheetByName(this.#tabName);
+      if (!sheet) return;
+
+      const lastRow = sheet.getLastRow();
+      let rowIndexToDelete = -1;
+
+      if (lastRow > 1) {
+        const ids = sheet.getRange(2, idColIndex + 1, lastRow - 1, 1).getValues();
+        for (let i = 0; i < ids.length; i++) {
+          if (ids[i][0] === idColumnValue) {
+            rowIndexToDelete = i + 2;
+            break;
+          }
+        }
+      }
+
+      if (rowIndexToDelete >= 2) {
+        sheet.deleteRow(rowIndexToDelete);
+      }
+      
+      SpreadsheetApp.flush();
+      
+      if (typeof CacheService !== 'undefined') {
+        try {
+          CacheService.getScriptCache().remove(`sheet_${this.#tabName}`);
+        } catch (e) {}
+      }
+    } catch (error) {
+      throw new Error(`Erro ao deletar da planilha [${this.#tabName}]: ${error.message}`);
+    } finally {
+      lock.releaseLock();
+    }
+  }
 }

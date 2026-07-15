@@ -119,6 +119,10 @@ export class DashboardAdminPage {
                 <label for="reg-telefone" class="form-label">WhatsApp</label>
                 <input type="tel" id="reg-telefone" class="form-input" required placeholder="Ex: (11) 99999-9999">
               </div>
+              <div class="form-group">
+                <label for="reg-senha" class="form-label">Senha de Acesso (Manual)</label>
+                <input type="password" id="reg-senha" class="form-input" required placeholder="Ex: Maria@2026">
+              </div>
               
               <div class="grid grid-cols-2 gap-4">
                 <div class="form-group">
@@ -159,6 +163,70 @@ export class DashboardAdminPage {
               <div class="flex gap-3 justify-end">
                 <button type="button" id="btn-close-release" class="btn btn-outline">Cancelar</button>
                 <button type="submit" class="btn btn-success">Autorizar Liberação</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Manage Patient Modal -->
+        <div id="manage-patient-modal" class="modal-overlay">
+          <div class="card modal-content" style="max-width: 500px; max-height: 90vh; overflow-y: auto;">
+            <h3 class="text-h1 text-xl mb-2">Gerenciar Paciente</h3>
+            <p class="text-p mb-5">Visualize, edite ou gerencie as informações da conta do paciente.</p>
+            
+            <form id="manage-patient-form">
+              <input type="hidden" id="manage-id">
+              
+              <div class="form-group">
+                <label for="manage-nome" class="form-label">Nome Completo</label>
+                <input type="text" id="manage-nome" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label for="manage-email" class="form-label">E-mail (Login)</label>
+                <input type="email" id="manage-email" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label for="manage-telefone" class="form-label">WhatsApp</label>
+                <input type="tel" id="manage-telefone" class="form-input" required>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label for="manage-datainicio" class="form-label">Início do Protocolo</label>
+                  <input type="date" id="manage-datainicio" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label for="manage-datafim" class="form-label">Fim (Previsão)</label>
+                  <input type="date" id="manage-datafim" class="form-input" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="manage-status" class="form-label">Status da Conta</label>
+                <select id="manage-status" class="form-input" style="background: rgba(0,0,0,0.2); border: 1px solid var(--color-border-strong); color: var(--color-text-primary);">
+                  <option value="ATIVO" style="background: var(--color-surface-base);">ATIVO (Acesso liberado)</option>
+                  <option value="INATIVO" style="background: var(--color-surface-base);">INATIVO (Acesso bloqueado)</option>
+                </select>
+              </div>
+
+              <div class="border-t pt-4 mt-4" style="border-color: var(--color-border-subtle);">
+                <h4 class="text-base font-semibold mb-2" style="color: var(--color-text-primary);">🔑 Segurança & Senha</h4>
+                <div class="form-group mb-2">
+                  <label class="form-label">Hash da Senha Atual</label>
+                  <input type="text" id="manage-current-hash" class="form-input" readonly disabled style="opacity: 0.6;">
+                </div>
+                <div class="form-group">
+                  <label for="manage-new-senha" class="form-label">Definir Nova Senha (Opcional)</label>
+                  <input type="password" id="manage-new-senha" class="form-input" placeholder="Digite apenas se quiser alterar a senha">
+                </div>
+              </div>
+
+              <div class="flex gap-3 justify-between mt-6">
+                <button type="button" id="btn-delete-patient" class="btn btn-outline text-danger" style="border-color: var(--color-brand-danger);">Excluir Conta</button>
+                <div class="flex gap-2">
+                  <button type="button" id="btn-close-manage" class="btn btn-outline">Cancelar</button>
+                  <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
               </div>
             </form>
           </div>
@@ -210,24 +278,88 @@ export class DashboardAdminPage {
       const nome = document.getElementById('reg-nome').value;
       const email = document.getElementById('reg-email').value;
       const telefone = document.getElementById('reg-telefone').value;
+      const senha = document.getElementById('reg-senha').value;
       const dataInicio = new Date(document.getElementById('reg-datainicio').value).toISOString();
       const dataFim = new Date(document.getElementById('reg-datafim').value).toISOString();
 
       try {
-        const res = await ApiClient.call('criarPaciente', {
+        await ApiClient.call('criarPaciente', {
           nome,
           email,
           telefone,
+          senha,
           dataInicio,
           dataFim
         });
 
-        alert(`Paciente cadastrado com sucesso!\nSenha Temporária gerada: ${res.senhaTemporaria}`);
+        alert(`Paciente cadastrado com sucesso!`);
         regModal.classList.remove('active');
         regForm.reset();
         await this.#loadPatientsList();
       } catch (err) {
         alert(`Erro ao cadastrar: ${err.message}`);
+      }
+    });
+
+    // Manage Patient Modal handlers
+    const manageModal = document.getElementById('manage-patient-modal');
+    const manageForm = document.getElementById('manage-patient-form');
+    const closeManageBtn = document.getElementById('btn-close-manage');
+    const deletePatientBtn = document.getElementById('btn-delete-patient');
+
+    closeManageBtn.addEventListener('click', () => {
+      manageModal.classList.remove('active');
+      manageForm.reset();
+    });
+
+    manageForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pacienteId = document.getElementById('manage-id').value;
+      const nome = document.getElementById('manage-nome').value;
+      const email = document.getElementById('manage-email').value;
+      const telefone = document.getElementById('manage-telefone').value;
+      const status = document.getElementById('manage-status').value;
+      const dataInicio = new Date(document.getElementById('manage-datainicio').value).toISOString();
+      const dataFim = new Date(document.getElementById('manage-datafim').value).toISOString();
+      const senha = document.getElementById('manage-new-senha').value;
+
+      try {
+        await ApiClient.call('editarPaciente', {
+          pacienteId,
+          nome,
+          email,
+          telefone,
+          status,
+          dataInicio,
+          dataFim,
+          senha: senha || null
+        });
+
+        alert('Paciente atualizado com sucesso!');
+        manageModal.classList.remove('active');
+        manageForm.reset();
+        await this.#loadPatientsList();
+      } catch (err) {
+        alert(`Erro ao salvar alterações: ${err.message}`);
+      }
+    });
+
+    deletePatientBtn.addEventListener('click', async () => {
+      const pacienteId = document.getElementById('manage-id').value;
+      const nome = document.getElementById('manage-nome').value;
+      
+      if (!confirm(`Tem certeza absoluta que deseja excluir permanentemente a conta de ${nome}?`)) {
+        return;
+      }
+
+      try {
+        await ApiClient.call('excluirPaciente', { pacienteId });
+        alert('Paciente excluído com sucesso!');
+        manageModal.classList.remove('active');
+        manageForm.reset();
+        await this.#loadPatientsList();
+      } catch (err) {
+        alert(`Erro ao excluir paciente: ${err.message}`);
       }
     });
 
@@ -345,8 +477,20 @@ export class DashboardAdminPage {
       tbody.querySelectorAll('tr').forEach(row => {
         row.addEventListener('click', (e) => {
           const pId = row.getAttribute('data-id');
-          // Extensible: click loads detailed patient reports in an admin modal view
-          alert(`Carregando relatório clínico de evolução do paciente ID: ${pId}`);
+          const p = livePatients.find(item => item.id === pId);
+          if (!p) return;
+
+          document.getElementById('manage-id').value = p.id;
+          document.getElementById('manage-nome').value = p.nome;
+          document.getElementById('manage-email').value = p.email;
+          document.getElementById('manage-telefone').value = p.telefone;
+          document.getElementById('manage-datainicio').value = p.dataInicio;
+          document.getElementById('manage-datafim').value = p.dataFim;
+          document.getElementById('manage-status').value = p.status;
+          document.getElementById('manage-current-hash').value = p.senhaHash;
+          document.getElementById('manage-new-senha').value = ''; // clear
+
+          document.getElementById('manage-patient-modal').classList.add('active');
         });
       });
 

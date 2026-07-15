@@ -25,8 +25,30 @@ export class GasRouter {
           nome: payload.nome,
           email: payload.email,
           telefone: payload.telefone,
+          senha: payload.senha,
           dataInicio: payload.dataInicio,
           dataFim: payload.dataFim
+        });
+      },
+
+      'editarPaciente': (payload) => {
+        GasRouter._verifyAdminToken(payload.token, services.tokenService);
+        return useCases.editarPacienteUseCase.execute({
+          id: payload.pacienteId,
+          nome: payload.nome,
+          email: payload.email,
+          telefone: payload.telefone,
+          dataInicio: payload.dataInicio,
+          dataFim: payload.dataFim,
+          status: payload.status,
+          senha: payload.senha
+        });
+      },
+
+      'excluirPaciente': (payload) => {
+        GasRouter._verifyAdminToken(payload.token, services.tokenService);
+        return useCases.excluirPacienteUseCase.execute({
+          id: payload.pacienteId
         });
       },
 
