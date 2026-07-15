@@ -6,7 +6,7 @@ export const SystemConfiguration = {
   // Production Apps Script URL (API Endpoint)
   // In production, this points to the deployed GAS web app URL.
   // In development, it falls back to local storage or development stub.
-  API_BASE_URL: localStorage.getItem('API_BASE_URL') || 'https://script.google.com/macros/s/DEVELOPMENT_STUB/exec',
+  API_BASE_URL: localStorage.getItem('API_BASE_URL') || 'https://script.google.com/macros/s/AKfycby_E0a6SOkGz3zOScWyTVNVsH3SicSt6OEZMWISRk2wJLYlCYg2ugu1W3SkvNGlX1hG/exec',
 
   // Session Management
   SESSION_TIMEOUT_MINUTES: 120, // 2 hours

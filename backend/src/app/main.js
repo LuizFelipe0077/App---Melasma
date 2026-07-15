@@ -5,16 +5,16 @@ import { DatabaseSetup } from '../infrastructure/persistence/DatabaseSetup.js';
  * doPost(e)
  * Global entrypoint for Google Apps Script WebApp POST requests.
  */
-export function doPost(e) {
+global.doPost = function(e) {
   return handlePost(e);
-}
+};
 
 /**
  * doGet(e)
  * Global entrypoint for Google Apps Script WebApp GET requests.
  * Used for status checking and health check verification.
  */
-export function doGet(e) {
+global.doGet = function(e) {
   const status = {
     app: 'Acompanhamento Clínico Integrativo API',
     status: 'ONLINE',
@@ -27,13 +27,13 @@ export function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
   return JSON.stringify(status);
-}
+};
 
 /**
  * setup()
  * Manual trigger function to initialize the spreadsheet database structure.
  * Clinical administrators run this function once from the GAS Editor after deployment.
  */
-export function setup() {
+global.setup = function() {
   DatabaseSetup.initializeDatabase();
-}
+};
