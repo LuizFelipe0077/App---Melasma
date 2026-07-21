@@ -51,6 +51,22 @@ export class Gamificacao {
     this.#verificarConquistasXp();
   }
 
+  /**
+   * Reverses the XP awarded for a check-in (mirrors creditarCheckin), used
+   * when a check-in is cancelled. Floors at 0 — never goes negative.
+   */
+  debitarCheckin(statusCheckin) {
+    if (statusCheckin === StatusCheckin.CONCLUIDO) {
+      this.#xpTotal = Math.max(0, this.#xpTotal - 10);
+    } else if (statusCheckin === StatusCheckin.ATRASADO) {
+      this.#xpTotal = Math.max(0, this.#xpTotal - 5);
+    }
+  }
+
+  decrementarStreak() {
+    this.#streakAtual = Math.max(0, this.#streakAtual - 1);
+  }
+
   incrementarStreak() {
     this.#streakAtual++;
     if (this.#streakAtual > this.#maiorStreak) {

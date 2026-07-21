@@ -19,6 +19,7 @@ export class CheckinMapper {
     row[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA] = checkin.dataHoraPrescrita.toISOString();
     row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA] = checkin.dataHoraRealizada ? checkin.dataHoraRealizada.toISOString() : '';
     row[SheetColumns.CHECKIN.STATUS] = checkin.status;
+    row[SheetColumns.CHECKIN.RETROATIVO] = checkin.retroativo ? 'TRUE' : 'FALSE';
     return row;
   }
 
@@ -34,7 +35,8 @@ export class CheckinMapper {
       suplementoId: new UUID(row[SheetColumns.CHECKIN.SUPLEMENTO_ID]),
       dataHoraPrescrita: new Date(row[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA]),
       dataHoraRealizada: row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA] ? new Date(row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA]) : null,
-      status: row[SheetColumns.CHECKIN.STATUS]
+      status: row[SheetColumns.CHECKIN.STATUS],
+      retroativo: row[SheetColumns.CHECKIN.RETROATIVO] === 'TRUE' || row[SheetColumns.CHECKIN.RETROATIVO] === true
     });
   }
 }

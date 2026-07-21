@@ -34,7 +34,8 @@ export const SheetColumns = {
     SUPLEMENTO_ID: 2,
     DATA_HORA_PRESCRITA: 3,
     DATA_HORA_REALIZADA: 4,
-    STATUS: 5
+    STATUS: 5,
+    RETROATIVO: 6
   },
   PROTOCOLO: {
     ID: 0,
