@@ -10,6 +10,9 @@ import { LoginUseCase } from '../../application/useCases/LoginUseCase.js';
 import { CriarPacienteUseCase } from '../../application/useCases/CriarPacienteUseCase.js';
 import { RegistrarCheckinUseCase } from '../../application/useCases/RegistrarCheckinUseCase.js';
 import { CancelarCheckinUseCase } from '../../application/useCases/CancelarCheckinUseCase.js';
+import { AdicionarSuplementoUseCase } from '../../application/useCases/AdicionarSuplementoUseCase.js';
+import { EditarSuplementoUseCase } from '../../application/useCases/EditarSuplementoUseCase.js';
+import { RemoverSuplementoUseCase } from '../../application/useCases/RemoverSuplementoUseCase.js';
 import { LiberarEdicaoRetroativaUseCase } from '../../application/useCases/LiberarEdicaoRetroativaUseCase.js';
 import { GerarDashboardUseCase } from '../../application/useCases/GerarDashboardUseCase.js';
 import { ListarPacientesUseCase } from '../../application/useCases/ListarPacientesUseCase.js';
@@ -74,6 +77,19 @@ class Container {
       this.useCases.cancelarCheckinUseCase = new CancelarCheckinUseCase(
         s.checkinRepository,
         s.gamificacaoRepository
+      );
+
+      this.useCases.adicionarSuplementoUseCase = new AdicionarSuplementoUseCase(
+        s.pacienteRepository,
+        s.protocoloRepository
+      );
+
+      this.useCases.editarSuplementoUseCase = new EditarSuplementoUseCase(
+        s.protocoloRepository
+      );
+
+      this.useCases.removerSuplementoUseCase = new RemoverSuplementoUseCase(
+        s.protocoloRepository
       );
 
       this.useCases.liberarEdicaoRetroativaUseCase = new LiberarEdicaoRetroativaUseCase(

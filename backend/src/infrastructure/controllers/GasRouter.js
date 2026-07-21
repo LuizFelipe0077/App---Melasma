@@ -75,6 +75,45 @@ export class GasRouter {
         });
       },
 
+      'adicionarSuplemento': (payload) => {
+        GasRouter._verifyAdminToken(payload.token, services.tokenService);
+        return useCases.adicionarSuplementoUseCase.execute({
+          pacienteId: payload.pacienteId,
+          nome: payload.nome,
+          dosagem: payload.dosagem,
+          quantidade: payload.quantidade,
+          tipo: payload.tipo,
+          horarios: payload.horarios,
+          diasSemana: payload.diasSemana,
+          instrucoes: payload.instrucoes,
+          notificacao: payload.notificacao,
+          dataInicio: payload.dataInicio,
+          dataFim: payload.dataFim
+        });
+      },
+
+      'editarSuplemento': (payload) => {
+        GasRouter._verifyAdminToken(payload.token, services.tokenService);
+        return useCases.editarSuplementoUseCase.execute({
+          suplementoId: payload.suplementoId,
+          nome: payload.nome,
+          dosagem: payload.dosagem,
+          quantidade: payload.quantidade,
+          tipo: payload.tipo,
+          horarios: payload.horarios,
+          diasSemana: payload.diasSemana,
+          instrucoes: payload.instrucoes,
+          notificacao: payload.notificacao
+        });
+      },
+
+      'removerSuplemento': (payload) => {
+        GasRouter._verifyAdminToken(payload.token, services.tokenService);
+        return useCases.removerSuplementoUseCase.execute({
+          suplementoId: payload.suplementoId
+        });
+      },
+
       'liberarEdicaoRetroativa': (payload) => {
         const adminUser = GasRouter._verifyAdminToken(payload.token, services.tokenService);
         return useCases.liberarEdicaoRetroativaUseCase.execute({

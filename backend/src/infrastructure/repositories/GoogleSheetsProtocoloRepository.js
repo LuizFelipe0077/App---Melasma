@@ -100,26 +100,53 @@ export class GoogleSheetsProtocoloRepository extends GoogleSheetsRepository {
 
     // 2. Save each supplement
     for (const suplemento of protocolo.suplementos) {
-      const sRow = [
-        suplemento.id.value,
-        suplemento.protocoloId.value,
-        suplemento.nome,
-        suplemento.dosagem,
-        JSON.stringify(suplemento.horarios),
-        suplemento.instrucoes,
-        suplemento.quantidade,
-        JSON.stringify(suplemento.diasSemana),
-        formatDatePtBr(suplemento.dataInicio),
-        formatDatePtBr(suplemento.dataFim),
-        suplemento.tipo,
-        suplemento.notificacao
-      ];
-      this.#suplementosSheet.writeRow(sRow, suplemento.id.value, 0);
+      this.#suplementosSheet.writeRow(this.#suplementoToRow(suplemento), suplemento.id.value, 0);
     }
   }
 
   findSuplementosByProtocoloId(protocoloId) {
     const p = this.findById(protocoloId);
     return p ? p.suplementos : [];
+  }
+
+  /**
+   * Adds a single supplement to an already-existing protocol (patient managed
+   * post-creation). Additive — does not touch protocol-level fields.
+   */
+  addSuplemento(suplemento) {
+    this.#suplementosSheet.writeRow(this.#suplementoToRow(suplemento), suplemento.id.value, 0);
+  }
+
+  /**
+   * Updates a single existing supplement row in place.
+   */
+  updateSuplemento(suplemento) {
+    this.#suplementosSheet.writeRow(this.#suplementoToRow(suplemento), suplemento.id.value, 0);
+  }
+
+  /**
+   * Removes a single supplement row. Historical check-ins tied to it are
+   * left untouched (audit trail), matching how excluirPaciente doesn't
+   * cascade-delete check-ins either.
+   */
+  removeSuplemento(suplementoId) {
+    this.#suplementosSheet.deleteRow(suplementoId, 0);
+  }
+
+  #suplementoToRow(suplemento) {
+    return [
+      suplemento.id.value,
+      suplemento.protocoloId.value,
+      suplemento.nome,
+      suplemento.dosagem,
+      JSON.stringify(suplemento.horarios),
+      suplemento.instrucoes,
+      suplemento.quantidade,
+      JSON.stringify(suplemento.diasSemana),
+      formatDatePtBr(suplemento.dataInicio),
+      formatDatePtBr(suplemento.dataFim),
+      suplemento.tipo,
+      suplemento.notificacao
+    ];
   }
 }
