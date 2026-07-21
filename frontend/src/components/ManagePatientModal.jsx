@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import Modal from './Modal.jsx';
+import ManageSupplements from './ManageSupplements.jsx';
+import Sheet from './Sheet.jsx';
 import { useConfirm } from '../context/ConfirmContext.jsx';
 
 const emptyForm = { id: '', nome: '', email: '', telefone: '', dataInicio: '', dataFim: '', status: 'ATIVO', novaSenha: '' };
@@ -11,21 +12,12 @@ export default function ManagePatientModal({ open, patient, onClose, onSave, onD
 
   useEffect(() => {
     if (patient) {
-      setForm({
-        id: patient.id,
-        nome: patient.nome,
-        email: patient.email,
-        telefone: patient.telefone,
-        dataInicio: patient.dataInicio,
-        dataFim: patient.dataFim,
-        status: patient.status,
-        novaSenha: ''
-      });
+      setForm({ id: patient.id, nome: patient.nome, email: patient.email, telefone: patient.telefone, dataInicio: patient.dataInicio, dataFim: patient.dataFim, status: patient.status, novaSenha: '' });
     }
   }, [patient]);
 
   const handleClose = async () => {
-    const ok = await confirm({ title: 'Descartar alterações', description: 'Deseja descartar as alterações não salvas da edição do paciente?', confirmLabel: 'Descartar', danger: true });
+    const ok = await confirm({ title: 'Descartar alterações', description: 'Suas edições não salvas serão perdidas.', confirmLabel: 'Descartar', danger: true });
     if (ok) onClose();
   };
 
@@ -34,13 +26,8 @@ export default function ManagePatientModal({ open, patient, onClose, onSave, onD
     setSaving(true);
     try {
       await onSave({
-        pacienteId: form.id,
-        nome: form.nome,
-        email: form.email,
-        telefone: form.telefone,
-        status: form.status,
-        dataInicio: new Date(form.dataInicio).toISOString(),
-        dataFim: new Date(form.dataFim).toISOString(),
+        pacienteId: form.id, nome: form.nome, email: form.email, telefone: form.telefone, status: form.status,
+        dataInicio: new Date(form.dataInicio).toISOString(), dataFim: new Date(form.dataFim).toISOString(),
         senha: form.novaSenha || null
       });
     } finally {
@@ -49,66 +36,44 @@ export default function ManagePatientModal({ open, patient, onClose, onSave, onD
   };
 
   const handleDelete = async () => {
-    const ok = await confirm({
-      title: 'Excluir paciente',
-      description: `Tem certeza absoluta que deseja excluir permanentemente a conta de ${form.nome}?`,
-      confirmLabel: 'Excluir definitivamente',
-      danger: true
-    });
+    const ok = await confirm({ title: 'Excluir paciente', description: `Excluir permanentemente a conta de ${form.nome}?`, confirmLabel: 'Excluir', danger: true });
     if (ok) onDelete(form.id);
   };
 
   if (!patient) return null;
 
   return (
-    <Modal open={open} onClose={handleClose} title="Gerenciar Paciente" description="Visualize, edite ou gerencie as informações da conta do paciente.">
+    <Sheet open={open} onClose={handleClose} title="Gerenciar paciente">
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label className="form-label">Nome Completo</label>
-          <input className="form-input" required value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+        <div className="field"><label className="field-label">Nome</label><input className="field-input" required value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
+        <div className="field"><label className="field-label">E-mail</label><input type="email" className="field-input" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+        <div className="field"><label className="field-label">WhatsApp</label><input type="tel" className="field-input" required value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} /></div>
+        <div className="flex gap-3">
+          <div className="field" style={{ flex: 1 }}><label className="field-label">Início</label><input type="date" className="field-input" required value={form.dataInicio} onChange={(e) => setForm({ ...form, dataInicio: e.target.value })} /></div>
+          <div className="field" style={{ flex: 1 }}><label className="field-label">Fim</label><input type="date" className="field-input" required value={form.dataFim} onChange={(e) => setForm({ ...form, dataFim: e.target.value })} /></div>
         </div>
-        <div className="form-group">
-          <label className="form-label">E-mail (Login)</label>
-          <input type="email" className="form-input" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        </div>
-        <div className="form-group">
-          <label className="form-label">WhatsApp</label>
-          <input type="tel" className="form-input" required value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="form-group">
-            <label className="form-label">Início do Protocolo</label>
-            <input type="date" className="form-input" required value={form.dataInicio} onChange={(e) => setForm({ ...form, dataInicio: e.target.value })} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Fim (Previsão)</label>
-            <input type="date" className="form-input" required value={form.dataFim} onChange={(e) => setForm({ ...form, dataFim: e.target.value })} />
-          </div>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Status da Conta</label>
-          <select className="form-input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-            <option value="ATIVO">ATIVO (Acesso liberado)</option>
-            <option value="INATIVO">INATIVO (Acesso bloqueado)</option>
+        <div className="field">
+          <label className="field-label">Status</label>
+          <select className="field-input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+            <option value="ATIVO">Ativo</option>
+            <option value="INATIVO">Inativo</option>
           </select>
         </div>
-
-        <div style={{ borderTop: '1px solid var(--color-border-subtle)', paddingTop: 16, marginTop: 16 }}>
-          <h4 className="text-base font-semibold mb-2">🔑 Segurança &amp; Senha</h4>
-          <div className="form-group">
-            <label className="form-label">Definir Nova Senha (Opcional)</label>
-            <input type="password" className="form-input" placeholder="Digite apenas se quiser alterar a senha" value={form.novaSenha} onChange={(e) => setForm({ ...form, novaSenha: e.target.value })} />
-          </div>
+        <div className="field">
+          <label className="field-label">Nova senha (opcional)</label>
+          <input type="password" className="field-input" placeholder="Deixe em branco para manter" value={form.novaSenha} onChange={(e) => setForm({ ...form, novaSenha: e.target.value })} />
         </div>
 
-        <div className="flex gap-3 justify-between mt-6">
-          <button type="button" className="btn btn-ghost-danger" onClick={handleDelete}>Excluir Conta</button>
+        <div className="flex justify-between" style={{ marginTop: 'var(--space-5)' }}>
+          <button type="button" className="btn btn-ghost" style={{ color: 'var(--danger)' }} onClick={handleDelete}>Excluir conta</button>
           <div className="flex gap-2">
-            <button type="button" className="btn btn-outline" onClick={handleClose}>Cancelar</button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Salvando...' : 'Salvar Alterações'}</button>
+            <button type="button" className="btn btn-ghost" onClick={handleClose}>Cancelar</button>
+            <button type="submit" className="btn btn-fill" disabled={saving}>{saving ? <span className="spinner" /> : 'Salvar'}</button>
           </div>
         </div>
       </form>
-    </Modal>
+
+      <ManageSupplements pacienteId={form.id} />
+    </Sheet>
   );
 }

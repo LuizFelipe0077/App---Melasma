@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
-import Modal from '../components/Modal.jsx';
+import Sheet from '../components/Sheet.jsx';
 
 const ConfirmContext = createContext(null);
 
@@ -23,17 +23,17 @@ export function ConfirmProvider({ children }) {
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
-      <Modal open={!!state} onClose={() => handleClose(false)} title={state?.title} description={state?.description}>
+      <Sheet open={!!state} onClose={() => handleClose(false)} title={state?.title} description={state?.description}>
         <div className="flex gap-3 justify-end">
-          <button className="btn btn-outline" onClick={() => handleClose(false)}>Cancelar</button>
+          <button className="btn btn-ghost" onClick={() => handleClose(false)}>Cancelar</button>
           <button
-            className={state?.danger ? 'btn btn-danger' : 'btn btn-primary'}
+            className={state?.danger ? 'btn btn-danger' : 'btn btn-fill'}
             onClick={() => handleClose(true)}
           >
             {state?.confirmLabel}
           </button>
         </div>
-      </Modal>
+      </Sheet>
     </ConfirmContext.Provider>
   );
 }

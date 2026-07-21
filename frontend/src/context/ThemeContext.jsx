@@ -5,10 +5,10 @@ const ThemeContext = createContext(null);
 export function protocolToThemeClass(protocoloNome) {
   const normalized = (protocoloNome || '').toLowerCase();
   if (normalized.includes('desinflamacao') || normalized.includes('desinflamação')) {
-    return 'theme-desinflamacao';
+    return 'protocol-desinflamacao';
   }
   if (normalized.includes('melasma')) {
-    return 'theme-melasma';
+    return 'protocol-melasma';
   }
   return '';
 }

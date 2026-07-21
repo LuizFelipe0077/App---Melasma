@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import Badge from '../components/Badge.jsx';
 import { useDashboardData } from '../hooks/useDashboardData.js';
 
 const RANGE_OPTIONS = [
@@ -8,7 +7,7 @@ const RANGE_OPTIONS = [
   { days: 90, label: '90 dias' } // backend hard-caps the window at 90 days (GerarDashboardUseCase)
 ];
 
-const STATUS_TONE = { CONCLUIDO: 'success', ATRASADO: 'warning', PENDENTE: 'neutral' };
+const STATUS_TONE = { CONCLUIDO: 'chip-success', ATRASADO: 'chip-warning', PENDENTE: '' };
 const STATUS_LABEL = { CONCLUIDO: 'Concluído', ATRASADO: 'Atrasado', PENDENTE: 'Pendente' };
 
 function groupByDay(rawCheckins, suplementosById) {
@@ -47,50 +46,46 @@ export default function HistoryPage() {
 
   return (
     <>
-      <header className="header mb-6">
-        <div>
-          <h1 className="text-h1 text-2xl">Histórico</h1>
-          <p className="text-p">Consulte suas doses registradas ao longo do tempo.</p>
-        </div>
+      <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+        <h1 className="display-md">Histórico</h1>
         <div className="flex gap-2">
           {RANGE_OPTIONS.map((opt) => (
             <button
               key={opt.days}
-              className={rangeDays === opt.days ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
+              className={rangeDays === opt.days ? 'btn btn-fill btn-sm' : 'btn btn-ghost btn-sm'}
               onClick={() => setRangeDays(opt.days)}
             >
               {opt.label}
             </button>
           ))}
         </div>
-      </header>
+      </div>
 
       {loading ? (
-        <div className="flex flex-col gap-3">
-          <div className="skeleton w-full" style={{ height: 60 }} />
-          <div className="skeleton w-full" style={{ height: 60 }} />
-          <div className="skeleton w-full" style={{ height: 60 }} />
+        <div className="flex flex-col gap-4">
+          <div className="skeleton" style={{ height: 60 }} />
+          <div className="skeleton" style={{ height: 60 }} />
         </div>
       ) : error ? (
-        <p className="error-text">Falha ao carregar histórico: {error.message}</p>
+        <p className="empty-state">Não foi possível carregar o histórico: {error.message}</p>
       ) : grouped.length === 0 ? (
-        <p className="text-xs text-tertiary text-center" style={{ padding: '24px 0' }}>Nenhum registro no período selecionado.</p>
+        <p className="empty-state">Nenhum registro no período selecionado.</p>
       ) : (
         <div className="flex flex-col gap-4">
           {grouped.map(([day, items]) => (
-            <section className="card" key={day}>
-              <h3 className="text-sm font-semibold text-secondary mb-3" style={{ textTransform: 'capitalize' }}>{day}</h3>
-              <div className="flex flex-col gap-2">
+            <section className="surface surface-pad" key={day}>
+              <div className="eyebrow" style={{ marginBottom: 'var(--space-3)', textTransform: 'capitalize' }}>{day}</div>
+              <div className="flex flex-col gap-3">
                 {items.map((item) => (
-                  <div key={item.id} className="wizard-item-row">
+                  <div key={item.id} className="flex items-center justify-between">
                     <div>
-                      <strong style={{ color: 'var(--color-text-primary)' }}>{item.suplemento?.nome || 'Suplemento'}</strong>
-                      <div className="text-tertiary" style={{ fontSize: 'var(--text-xs)' }}>
-                        Previsto: {new Date(item.dataHoraPrescrita).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        {item.dataHoraRealizada && ` · Realizado: ${new Date(item.dataHoraRealizada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}
+                      <div className="dose-name">{item.suplemento?.nome || 'Suplemento'}</div>
+                      <div className="dose-meta">
+                        Previsto {new Date(item.dataHoraPrescrita).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        {item.dataHoraRealizada && ` · Realizado ${new Date(item.dataHoraRealizada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
                     </div>
-                    <Badge tone={STATUS_TONE[item.status] || 'neutral'}>{STATUS_LABEL[item.status] || item.status}</Badge>
+                    <span className={`chip ${STATUS_TONE[item.status] || ''}`}>{STATUS_LABEL[item.status] || item.status}</span>
                   </div>
                 ))}
               </div>

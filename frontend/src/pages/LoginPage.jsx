@@ -1,11 +1,10 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { ApiClient } from '../api/apiClient.js';
-import Modal from '../components/Modal.jsx';
-import Spinner from '../components/Spinner.jsx';
+import Sheet from '../components/Sheet.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { useToast } from '../context/ToastContext.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
+import { useToast } from '../context/ToastContext.jsx';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -33,7 +32,7 @@ export default function LoginPage() {
       login(result);
     } catch (err) {
       setError(err.message || 'Falha de conexão. Tente novamente.');
-      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      if (navigator.vibrate) navigator.vibrate([90, 40, 90]);
     } finally {
       setLoading(false);
     }
@@ -47,112 +46,79 @@ export default function LoginPage() {
   const saveConfig = () => {
     if (ApiClient.setApiBaseUrl(gasUrl.trim())) {
       setConfigOpen(false);
-      showToast({ message: 'Endpoint configurado com sucesso!' });
+      showToast({ message: 'Endpoint configurado.' });
     } else {
-      showError('URL inválida. Deve iniciar com https://script.google.com/');
+      showError('URL inválida — deve começar com https://script.google.com/');
     }
   };
 
   return (
-    <div className="split-screen bg-base">
-      <div className="split-screen-visual hidden-mobile">
-        <div className="visual-shape" />
-        <div className="relative text-center flex flex-col items-center justify-center px-6" style={{ zIndex: 10, width: '100%' }}>
-          <h2 className="text-4xl font-light mb-4 text-primary" style={{ letterSpacing: '-0.02em', fontSize: '2.25rem' }}>
-            Clinical Tracking
-          </h2>
-          <p className="font-light text-lg text-secondary" style={{ maxWidth: 320, lineHeight: 1.6 }}>
-            O luxo de uma saúde integrativa, conectada e baseada em precisão científica.
-          </p>
+    <div className="flex flex-col items-center" style={{ minHeight: '100dvh', justifyContent: 'center', padding: 'var(--space-5)' }}>
+      <motion.div
+        style={{ width: '100%', maxWidth: 400 }}
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="text-center" style={{ marginBottom: 'var(--space-7)' }}>
+          <div className="eyebrow" style={{ marginBottom: 'var(--space-3)' }}>Acompanhamento clínico integrativo</div>
+          <h1 className="display-md">Bem-vinda de volta</h1>
         </div>
-      </div>
 
-      <div className="split-screen-content">
-        <motion.div
-          className="w-full"
-          style={{ maxWidth: 400 }}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-        >
-          <header className="mb-8 text-left">
-            <h1 className="text-h1">Acolhimento Clínico</h1>
-            <p className="text-p text-secondary">Seu espaço de evolução e cuidado integrativo.</p>
-          </header>
+        <form onSubmit={handleSubmit} className="surface surface-pad">
+          <div className="field">
+            <label className="field-label" htmlFor="email">E-mail</label>
+            <input
+              id="email" type="email" className="field-input" required
+              placeholder="nome@email.com" autoComplete="email"
+              value={email} onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="form-group mb-6">
-              <label htmlFor="email" className="form-label">E-mail corporativo ou paciente</label>
+          <div className="field">
+            <label className="field-label" htmlFor="password">Senha</label>
+            <div className="flex" style={{ position: 'relative' }}>
               <input
-                type="email"
-                id="email"
-                className="form-input"
-                required
-                placeholder="nome@email.com"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="password" type={showPassword ? 'text' : 'password'} className="field-input" required
+                placeholder="••••••••" autoComplete="current-password" style={{ paddingRight: 48 }}
+                value={senha} onChange={(e) => setSenha(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label="Mostrar ou ocultar senha"
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
             </div>
+          </div>
 
-            <div className="form-group mb-8">
-              <label htmlFor="password" className="form-label">Sua senha de acesso</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  className="form-input"
-                  required
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  style={{ paddingRight: 48 }}
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="flex items-center justify-center"
-                  style={{
-                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                    background: 'transparent', border: 'none', fontSize: 18,
-                    color: 'var(--color-text-secondary)', width: 32, height: 32, padding: 0, cursor: 'pointer'
-                  }}
-                  aria-label="Mostrar ou ocultar senha"
-                  onClick={() => setShowPassword((s) => !s)}
-                >
-                  {showPassword ? '🙈' : '👁️'}
-                </button>
-              </div>
-            </div>
+          {error && <p className="field-error" role="alert">{error}</p>}
 
-            {error && <div className="alert alert-error mb-6" role="alert">{error}</div>}
+          <button type="submit" className="btn btn-fill w-full" disabled={loading} style={{ marginTop: 'var(--space-3)' }}>
+            {loading ? <span className="spinner" /> : 'Entrar'}
+          </button>
+        </form>
 
-            <button type="submit" className="btn btn-primary w-full" disabled={loading}>
-              {loading ? <Spinner /> : <span>Entrar no Tratamento</span>}
-            </button>
-          </form>
-
-          <footer className="mt-8 text-center">
-            <button className="btn btn-outline btn-sm" onClick={openConfig}>
-              ⚙️ Configurações de Conexão (GAS)
-            </button>
-          </footer>
-        </motion.div>
-      </div>
-
-      <Modal open={configOpen} onClose={() => setConfigOpen(false)} title="Endpoint da API" description="Insira a URL de execução do seu Google Apps Script:">
-        <input
-          type="url"
-          className="form-input mb-6"
-          placeholder="https://script.google.com/macros/s/.../exec"
-          value={gasUrl}
-          onChange={(e) => setGasUrl(e.target.value)}
-        />
-        <div className="flex justify-end gap-3">
-          <button className="btn btn-outline" onClick={() => setConfigOpen(false)}>Cancelar</button>
-          <button className="btn btn-success" onClick={saveConfig}>Salvar Conexão</button>
+        <div className="text-center" style={{ marginTop: 'var(--space-6)' }}>
+          <button className="btn-text" style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={openConfig}>
+            Configurações de conexão
+          </button>
         </div>
-      </Modal>
+      </motion.div>
+
+      <Sheet open={configOpen} onClose={() => setConfigOpen(false)} title="Endpoint da API" description="URL de execução do Google Apps Script:">
+        <input
+          type="url" className="field-input" style={{ marginBottom: 'var(--space-5)' }}
+          placeholder="https://script.google.com/macros/s/.../exec"
+          value={gasUrl} onChange={(e) => setGasUrl(e.target.value)}
+        />
+        <div className="flex gap-3 justify-end">
+          <button className="btn btn-ghost" onClick={() => setConfigOpen(false)}>Cancelar</button>
+          <button className="btn btn-fill" onClick={saveConfig}>Salvar</button>
+        </div>
+      </Sheet>
     </div>
   );
 }
