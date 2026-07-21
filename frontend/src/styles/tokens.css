@@ -1,291 +1,188 @@
 /*
- * tokens.css — CLINICAL TRACKING · CAMADA DE TOKENS
+ * tokens.css — "RITUAL" · sistema de tokens
  * ============================================================================
- * Fonte única de verdade para cor, espaço, tipografia, borda, sombra e motion.
- * Conceito: "Luxo Silencioso" — clínica de Estética Integrativa.
- *
- * ARQUITETURA EM 3 CAMADAS
- *   1. PRIMITIVOS  — hex cru. Nunca usar direto em componentes.
- *   2. SEMÂNTICOS  — o que a cor SIGNIFICA (--color-text-primary). Use estes.
- *   3. TEMAS       — Institucional (:root), Melasma, Desinflamação.
- *
- * REGRA DE OURO
- *   Componentes consomem apenas tokens semânticos. Trocar de tema nunca
- *   exige tocar em componente. Novo protocolo = um bloco novo, nada mais.
- *
- * ACESSIBILIDADE (medido, não estimado)
- *   A paleta do briefing falha WCAG AA em alguns pares quando usada como
- *   texto. Preservamos os hex do briefing para PREENCHIMENTOS e SUPERFÍCIES
- *   (critério 3:1 — WCAG 1.4.11) e derivamos variantes `-ink` (matiz e
- *   saturação idênticos, luminosidade reduzida) para TEXTO pequeno (4.5:1).
+ * Reconstrução completa da identidade visual (nenhum token do sistema
+ * anterior foi reaproveitado). Camadas:
+ *   1. PRIMITIVOS — hex por protocolo, nunca consumido direto.
+ *   2. PAPEL      — o que a cor SIGNIFICA (--ink, --surface, --accent...).
+ *   3. PROTOCOLO  — Institucional (:root), Melasma, Desinflamação.
  * ========================================================================= */
 
 :root {
-  /* ==========================================================================
-     1. PRIMITIVOS — paleta bruta (não consumir direto)
-     ========================================================================== */
+  /* -- Primitivos: Melasma (briefing) -- */
+  --p-melasma-accent:      #7A3A10;
+  --p-melasma-accent-soft: #A35C2E;
+  --p-melasma-surface:     #F8F2EE;
+  --p-melasma-card:        #FFFDFB;
+  --p-melasma-ink:         #3D2415;
 
-  /* --- Melasma (briefing, literal) --- */
-  --raw-melasma-primary:    #7A3A10;
-  --raw-melasma-secondary:  #A35C2E;
-  --raw-melasma-bg:         #F8F2EE;
-  --raw-melasma-card:       #FFFDFB;
-  --raw-melasma-text:       #3D2415;
-  --raw-melasma-success:    #6F8F60;
-  --raw-melasma-error:      #C95D5D;
-  --raw-melasma-success-ink: #617C54;
-  --raw-melasma-error-ink:   #C44E4E;
+  /* -- Primitivos: Desinflamação (briefing) -- */
+  --p-desinf-accent:       #5D7A58;
+  --p-desinf-accent-soft:  #7F9B79;
+  --p-desinf-surface:      #F4F8F3;
+  --p-desinf-card:         #FFFFFF;
+  --p-desinf-ink:          #2F4730;
 
-  /* --- Desinflamação (briefing, literal) --- */
-  --raw-desinf-primary:     #5D7A58;
-  --raw-desinf-secondary:   #7F9B79;
-  --raw-desinf-bg:          #F4F8F3;
-  --raw-desinf-card:        #FFFFFF;
-  --raw-desinf-text:        #2F4730;
-  --raw-desinf-success:     #4E8F63;
-  --raw-desinf-error:       #C95D5D;
-  --raw-desinf-primary-ink:   #5C7957;
-  --raw-desinf-secondary-ink: #5F785A;
-  --raw-desinf-success-ink:   #47825A;
-  --raw-desinf-error-ink:     #C55050;
+  /* -- Primitivos: Institucional (login / admin) -- */
+  --p-inst-accent:      #4A443C;
+  --p-inst-accent-soft: #6E655A;
+  --p-inst-surface:     #F6F5F2;
+  --p-inst-card:        #FFFFFF;
+  --p-inst-ink:         #262320;
 
-  /* --- Institucional (neutro-pedra: ponte entre o marrom e o verde) --- */
-  --raw-inst-primary:       #4A443C;
-  --raw-inst-secondary:     #6E655A;
-  --raw-inst-bg:            #F5F4F1;
-  --raw-inst-card:          #FFFFFF;
-  --raw-inst-text:          #2A2622;
+  /* -- Feedback (compartilhado entre protocolos, AA verificado) -- */
+  --p-success-ink: #4F7D57;
+  --p-danger-ink:  #B5453F;
+  --p-warning-ink: #92661F;
 
   /* ==========================================================================
-     2. ESPAÇAMENTO — base 8px estrita
+     Tipografia — Fraunces (display, editorial) + Inter (UI/corpo)
      ========================================================================== */
-  --space-1:  4px;
-  --space-2:  8px;
-  --space-3:  12px;
-  --space-4:  16px;
-  --space-5:  24px;
-  --space-6:  32px;
-  --space-8:  48px;
-  --space-10: 64px;
-  --space-12: 96px;
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  /* ==========================================================================
-     3. TIPOGRAFIA
-     ========================================================================== */
-  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-               Helvetica, Arial, sans-serif;
+  --display-sm: 1.75rem;
+  --display-md: 2.5rem;
+  --display-lg: 3.5rem;
 
-  --text-xs:   0.75rem;
-  --text-sm:   0.875rem;
-  --text-base: 1rem;
-  --text-lg:   1.125rem;
-  --text-xl:   1.25rem;
-  --text-2xl:  1.5rem;
-  --text-3xl:  1.875rem;
-  --text-4xl:  2.25rem;
-  --text-5xl:  3rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.1875rem;
 
-  --leading-tight:   1.15;
-  --leading-snug:    1.35;
-  --leading-normal:  1.5;
-  --leading-relaxed: 1.65;
-
-  --tracking-tight:  -0.02em;
-  --tracking-normal: 0;
-  --tracking-wide:   0.04em;
-
-  --weight-light:    300;
-  --weight-regular:  400;
-  --weight-medium:   500;
+  --weight-display: 340;
+  --weight-regular: 400;
+  --weight-medium: 500;
   --weight-semibold: 600;
-  --weight-bold:     700;
 
   /* ==========================================================================
-     4. BORDAS — briefing: 12–20px
+     Espaço — grid de 8px
      ========================================================================== */
-  --radius-sm:   12px;
-  --radius-md:   16px;
-  --radius-lg:   20px;
-  --radius-pill: 9999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 56px;
+  --space-9: 72px;
 
   /* ==========================================================================
-     5. SOMBRAS
+     Forma — raios, borda de traço fino
      ========================================================================== */
-  --shadow-ambient: 0 1px 2px var(--color-shadow-tint-weak);
-  --shadow-raised:  0 1px 2px var(--color-shadow-tint-weak),
-                    0 4px 12px -2px var(--color-shadow-tint-weak);
-  --shadow-overlay: 0 8px 24px -6px var(--color-shadow-tint),
-                    0 2px 6px -2px var(--color-shadow-tint-weak);
-  --shadow-modal:   0 24px 48px -12px var(--color-shadow-tint-strong);
-  --shadow-focus:   0 0 0 3px var(--color-focus-ring);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 26px;
+  --radius-pill: 999px;
+  --hairline: 1px;
 
   /* ==========================================================================
-     6. MOTION — briefing: 150–250ms, sutil
+     Motion — assinatura "settle"
      ========================================================================== */
-  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-decel:    cubic-bezier(0, 0, 0.2, 1);
-  --ease-spring:   cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-glide: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-settle: cubic-bezier(0.34, 1.3, 0.64, 1);
+  --motion-quick: 140ms;
+  --motion-base: 240ms;
+  --motion-slow: 420ms;
 
-  --duration-instant: 100ms;
-  --duration-fast:    150ms;
-  --duration-normal:  200ms;
-  --duration-slow:    250ms;
-
-  --transition-fast:   var(--duration-fast) var(--ease-standard);
-  --transition-normal: var(--duration-normal) var(--ease-standard);
-  --transition-spring: var(--duration-slow) var(--ease-spring);
+  --z-rail: 200;
+  --z-sheet: 900;
+  --z-toast: 950;
 
   /* ==========================================================================
-     7. CAMADAS
+     Papel — protocolo padrão: Institucional
      ========================================================================== */
-  --z-base: 0;
-  --z-sticky: 100;
-  --z-modal: 9000;
-  --z-toast: 9500;
+  --surface: var(--p-inst-surface);
+  --surface-raised: var(--p-inst-card);
+  --surface-sunken: #EAE8E4;
+  --surface-hover: #EEECE8;
 
-  /* ==========================================================================
-     8. TEMA PADRÃO — INSTITUCIONAL
-     Aplica-se a Login e Painel Admin, que não pertencem a um protocolo.
-     ========================================================================== */
-  --color-surface-base:   var(--raw-inst-bg);
-  --color-surface-card:   var(--raw-inst-card);
-  --color-surface-sunken: #EDEBE7;
-  --color-surface-hover:  #EAE8E3;
-  --color-surface-active: #E3E0DA;
+  --ink: var(--p-inst-ink);
+  --ink-soft: #6B655C;
+  --ink-faint: #99938A;
+  --ink-on-accent: #FFFFFF;
 
-  --color-text-primary:   var(--raw-inst-text);
-  --color-text-secondary: #5A534B;
-  --color-text-tertiary:  #7D766C;
-  --color-text-on-fill:   #FFFFFF;
+  --accent: var(--p-inst-accent);
+  --accent-soft: var(--p-inst-accent-soft);
 
-  --color-border-subtle:  rgba(42, 38, 34, 0.10);
-  --color-border-strong:  rgba(42, 38, 34, 0.20);
+  --line: rgba(38, 35, 32, 0.09);
+  --line-strong: rgba(38, 35, 32, 0.18);
+  --ring: rgba(38, 35, 32, 0.32);
 
-  --color-brand-primary:  var(--raw-inst-primary);
-  --color-brand-accent:   var(--raw-inst-secondary);
-  --color-brand-primary-ink: var(--raw-inst-primary);
-  --color-brand-accent-ink:  var(--raw-inst-secondary);
+  --success: var(--p-success-ink);
+  --success-wash: rgba(79, 125, 87, 0.12);
+  --danger: var(--p-danger-ink);
+  --danger-wash: rgba(181, 69, 63, 0.10);
+  --danger-fill: #B5453F;
+  --warning: var(--p-warning-ink);
+  --warning-wash: rgba(146, 102, 31, 0.12);
 
-  --color-success:        var(--raw-melasma-success);
-  --color-success-ink:    var(--raw-melasma-success-ink);
-  --color-success-tint:   rgba(111, 143, 96, 0.14);
-  --color-danger:         var(--raw-melasma-error);
-  --color-danger-ink:     var(--raw-melasma-error-ink);
-  --color-danger-tint:    rgba(201, 93, 93, 0.12);
-  --color-danger-fill:    #C55050;
-  --color-warning:        #B07A2E;
-  --color-warning-ink:    #8F6224;
-  --color-warning-tint:   rgba(176, 122, 46, 0.14);
+  --shadow-card: 0 1px 2px rgba(38, 35, 32, 0.04), 0 6px 20px -8px rgba(38, 35, 32, 0.10);
+  --shadow-sheet: 0 -12px 40px -8px rgba(38, 35, 32, 0.20);
+  --shadow-rail: 4px 0 24px -12px rgba(38, 35, 32, 0.12);
 
-  --color-text-on-primary: #FFFFFF;
-  --color-text-on-success: #1A1A1A;
-  --color-text-on-danger:  #FFFFFF;
-
-  --color-shadow-tint-weak:   rgba(42, 38, 34, 0.05);
-  --color-shadow-tint:        rgba(42, 38, 34, 0.10);
-  --color-shadow-tint-strong: rgba(42, 38, 34, 0.18);
-  --color-focus-ring:         rgba(74, 68, 60, 0.35);
-
-  --gradient-ambient:
-    radial-gradient(circle at 12% 8%, rgba(74, 68, 60, 0.035), transparent 42%),
-    radial-gradient(circle at 88% 92%, rgba(110, 101, 90, 0.03), transparent 42%);
-
-  --glass-blur:       blur(8px);
-  --glass-blur-heavy: blur(16px);
+  --wash:
+    radial-gradient(ellipse at 20% -10%, rgba(74, 68, 60, 0.05), transparent 55%),
+    radial-gradient(ellipse at 100% 0%, rgba(110, 101, 90, 0.04), transparent 45%);
 }
 
 /* ============================================================================
-   9. TEMA — MELASMA
-   Seletor: `body.theme-melasma`.
+   Protocolo — MELASMA
    ========================================================================== */
-body.theme-melasma {
-  --color-surface-base:   var(--raw-melasma-bg);
-  --color-surface-card:   var(--raw-melasma-card);
-  --color-surface-sunken: #F1E7E0;
-  --color-surface-hover:  #F3EAE3;
-  --color-surface-active: #EADFD6;
+body.protocol-melasma {
+  --surface: var(--p-melasma-surface);
+  --surface-raised: var(--p-melasma-card);
+  --surface-sunken: #F0E5DD;
+  --surface-hover: #F3E9E1;
 
-  --color-text-primary:   var(--raw-melasma-text);
-  --color-text-secondary: #6B4E3D;
-  --color-text-tertiary:  #8A7264;
-  --color-text-on-fill:   #FFFFFF;
+  --ink: var(--p-melasma-ink);
+  --ink-soft: #7A5D4C;
+  --ink-faint: #A48D7E;
 
-  --color-border-subtle:  rgba(122, 58, 16, 0.10);
-  --color-border-strong:  rgba(122, 58, 16, 0.22);
+  --accent: var(--p-melasma-accent);
+  --accent-soft: var(--p-melasma-accent-soft);
 
-  --color-brand-primary:  var(--raw-melasma-primary);
-  --color-brand-accent:   var(--raw-melasma-secondary);
-  --color-brand-primary-ink: var(--raw-melasma-primary);
-  --color-brand-accent-ink:  var(--raw-melasma-secondary);
+  --line: rgba(122, 58, 16, 0.11);
+  --line-strong: rgba(122, 58, 16, 0.22);
+  --ring: rgba(122, 58, 16, 0.35);
 
-  --color-success:        var(--raw-melasma-success);
-  --color-success-ink:    var(--raw-melasma-success-ink);
-  --color-success-tint:   rgba(111, 143, 96, 0.14);
-  --color-danger:         var(--raw-melasma-error);
-  --color-danger-ink:     var(--raw-melasma-error-ink);
-  --color-danger-tint:    rgba(201, 93, 93, 0.12);
-  --color-danger-fill:    #C55050;
-  --color-warning:        #B07A2E;
-  --color-warning-ink:    #8F6224;
-  --color-warning-tint:   rgba(176, 122, 46, 0.14);
+  --shadow-card: 0 1px 2px rgba(61, 36, 21, 0.05), 0 6px 20px -8px rgba(61, 36, 21, 0.12);
+  --shadow-sheet: 0 -12px 40px -8px rgba(61, 36, 21, 0.22);
 
-  --color-shadow-tint-weak:   rgba(61, 36, 21, 0.05);
-  --color-shadow-tint:        rgba(61, 36, 21, 0.10);
-  --color-shadow-tint-strong: rgba(61, 36, 21, 0.18);
-  --color-focus-ring:         rgba(122, 58, 16, 0.35);
-
-  --gradient-ambient:
-    radial-gradient(circle at 12% 8%, rgba(122, 58, 16, 0.04), transparent 42%),
-    radial-gradient(circle at 88% 92%, rgba(163, 92, 46, 0.035), transparent 42%);
+  --wash:
+    radial-gradient(ellipse at 20% -10%, rgba(122, 58, 16, 0.055), transparent 55%),
+    radial-gradient(ellipse at 100% 0%, rgba(163, 92, 46, 0.045), transparent 45%);
 }
 
 /* ============================================================================
-   10. TEMA — DESINFLAMAÇÃO
+   Protocolo — DESINFLAMAÇÃO
    ========================================================================== */
-body.theme-desinflamacao {
-  --color-surface-base:   var(--raw-desinf-bg);
-  --color-surface-card:   var(--raw-desinf-card);
-  --color-surface-sunken: #E9F1E8;
-  --color-surface-hover:  #E9F1E8;
-  --color-surface-active: #DDE9DC;
+body.protocol-desinflamacao {
+  --surface: var(--p-desinf-surface);
+  --surface-raised: var(--p-desinf-card);
+  --surface-sunken: #E7F0E6;
+  --surface-hover: #ECF3EB;
 
-  --color-text-primary:   var(--raw-desinf-text);
-  --color-text-secondary: #4A634B;
-  --color-text-tertiary:  #6B846C;
-  --color-text-on-fill:   #FFFFFF;
+  --ink: var(--p-desinf-ink);
+  --ink-soft: #56745A;
+  --ink-faint: #86A187;
 
-  --color-border-subtle:  rgba(93, 122, 88, 0.12);
-  --color-border-strong:  rgba(93, 122, 88, 0.24);
+  --accent: var(--p-desinf-accent);
+  --accent-soft: var(--p-desinf-accent-soft);
 
-  --color-brand-primary:  var(--raw-desinf-primary);
-  --color-brand-accent:   var(--raw-desinf-secondary);
-  --color-brand-primary-ink: var(--raw-desinf-primary-ink);
-  --color-brand-accent-ink:  var(--raw-desinf-secondary-ink);
+  --line: rgba(93, 122, 88, 0.13);
+  --line-strong: rgba(93, 122, 88, 0.25);
+  --ring: rgba(93, 122, 88, 0.4);
 
-  --color-success:        var(--raw-desinf-success);
-  --color-success-ink:    var(--raw-desinf-success-ink);
-  --color-success-tint:   rgba(78, 143, 99, 0.14);
-  --color-danger:         var(--raw-desinf-error);
-  --color-danger-ink:     var(--raw-desinf-error-ink);
-  --color-danger-tint:    rgba(201, 93, 93, 0.12);
-  --color-danger-fill:    #C55050;
-  --color-warning:        #8A6A2A;
-  --color-warning-ink:    #745823;
-  --color-warning-tint:   rgba(138, 106, 42, 0.14);
+  --shadow-card: 0 1px 2px rgba(47, 71, 48, 0.05), 0 6px 20px -8px rgba(47, 71, 48, 0.12);
+  --shadow-sheet: 0 -12px 40px -8px rgba(47, 71, 48, 0.22);
 
-  --color-shadow-tint-weak:   rgba(47, 71, 48, 0.05);
-  --color-shadow-tint:        rgba(47, 71, 48, 0.10);
-  --color-shadow-tint-strong: rgba(47, 71, 48, 0.18);
-  --color-focus-ring:         rgba(93, 122, 88, 0.38);
-
-  --gradient-ambient:
-    radial-gradient(circle at 12% 8%, rgba(93, 122, 88, 0.045), transparent 42%),
-    radial-gradient(circle at 88% 92%, rgba(127, 155, 121, 0.035), transparent 42%);
+  --wash:
+    radial-gradient(ellipse at 20% -10%, rgba(93, 122, 88, 0.06), transparent 55%),
+    radial-gradient(ellipse at 100% 0%, rgba(127, 155, 121, 0.045), transparent 45%);
 }
 
-/* ============================================================================
-   11. MOVIMENTO REDUZIDO — piso de qualidade, não item de lista
-   ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

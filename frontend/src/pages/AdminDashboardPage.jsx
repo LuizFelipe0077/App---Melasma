@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ApiClient } from '../api/apiClient.js';
-import AppShell from '../components/AppShell.jsx';
-import { StatCard } from '../components/StatCard.jsx';
+import AppCanvas from '../components/AppCanvas.jsx';
+import StatChip from '../components/StatChip.jsx';
 import PatientTable from '../components/PatientTable.jsx';
 import RegisterPatientWizard from '../components/RegisterPatientWizard.jsx';
 import ManagePatientModal from '../components/ManagePatientModal.jsx';
@@ -11,7 +11,7 @@ import { useConfirm } from '../context/ConfirmContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 
-const NAV_ITEMS = [{ to: '/admin', end: true, icon: '👥', label: 'Pacientes Ativos' }];
+const NAV_ITEMS = [{ to: '/admin', end: true, icon: '☷', label: 'Pacientes' }];
 
 export default function AdminDashboardPage() {
   const { logout } = useAuth();
@@ -36,8 +36,7 @@ export default function AdminDashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await ApiClient.call('listarPacientes');
-      setPatients(result);
+      setPatients(await ApiClient.call('listarPacientes'));
     } catch (err) {
       setError(err);
     } finally {
@@ -45,9 +44,7 @@ export default function AdminDashboardPage() {
     }
   };
 
-  useEffect(() => {
-    loadPatients();
-  }, []);
+  useEffect(() => { loadPatients(); }, []);
 
   const filteredPatients = useMemo(() => {
     const q = search.toLowerCase();
@@ -62,14 +59,14 @@ export default function AdminDashboardPage() {
   }), [patients]);
 
   const handleLogout = async () => {
-    const ok = await confirm({ title: 'Encerrar sessão', description: 'Tem certeza que deseja encerrar a sua sessão administrativa?', confirmLabel: 'Sair' });
+    const ok = await confirm({ title: 'Encerrar sessão', description: 'Tem certeza que deseja sair?', confirmLabel: 'Sair' });
     if (ok) logout();
   };
 
   const handleCreatePatient = async (payload) => {
     try {
       await ApiClient.call('criarPaciente', payload);
-      showToast({ message: 'Paciente cadastrado com sucesso!' });
+      showToast({ message: 'Paciente cadastrado.' });
       setRegisterOpen(false);
       await loadPatients();
     } catch (err) {
@@ -81,11 +78,11 @@ export default function AdminDashboardPage() {
   const handleSavePatient = async (payload) => {
     try {
       await ApiClient.call('editarPaciente', payload);
-      showToast({ message: 'Paciente atualizado com sucesso!' });
+      showToast({ message: 'Paciente atualizado.' });
       setManagePatient(null);
       await loadPatients();
     } catch (err) {
-      showError(`Erro ao salvar alterações: ${err.message}`);
+      showError(`Erro ao salvar: ${err.message}`);
       throw err;
     }
   };
@@ -93,81 +90,55 @@ export default function AdminDashboardPage() {
   const handleDeletePatient = async (pacienteId) => {
     try {
       await ApiClient.call('excluirPaciente', { pacienteId });
-      showToast({ message: 'Paciente excluído com sucesso!' });
+      showToast({ message: 'Paciente excluído.' });
       setManagePatient(null);
       await loadPatients();
     } catch (err) {
-      showError(`Erro ao excluir paciente: ${err.message}`);
+      showError(`Erro ao excluir: ${err.message}`);
     }
   };
 
   const handleRelease = async (payload) => {
     try {
       await ApiClient.call('liberarEdicaoRetroativa', payload);
-      showToast({ message: 'Permissão de edição retroativa concedida com sucesso!' });
+      showToast({ message: 'Liberação concedida.' });
       setReleasePatientId(null);
     } catch (err) {
-      showError(`Erro ao conceder liberação: ${err.message}`);
+      showError(`Erro ao liberar: ${err.message}`);
     }
   };
 
   return (
-    <AppShell brand="Clinical Admin" navItems={NAV_ITEMS} onLogout={handleLogout}>
-      <header className="header mb-6">
-        <div>
-          <h1 className="text-h1 text-2xl">Painel de Monitoramento Clínico</h1>
-          <p className="text-p">Gestão de adesão e cadastros de pacientes do consultório.</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => setRegisterOpen(true)}>
-          <span className="text-xl" style={{ lineHeight: 1 }}>+</span> Novo Paciente
-        </button>
-      </header>
-
-      <div className="grid grid-cols-1 md-grid-cols-3 gap-4 mb-6">
-        <StatCard label="Alerta de Abandono (<60%)" value={loading ? '--' : stats.abandon} color="var(--color-danger-ink)" />
-        <StatCard label="Adesão Excelente (>90%)" value={loading ? '--' : stats.excellent} color="var(--color-success-ink)" />
-        <StatCard label="Total de Pacientes Ativos" value={loading ? '--' : stats.total} color="var(--color-brand-primary)" />
+    <AppCanvas mark="✦" navItems={NAV_ITEMS} onLogout={handleLogout}>
+      <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+        <h1 className="display-md">Pacientes</h1>
+        <button className="btn btn-fill" onClick={() => setRegisterOpen(true)}>+ Novo paciente</button>
       </div>
 
-      <section className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="flex justify-between items-center" style={{ padding: '16px 20px', borderBottom: '1px solid var(--color-border-subtle)' }}>
-          <h3 className="text-h1 text-lg" style={{ margin: 0 }}>Lista de Acompanhamento</h3>
-          <input
-            className="form-input"
-            style={{ maxWidth: 300, padding: '8px 12px' }}
-            placeholder="Buscar por nome ou email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      <div className="flex gap-4" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap' }}>
+        <StatChip label="Alerta de abandono (<60%)" value={loading ? '—' : stats.abandon} tone="danger" />
+        <StatChip label="Adesão excelente (>90%)" value={loading ? '—' : stats.excellent} tone="success" />
+        <StatChip label="Total ativos" value={loading ? '—' : stats.total} />
+      </div>
+
+      <section className="surface" style={{ overflow: 'hidden' }}>
+        <div className="flex items-center justify-between" style={{ padding: 'var(--space-4) var(--space-5)', borderBottom: 'var(--hairline) solid var(--line)' }}>
+          <h2 className="display-sm" style={{ fontSize: '1.25rem' }}>Acompanhamento</h2>
+          <input className="field-input" style={{ maxWidth: 260, padding: '8px 14px' }} placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
 
         {loading ? (
-          <div style={{ padding: 24 }}><div className="skeleton w-full" style={{ height: 20 }} /></div>
+          <div style={{ padding: 24 }}><div className="skeleton" style={{ height: 20 }} /></div>
         ) : error ? (
-          <p className="error-text">Erro ao ler lista: {error.message}</p>
+          <p className="empty-state">Erro ao carregar: {error.message}</p>
         ) : (
-          <PatientTable
-            patients={filteredPatients}
-            onRowClick={setManagePatient}
-            onReleaseClick={setReleasePatientId}
-          />
+          <PatientTable patients={filteredPatients} onRowClick={setManagePatient} onReleaseClick={setReleasePatientId} />
         )}
       </section>
 
       <RegisterPatientWizard open={registerOpen} onClose={() => setRegisterOpen(false)} onSubmit={handleCreatePatient} />
-      <ManagePatientModal
-        open={!!managePatient}
-        patient={managePatient}
-        onClose={() => setManagePatient(null)}
-        onSave={handleSavePatient}
-        onDelete={handleDeletePatient}
-      />
-      <ReleaseModal
-        open={!!releasePatientId}
-        patientId={releasePatientId}
-        onClose={() => setReleasePatientId(null)}
-        onSubmit={handleRelease}
-      />
-    </AppShell>
+      <ManagePatientModal open={!!managePatient} patient={managePatient} onClose={() => setManagePatient(null)} onSave={handleSavePatient} onDelete={handleDeletePatient} />
+      <ReleaseModal open={!!releasePatientId} patientId={releasePatientId} onClose={() => setReleasePatientId(null)} onSubmit={handleRelease} />
+    </AppCanvas>
   );
 }

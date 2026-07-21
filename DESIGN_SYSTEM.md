@@ -1,51 +1,53 @@
-# DESIGN_SYSTEM.md
+# DESIGN_SYSTEM.md — "Ritual"
 
-Sistema de design do front-end reconstruído (`frontend/`). A base de tokens já existia parcialmente no projeto anterior ("Luxo Silencioso") — este documento descreve o que foi mantido, completado e como consumi-lo em componentes React novos.
+Segunda reconstrução completa do front-end (branch `redesign/frontend-v2`). O sistema anterior ("Luxo Silencioso" — bento-grid, Outfit, modais centrados) foi **descartado por completo**; nada foi reaproveitado. Este documento descreve o sistema novo.
 
-## Arquitetura de tokens (`src/styles/tokens.css`)
+## Conceito
 
-Três camadas, nessa ordem de dependência:
+**Ritual** — o tratamento diário como um pequeno ritual de autocuidado, não uma lista de tarefas. Referências: boutique editorial, Apple Health (anel de progresso), apps nativos de bem-estar (bottom sheets, navegação mínima).
 
-1. **Primitivos** (`--raw-melasma-*`, `--raw-desinf-*`, `--raw-inst-*`) — hex cru do briefing. Nunca usar direto em componentes.
-2. **Semânticos** (`--color-surface-base`, `--color-text-primary`, `--color-brand-primary`, `--color-danger`, `--color-shadow-tint`, etc.) — o que os componentes devem consumir.
-3. **Temas** — `:root` (Institucional), `body.theme-melasma`, `body.theme-desinflamacao`. Cada um redefine os mesmos nomes semânticos. Trocar de tema = trocar a classe do `<body>`, zero mudança em componente.
+## Tipografia
 
-A camada de aliases legados ("Seção 12: COMPATIBILIDADE") do `tokens.css` original foi **removida** nesta reconstrução — como todos os componentes são novos, não havia mais nenhum consumidor dos nomes antigos (`--shadow-sm`, `--radius-full`, `--transition-bounce`, etc.). Qualquer PR futuro deve usar diretamente os nomes semânticos atuais.
+- **Display** (`--font-display`): `Fraunces` — serifada editorial, peso 340 (`--weight-display`), usada em todo título e número grande (nome do paciente, "Hoje", %, "Bem-vinda de volta").
+- **Corpo/UI** (`--font-body`): `Inter` — usada em labels, botões, texto de apoio.
+- Escala: `--text-xs` (12px) a `--text-lg` (19px) para UI; `--display-sm/md/lg` (28/40/56px) para títulos.
+- `.eyebrow`: rótulo pequeno, maiúsculo, tracking largo — usado como "kicker" acima de títulos (ex: "BOA NOITE", "ACOMPANHAMENTO CLÍNICO INTEGRATIVO").
 
-## Como trocar de tema
+## Cor — arquitetura em 3 camadas
 
-`src/context/ThemeContext.jsx` expõe `useTheme()` → `{ themeClass, setThemeClass }`. `setThemeClass(className)` aplica a classe direto no `document.body`. `protocolToThemeClass(protocoloNome)` (mesmo arquivo) normaliza o nome do protocolo vindo do backend (`"Melasma"`, `"Desinflamação"`) para a classe CSS correta. Cada layout de página (`PatientLayout.jsx`, `AdminDashboardPage.jsx`, `LoginPage.jsx`) chama isso uma vez no mount.
+1. **Primitivos** (`--p-*`): hex por protocolo, do briefing original, nunca consumidos direto.
+2. **Papel** (`--surface`, `--ink`, `--accent`, `--line`, `--success`, `--danger`, `--warning`...): o que a cor significa.
+3. **Protocolo**: `:root` (Institucional — login/admin), `body.protocol-melasma`, `body.protocol-desinflamacao`.
 
-## Paletas
+| Protocolo | Accent | Accent secundário | Surface | Ink |
+|---|---|---|---|---|
+| Melasma | `#7A3A10` | `#A35C2E` | `#F8F2EE` | `#3D2415` |
+| Desinflamação | `#5D7A58` | `#7F9B79` | `#F4F8F3` | `#2F4730` |
+| Institucional | `#4A443C` | `#6E655A` | `#F6F5F2` | `#262320` |
 
-| Protocolo | Primária | Secundária | Fundo | Card | Texto |
-|---|---|---|---|---|---|
-| Melasma | `#7A3A10` | `#A35C2E` | `#F8F2EE` | `#FFFDFB` | `#3D2415` |
-| Desinflamação | `#5D7A58` | `#7F9B79` | `#F4F8F3` | `#FFFFFF` | `#2F4730` |
-| Institucional (login/admin) | `#4A443C` | `#6E655A` | `#F5F4F1` | `#FFFFFF` | `#2A2622` |
+Trocar de protocolo = trocar uma classe no `<body>` (`useTheme().setThemeClass(...)`, ver `context/ThemeContext.jsx`) — nenhum componente muda.
 
-## Espaçamento, tipografia, motion
+## Espaço, forma, sombra
 
-- Espaçamento: escala de 8px (`--space-1` = 4px até `--space-12` = 96px).
-- Tipografia: `Outfit` via Google Fonts, escala `--text-xs` (12px) a `--text-5xl` (48px).
-- Motion: `--duration-fast/normal/slow` (150/200/250ms) + `--ease-standard/decel/spring`. Tudo respeita `prefers-reduced-motion`.
+- Espaço: grade de 8px (`--space-1` a `--space-9`, 4px–72px).
+- Forma: `--radius-sm` 10px, `--radius-md` 14px, `--radius-lg` 26px (cards grandes, sheets), `--radius-pill` para tudo circular/pílula.
+- Sombra: **única e suave** por elevação — `--shadow-card` (cards), `--shadow-sheet` (bottom sheets), `--shadow-rail` (navegação) — nada de camadas múltiplas ou glassmorphism.
 
-## Componentes (`src/components/`)
+## Motion
 
-| Componente | Uso |
-|---|---|
-| `AppShell` | Layout com sidebar (desktop) + topbar/bottom-nav (mobile). Usado por paciente e admin. |
-| `Sidebar`, `MobileTopBar`, `BottomNav` | Navegação responsiva — trocam automaticamente pelo breakpoint (1024px), não por JS. |
-| `Modal` | Modal genérico (Framer Motion, portal, fecha com Esc/clique fora). Base de todos os diálogos. |
-| `ToastContext` / `useToast()` | Substitui `alert()`. Toast com ação opcional (ex: "Desfazer"). |
-| `ConfirmContext` / `useConfirm()` | Substitui `confirm()`. Retorna uma Promise&lt;boolean&gt;. |
-| `StatCard`, `HeroStatCard` | Cards de métrica (admin) e o hero de adesão/streak (paciente). |
-| `SupplementCard` | Card de dose — estado pendente/concluído, feedback tátil (`navigator.vibrate`) e sonoro. |
-| `WeekStrip` | Tira de 7 dias do dashboard do paciente. |
-| `PatientTable` | Tabela de pacientes do admin. |
-| `RegisterPatientWizard` | Wizard de 5 etapas para criar paciente (decompõe o antigo monólito de ~390 linhas). |
-| `ManagePatientModal`, `ReleaseModal` | Editar/excluir paciente; liberar edição retroativa. |
+Assinatura "settle": `--ease-glide` (saída suave) e `--ease-settle` (uma leve sobreposição elástica, usada quando algo "assenta no lugar" — sheets, anel de progresso). Durações: 140/240/420ms.
 
-## Regra de ouro
+## Navegação
 
-Componentes só consomem tokens semânticos (`var(--color-*)`, `var(--space-*)`, etc.), nunca hex cru nem os tokens `--raw-*`. Um novo protocolo/tema é um bloco novo em `tokens.css` — nenhum componente precisa mudar.
+- **Desktop (≥1024px)**: `.rail` — trilho fino de 76px, só ícones, item ativo vira um botão preenchido com a cor do protocolo.
+- **Mobile (<1024px)**: `.pill-nav` — pílula flutuante fixa no rodapé, com ícone+label, item ativo preenchido.
+- Nunca sidebar de texto nem bottom-nav de borda a borda (identidade anterior).
+
+## Padrões de interação
+
+- **Bottom sheet** (`components/Sheet.jsx`) substitui todo modal centralizado — sobe do rodapé em qualquer largura, com um "grabber" visual no mobile.
+- **Anel de progresso** (`components/ProgressRing.jsx`) substitui a barra linear — SVG animado, % no centro em serifada, streak abaixo.
+- **Linha do tempo** (`.timeline`) substitui o bento-grid do dia — um trilho vertical conectando as doses, ponto preenchido quando concluída.
+- **Heatmap** (`components/HeatmapStrip.jsx`, `HeatmapMonth.jsx`) substitui a tira de calendário antiga e a grade de mês — células coloridas por adesão.
+
+Ver `COMPONENT_LIBRARY.md` para a lista completa de componentes e `UX_DECISIONS.md` para o raciocínio por trás de cada escolha.
