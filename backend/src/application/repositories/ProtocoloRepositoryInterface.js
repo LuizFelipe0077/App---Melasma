@@ -18,4 +18,16 @@ export class ProtocoloRepositoryInterface {
   findSuplementosByProtocoloId(protocoloId) {
     throw new Error('Método findSuplementosByProtocoloId não implementado.');
   }
+
+  addSuplemento(suplemento) {
+    throw new Error('Método addSuplemento não implementado.');
+  }
+
+  updateSuplemento(suplemento) {
+    throw new Error('Método updateSuplemento não implementado.');
+  }
+
+  removeSuplemento(suplementoId) {
+    throw new Error('Método removeSuplemento não implementado.');
+  }
 }

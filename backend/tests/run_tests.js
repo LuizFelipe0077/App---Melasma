@@ -15,6 +15,9 @@ import { GoogleSheetsPermissaoRepository } from '../src/infrastructure/repositor
 import { CriarPacienteUseCase } from '../src/application/useCases/CriarPacienteUseCase.js';
 import { RegistrarCheckinUseCase } from '../src/application/useCases/RegistrarCheckinUseCase.js';
 import { CancelarCheckinUseCase } from '../src/application/useCases/CancelarCheckinUseCase.js';
+import { AdicionarSuplementoUseCase } from '../src/application/useCases/AdicionarSuplementoUseCase.js';
+import { EditarSuplementoUseCase } from '../src/application/useCases/EditarSuplementoUseCase.js';
+import { RemoverSuplementoUseCase } from '../src/application/useCases/RemoverSuplementoUseCase.js';
 import { LoginUseCase } from '../src/application/useCases/LoginUseCase.js';
 import { EditarPacienteUseCase } from '../src/application/useCases/EditarPacienteUseCase.js';
 import { ExcluirPacienteUseCase } from '../src/application/useCases/ExcluirPacienteUseCase.js';
@@ -361,6 +364,81 @@ async function runTests() {
       throw new Error('Deveria ter rejeitado cancelar um check-in que já está PENDENTE.');
     } catch (e) {
       if (!e.message.includes('ainda não foi realizado')) throw e;
+    }
+  });
+
+  // --- Test 10: Adicionar/Editar/RemoverSuplementoUseCase (additive endpoints) ---
+  await test('Casos de Uso - Adicionar/Editar/RemoverSuplemento em paciente já cadastrado', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const protocoloRepo = new GoogleSheetsProtocoloRepository();
+    const checkinRepo = new GoogleSheetsCheckinRepository();
+    const cryptoService = new BcryptGasService();
+
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, protocoloRepo, checkinRepo);
+    const adicionarUC = new AdicionarSuplementoUseCase(pacienteRepo, protocoloRepo);
+    const editarUC = new EditarSuplementoUseCase(protocoloRepo);
+    const removerUC = new RemoverSuplementoUseCase(protocoloRepo);
+
+    const dataInicio = new Date();
+    const dataFim = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    const reg = await registerUC.execute({
+      nome: 'Paciente Suplementos',
+      email: 'suplementos@email.com',
+      telefone: '(11) 94444-4444',
+      senha: 'suplementos123',
+      dataInicio: dataInicio.toISOString(),
+      dataFim: dataFim.toISOString(),
+      protocoloNome: 'Melasma',
+      suplementos: []
+    });
+
+    // Adicionar
+    const added = adicionarUC.execute({
+      pacienteId: reg.id,
+      nome: 'Ômega 3',
+      dosagem: '1000mg',
+      quantidade: 1,
+      tipo: 'Manipulado',
+      horarios: ['09:00'],
+      diasSemana: ['todos'],
+      instrucoes: 'Tomar no almoço'
+    });
+
+    let suplemento = protocoloRepo.findSuplementoById(added.suplementoId);
+    if (!suplemento || suplemento.nome !== 'Ômega 3' || suplemento.dosagem !== '1000mg') {
+      throw new Error('Suplemento não foi adicionado corretamente.');
+    }
+
+    // Editar
+    editarUC.execute({
+      suplementoId: added.suplementoId,
+      nome: 'Ômega 3 Premium',
+      dosagem: '2000mg',
+      horarios: ['09:00', '21:00']
+    });
+
+    suplemento = protocoloRepo.findSuplementoById(added.suplementoId);
+    if (suplemento.nome !== 'Ômega 3 Premium' || suplemento.dosagem !== '2000mg' || suplemento.horarios.length !== 2) {
+      throw new Error('Suplemento não foi editado corretamente.');
+    }
+    if (suplemento.instrucoes !== 'Tomar no almoço') {
+      throw new Error('Edição parcial não deveria ter apagado o campo instrucoes não enviado.');
+    }
+
+    // Remover
+    removerUC.execute({ suplementoId: added.suplementoId });
+    suplemento = protocoloRepo.findSuplementoById(added.suplementoId);
+    if (suplemento !== null) {
+      throw new Error('Suplemento não foi removido corretamente.');
+    }
+
+    // Remover um suplemento inexistente deve lançar erro
+    try {
+      removerUC.execute({ suplementoId: 'id-que-nao-existe' });
+      throw new Error('Deveria ter lançado erro ao remover suplemento inexistente.');
+    } catch (e) {
+      if (!e.message.includes('não encontrado')) throw e;
     }
   });
 
