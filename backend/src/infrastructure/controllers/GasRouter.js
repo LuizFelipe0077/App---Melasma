@@ -66,6 +66,15 @@ export class GasRouter {
         });
       },
 
+      'cancelarCheckin': (payload) => {
+        const user = GasRouter._verifyToken(payload.token, services.tokenService);
+        return useCases.cancelarCheckinUseCase.execute({
+          userId: user.userId,
+          role: user.role,
+          checkinId: payload.checkinId
+        });
+      },
+
       'liberarEdicaoRetroativa': (payload) => {
         const adminUser = GasRouter._verifyAdminToken(payload.token, services.tokenService);
         return useCases.liberarEdicaoRetroativaUseCase.execute({

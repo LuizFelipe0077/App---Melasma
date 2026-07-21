@@ -14,9 +14,12 @@ import { GoogleSheetsPermissaoRepository } from '../src/infrastructure/repositor
 
 import { CriarPacienteUseCase } from '../src/application/useCases/CriarPacienteUseCase.js';
 import { RegistrarCheckinUseCase } from '../src/application/useCases/RegistrarCheckinUseCase.js';
+import { CancelarCheckinUseCase } from '../src/application/useCases/CancelarCheckinUseCase.js';
 import { LoginUseCase } from '../src/application/useCases/LoginUseCase.js';
 import { EditarPacienteUseCase } from '../src/application/useCases/EditarPacienteUseCase.js';
 import { ExcluirPacienteUseCase } from '../src/application/useCases/ExcluirPacienteUseCase.js';
+import { Protocolo } from '../src/domain/entities/Protocolo.js';
+import { Suplemento } from '../src/domain/entities/Suplemento.js';
 
 async function runTests() {
   process.env.ADMIN_EMAIL = 'admin@clinica.com';
@@ -267,6 +270,97 @@ async function runTests() {
     const deleted = await pacienteRepo.findById(reg.id);
     if (deleted !== null) {
       throw new Error('Paciente não foi excluído da memória.');
+    }
+  });
+
+  // --- Test 9: CancelarCheckinUseCase (additive endpoint) ---
+  await test('Caso de Uso - CancelarCheckinUseCase (reverte check-in e guarda de propriedade)', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const protocoloRepo = new GoogleSheetsProtocoloRepository();
+    const checkinRepo = new GoogleSheetsCheckinRepository();
+    const gamificacaoRepo = new GoogleSheetsGamificacaoRepository();
+    const cryptoService = new BcryptGasService();
+
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, protocoloRepo, checkinRepo);
+    const registrarCheckinUC = new RegistrarCheckinUseCase(pacienteRepo, protocoloRepo, checkinRepo, gamificacaoRepo, null);
+    const cancelarCheckinUC = new CancelarCheckinUseCase(checkinRepo, gamificacaoRepo);
+
+    const dataInicio = new Date();
+    const dataFim = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    // suplementos: [] on purpose — CriarPacienteUseCase pre-generates a PENDENTE
+    // check-in for every future slot of every supplement passed in, which would
+    // collide with RegistrarCheckinUseCase's own duplicate-slot guard below.
+    // The supplement is added manually afterwards so this test only exercises
+    // the check-in registration/cancellation path, not the (separate,
+    // pre-existing) prescription-generation flow.
+    const reg = await registerUC.execute({
+      nome: 'Paciente Checkin',
+      email: 'checkin@email.com',
+      telefone: '(11) 95555-5555',
+      senha: 'checkin123',
+      dataInicio: dataInicio.toISOString(),
+      dataFim: dataFim.toISOString(),
+      protocoloNome: 'Melasma',
+      suplementos: []
+    });
+
+    const paciente = pacienteRepo.findById(reg.id);
+    const suplemento = new Suplemento({
+      id: UUID.generate(),
+      protocoloId: paciente.protocoloId,
+      nome: 'Vitamina C',
+      dosagem: '500mg',
+      horarios: ['08:00'],
+      instrucoes: '',
+      quantidade: 1,
+      diasSemana: ['todos'],
+      dataInicio,
+      dataFim,
+      tipo: 'Vitamina'
+    });
+    protocoloRepo.save(new Protocolo({ id: paciente.protocoloId, nome: 'Melasma', suplementos: [suplemento], duracaoDias: 30 }));
+    const suplementoId = suplemento.id.value;
+
+    const prescribedTime = new Date();
+    prescribedTime.setHours(8, 0, 0, 0);
+
+    const registro = await registrarCheckinUC.execute({
+      pacienteId: reg.id,
+      suplementoId,
+      dataHoraPrescrita: prescribedTime.toISOString(),
+      dataHoraRealizada: prescribedTime.toISOString() // on time, deterministically CONCLUIDO regardless of wall-clock
+    });
+
+    if (registro.status !== 'CONCLUIDO') {
+      throw new Error(`Check-in deveria ter sido registrado como CONCLUIDO, veio: ${registro.status}`);
+    }
+
+    // Guard: another patient cannot cancel someone else's check-in
+    try {
+      cancelarCheckinUC.execute({ userId: 'outro-paciente-id', role: 'PACIENTE', checkinId: registro.checkinId });
+      throw new Error('Deveria ter negado o cancelamento de check-in de outro paciente.');
+    } catch (e) {
+      if (!e.message.includes('Acesso negado')) throw e;
+    }
+
+    // Happy path: the owner cancels their own check-in
+    const cancelResult = cancelarCheckinUC.execute({ userId: reg.id, role: 'PACIENTE', checkinId: registro.checkinId });
+    if (!cancelResult.success) {
+      throw new Error('Cancelamento deveria retornar success: true.');
+    }
+
+    const revertedCheckin = checkinRepo.findById(registro.checkinId);
+    if (revertedCheckin.status !== 'PENDENTE' || revertedCheckin.dataHoraRealizada !== null) {
+      throw new Error('Check-in não voltou para o estado PENDENTE após o cancelamento.');
+    }
+
+    // Cancelling an already-PENDENTE check-in must be rejected
+    try {
+      cancelarCheckinUC.execute({ userId: reg.id, role: 'PACIENTE', checkinId: registro.checkinId });
+      throw new Error('Deveria ter rejeitado cancelar um check-in que já está PENDENTE.');
+    } catch (e) {
+      if (!e.message.includes('ainda não foi realizado')) throw e;
     }
   });
 

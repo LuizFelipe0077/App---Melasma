@@ -9,6 +9,7 @@ import { TokenService } from '../services/TokenService.js';
 import { LoginUseCase } from '../../application/useCases/LoginUseCase.js';
 import { CriarPacienteUseCase } from '../../application/useCases/CriarPacienteUseCase.js';
 import { RegistrarCheckinUseCase } from '../../application/useCases/RegistrarCheckinUseCase.js';
+import { CancelarCheckinUseCase } from '../../application/useCases/CancelarCheckinUseCase.js';
 import { LiberarEdicaoRetroativaUseCase } from '../../application/useCases/LiberarEdicaoRetroativaUseCase.js';
 import { GerarDashboardUseCase } from '../../application/useCases/GerarDashboardUseCase.js';
 import { ListarPacientesUseCase } from '../../application/useCases/ListarPacientesUseCase.js';
@@ -68,6 +69,11 @@ class Container {
         s.checkinRepository, 
         s.gamificacaoRepository,
         s.permissaoRepository
+      );
+
+      this.useCases.cancelarCheckinUseCase = new CancelarCheckinUseCase(
+        s.checkinRepository,
+        s.gamificacaoRepository
       );
 
       this.useCases.liberarEdicaoRetroativaUseCase = new LiberarEdicaoRetroativaUseCase(
