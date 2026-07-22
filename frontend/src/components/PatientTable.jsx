@@ -4,7 +4,7 @@ function adherenceTone(rate) {
   return { tone: 'chip-warning', label: 'Regular' };
 }
 
-export default function PatientTable({ patients, onRowClick, onReleaseClick }) {
+export default function PatientTable({ patients, onRowClick, onReleaseClick, onHistoryClick }) {
   if (patients.length === 0) {
     return <p className="empty-state">Nenhum paciente encontrado.</p>;
   }
@@ -22,6 +22,12 @@ export default function PatientTable({ patients, onRowClick, onReleaseClick }) {
             <div className="flex items-center gap-3">
               <span style={{ fontWeight: 'var(--weight-semibold)' }}>{p.rate}%</span>
               <span className={`chip ${tone}`}>{label}</span>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={(e) => { e.stopPropagation(); onHistoryClick(p); }}
+              >
+                Histórico
+              </button>
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={(e) => { e.stopPropagation(); onReleaseClick(p.id); }}
