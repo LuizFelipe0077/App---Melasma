@@ -98,7 +98,7 @@ export default function AdminPatientsPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+      <div className="flex items-center justify-between mobile-stack-center" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         <h1 className="display-md">Pacientes</h1>
         <button className="btn btn-fill" onClick={() => setRegisterOpen(true)}>+ Novo paciente</button>
       </div>
@@ -110,9 +110,9 @@ export default function AdminPatientsPage() {
       </div>
 
       <section className="surface" style={{ overflow: 'hidden' }}>
-        <div className="flex items-center justify-between" style={{ padding: 'var(--space-4) var(--space-5)', borderBottom: 'var(--hairline) solid var(--line)' }}>
+        <div className="flex items-center justify-between mobile-stack-center" style={{ padding: 'var(--space-4) var(--space-5)', borderBottom: 'var(--hairline) solid var(--line)', gap: 'var(--space-3)' }}>
           <h2 className="display-sm" style={{ fontSize: '1.25rem' }}>Acompanhamento</h2>
-          <input className="field-input" style={{ maxWidth: 260, padding: '8px 14px' }} placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <input className="field-input admin-search-input" style={{ maxWidth: 260, padding: '8px 14px' }} placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
 
         {loading ? (

@@ -27,21 +27,25 @@ export default function PatientTable({ patients, onRowClick, onReleaseClick, onH
               <div className="dose-name">{p.nome}</div>
               <div className="dose-meta">{p.email}</div>
             </div>
-            <div className="flex items-center gap-3">
-              <span style={{ fontWeight: 'var(--weight-semibold)' }}>{p.rate}%</span>
-              <span className={`chip ${tone}`}>{label}</span>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={(e) => { e.stopPropagation(); onHistoryClick(p); }}
-              >
-                Histórico
-              </button>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={(e) => { e.stopPropagation(); onReleaseClick(p.id); }}
-              >
-                Liberar retroativo
-              </button>
+            <div className="roster-row-meta">
+              <div className="flex items-center gap-3">
+                <span style={{ fontWeight: 'var(--weight-semibold)' }}>{p.rate}%</span>
+                <span className={`chip ${tone}`}>{label}</span>
+              </div>
+              <div className="roster-row-buttons">
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={(e) => { e.stopPropagation(); onHistoryClick(p); }}
+                >
+                  Histórico
+                </button>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={(e) => { e.stopPropagation(); onReleaseClick(p.id); }}
+                >
+                  Liberar retroativo
+                </button>
+              </div>
             </div>
           </div>
         );
