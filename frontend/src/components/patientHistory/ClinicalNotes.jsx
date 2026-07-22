@@ -99,7 +99,7 @@ export default function ClinicalNotes({ pacienteId, filterTipos, tipoOptions = O
                 <span className="note-type-tag">{allLabels.find((t) => t.value === n.tipo)?.label || n.tipo}</span>
                 <span className="dose-meta">{new Date(n.createdAt).toLocaleString('pt-BR')}</span>
               </div>
-              <p className="body-sm" style={{ color: 'var(--ink)' }}>{n.texto}</p>
+              <p className="body-sm text-ink">{n.texto}</p>
             </div>
           ))}
         </div>

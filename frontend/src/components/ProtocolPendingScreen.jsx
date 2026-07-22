@@ -47,7 +47,7 @@ export default function ProtocolPendingScreen({ dataInicio, onLogout }) {
         <div style={{ fontSize: '2.5rem', marginBottom: 'var(--space-5)' }} aria-hidden="true">🌿</div>
         <h1 className="display-md" style={{ marginBottom: 'var(--space-4)' }}>Seu protocolo está sendo preparado</h1>
         <p className="body-md" style={{ marginBottom: 'var(--space-6)' }}>
-          Seu tratamento começará em <strong style={{ color: 'var(--ink)' }}>{startLabel}</strong>. Estamos organizando todas as etapas para que sua experiência seja perfeita.
+          Seu tratamento começará em <strong className="text-ink">{startLabel}</strong>. Estamos organizando todas as etapas para que sua experiência seja perfeita.
         </p>
 
         {countdown && (

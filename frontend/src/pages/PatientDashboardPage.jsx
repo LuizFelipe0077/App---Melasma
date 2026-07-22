@@ -243,20 +243,20 @@ export default function PatientDashboardPage() {
         <div className="dashboard-info-row">
           <div>
             <span className="eyebrow">Hoje faltam</span>
-            <p className="body-md" style={{ color: 'var(--ink)', fontWeight: 'var(--weight-medium)' }}>
+            <p className="body-md-strong">
               {pendingSlots.length} {pendingSlots.length === 1 ? 'suplemento' : 'suplementos'}
             </p>
           </div>
           {nextPending && (
             <div>
               <span className="eyebrow">Próximo horário</span>
-              <p className="body-md" style={{ color: 'var(--ink)', fontWeight: 'var(--weight-medium)' }}>{formatTime(nextPending.checkin.dataHoraPrescrita)}</p>
+              <p className="body-md-strong">{formatTime(nextPending.checkin.dataHoraPrescrita)}</p>
             </div>
           )}
           {treatment && (
             <div>
               <span className="eyebrow">Dias restantes</span>
-              <p className="body-md" style={{ color: 'var(--ink)', fontWeight: 'var(--weight-medium)' }}>{treatment.remaining}</p>
+              <p className="body-md-strong">{treatment.remaining}</p>
             </div>
           )}
         </div>

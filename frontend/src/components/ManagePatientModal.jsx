@@ -48,9 +48,9 @@ export default function ManagePatientModal({ open, patient, onClose, onSave, onD
         <div className="field"><label className="field-label">Nome</label><input className="field-input" required value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
         <div className="field"><label className="field-label">E-mail</label><input type="email" className="field-input" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
         <div className="field"><label className="field-label">WhatsApp</label><input type="tel" className="field-input" required value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} /></div>
-        <div className="flex gap-3">
-          <div className="field" style={{ flex: 1 }}><label className="field-label">Início</label><input type="date" className="field-input" required value={form.dataInicio} onChange={(e) => setForm({ ...form, dataInicio: e.target.value })} /></div>
-          <div className="field" style={{ flex: 1 }}><label className="field-label">Fim</label><input type="date" className="field-input" required value={form.dataFim} onChange={(e) => setForm({ ...form, dataFim: e.target.value })} /></div>
+        <div className="field-row">
+          <div className="field"><label className="field-label">Início</label><input type="date" className="field-input" required value={form.dataInicio} onChange={(e) => setForm({ ...form, dataInicio: e.target.value })} /></div>
+          <div className="field"><label className="field-label">Fim</label><input type="date" className="field-input" required value={form.dataFim} onChange={(e) => setForm({ ...form, dataFim: e.target.value })} /></div>
         </div>
         <div className="field">
           <label className="field-label">Status</label>
@@ -65,7 +65,7 @@ export default function ManagePatientModal({ open, patient, onClose, onSave, onD
         </div>
 
         <div className="flex justify-between" style={{ marginTop: 'var(--space-5)' }}>
-          <button type="button" className="btn btn-ghost" style={{ color: 'var(--danger)' }} onClick={handleDelete}>Excluir conta</button>
+          <button type="button" className="btn btn-ghost btn-ghost-danger" onClick={handleDelete}>Excluir conta</button>
           <div className="flex gap-2">
             <button type="button" className="btn btn-ghost" onClick={handleClose}>Cancelar</button>
             <button type="submit" className="btn btn-fill" disabled={saving}>{saving ? <span className="spinner" /> : 'Salvar'}</button>

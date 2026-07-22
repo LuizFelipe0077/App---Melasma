@@ -103,7 +103,7 @@ export default function AdminPatientsPage() {
         <button className="btn btn-fill" onClick={() => setRegisterOpen(true)}>+ Novo paciente</button>
       </div>
 
-      <div className="flex gap-4" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap' }}>
+      <div className="metric-grid" style={{ marginBottom: 'var(--space-6)' }}>
         <StatChip label="Alerta de abandono (<60%)" value={loading ? '—' : stats.abandon} tone="danger" />
         <StatChip label="Adesão excelente (>90%)" value={loading ? '—' : stats.excellent} tone="success" />
         <StatChip label="Total ativos" value={loading ? '—' : stats.total} />
@@ -116,7 +116,7 @@ export default function AdminPatientsPage() {
         </div>
 
         {loading ? (
-          <div style={{ padding: 24 }}><div className="skeleton" style={{ height: 20 }} /></div>
+          <div style={{ padding: 'var(--space-5)' }}><div className="skeleton" style={{ height: 20 }} /></div>
         ) : error ? (
           <p className="empty-state">Erro ao carregar: {error.message}</p>
         ) : (

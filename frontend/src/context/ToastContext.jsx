@@ -46,7 +46,7 @@ export function ToastProvider({ children }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 30 }}
                 transition={{ duration: 0.25, ease: [0.34, 1.4, 0.64, 1] }}
-                style={t.tone === 'error' ? { backgroundColor: 'var(--color-danger-fill)' } : undefined}
+                style={t.tone === 'error' ? { backgroundColor: 'var(--danger)' } : undefined}
               >
                 <span>{t.message}</span>
                 {t.actionLabel && (

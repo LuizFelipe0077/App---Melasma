@@ -117,9 +117,9 @@ export default function RegisterPatientWizard({ open, onClose, onSubmit }) {
                 <option value="Desinflamação">Desinflamação</option>
               </select>
             </div>
-            <div className="flex gap-3">
-              <div className="field" style={{ flex: 1 }}><label className="field-label">Início</label><input type="date" className="field-input" value={protocol.dataInicio} onChange={(e) => setProtocol({ ...protocol, dataInicio: e.target.value })} /></div>
-              <div className="field" style={{ flex: 1 }}><label className="field-label">Fim</label><input type="date" className="field-input" value={protocol.dataFim} onChange={(e) => setProtocol({ ...protocol, dataFim: e.target.value })} /></div>
+            <div className="field-row">
+              <div className="field"><label className="field-label">Início</label><input type="date" className="field-input" value={protocol.dataInicio} onChange={(e) => setProtocol({ ...protocol, dataInicio: e.target.value })} /></div>
+              <div className="field"><label className="field-label">Fim</label><input type="date" className="field-input" value={protocol.dataFim} onChange={(e) => setProtocol({ ...protocol, dataFim: e.target.value })} /></div>
             </div>
           </div>
         )}
@@ -134,7 +134,7 @@ export default function RegisterPatientWizard({ open, onClose, onSubmit }) {
               <p className="body-sm">Nenhum suplemento adicionado ainda.</p>
             ) : (
               supplements.map((s, idx) => (
-                <div key={idx} className="flex items-center justify-between" style={{ padding: 'var(--space-3) 0', borderBottom: 'var(--hairline) solid var(--line)' }}>
+                <div key={idx} className="list-row">
                   <div>
                     <div className="dose-name">{s.nome} — {s.dosagem}</div>
                     <div className="dose-meta">{s.horarios.join(', ')}</div>

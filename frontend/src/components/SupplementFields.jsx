@@ -52,22 +52,22 @@ export default function SupplementFields({ draft, onChange }) {
 
   return (
     <div>
-      <div className="flex gap-3">
-        <div className="field" style={{ flex: 1 }}>
+      <div className="field-row">
+        <div className="field">
           <label className="field-label">Nome</label>
           <input className="field-input" placeholder="Ex: Vitamina C" value={draft.nome} onChange={(e) => set({ nome: e.target.value })} />
         </div>
-        <div className="field" style={{ flex: 1 }}>
+        <div className="field">
           <label className="field-label">Dosagem</label>
           <input className="field-input" placeholder="Ex: 500mg" value={draft.dosagem} onChange={(e) => set({ dosagem: e.target.value })} />
         </div>
       </div>
-      <div className="flex gap-3">
-        <div className="field" style={{ flex: 1 }}>
+      <div className="field-row">
+        <div className="field">
           <label className="field-label">Quantidade</label>
           <input type="number" min="1" className="field-input" value={draft.quantidade} onChange={(e) => set({ quantidade: e.target.value })} />
         </div>
-        <div className="field" style={{ flex: 1 }}>
+        <div className="field">
           <label className="field-label">Tipo</label>
           <select className="field-input" value={draft.tipo} onChange={(e) => set({ tipo: e.target.value })}>
             {TIPO_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
