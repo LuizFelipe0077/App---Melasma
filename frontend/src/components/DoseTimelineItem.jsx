@@ -1,31 +1,9 @@
-import { useState } from 'react';
-
-let sharedAudioCtx = null;
-function playChime() {
-  try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    if (!sharedAudioCtx) sharedAudioCtx = new AudioContextClass();
-    if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
-    const osc = sharedAudioCtx.createOscillator();
-    const gain = sharedAudioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, sharedAudioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1320, sharedAudioCtx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.07, sharedAudioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, sharedAudioCtx.currentTime + 0.2);
-    osc.connect(gain);
-    gain.connect(sharedAudioCtx.destination);
-    osc.start();
-    osc.stop(sharedAudioCtx.currentTime + 0.25);
-  } catch {
-    // audio blocked/unsupported — silent no-op
-  }
-}
+import { motion } from 'framer-motion';
+import { memo, useState } from 'react';
 
 const formatTime = (date) => date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-export default function DoseTimelineItem({ suplemento, checkin, onCheck, onUndo }) {
+function DoseTimelineItem({ suplemento, checkin, onCheck, onUndo }) {
   const [checking, setChecking] = useState(false);
   const isDone = checkin && checkin.status !== 'PENDENTE';
 
@@ -34,13 +12,10 @@ export default function DoseTimelineItem({ suplemento, checkin, onCheck, onUndo 
       onUndo(suplemento, checkin);
       return;
     }
-    setChecking(true);
     if (navigator.vibrate) navigator.vibrate(70);
-    playChime();
-    setTimeout(() => {
-      onCheck(suplemento, checkin);
-      setChecking(false);
-    }, 260);
+    setChecking(true);
+    onCheck(suplemento, checkin);
+    setTimeout(() => setChecking(false), 260);
   };
 
   return (
@@ -58,14 +33,19 @@ export default function DoseTimelineItem({ suplemento, checkin, onCheck, onUndo 
             </div>
           </div>
         </div>
-        <button
+        <motion.button
           className={`dose-check${isDone ? ' done' : ''}`}
           onClick={handleClick}
           aria-label={isDone ? `Desfazer ${suplemento.nome}` : `Marcar ${suplemento.nome} como tomado`}
+          whileTap={{ scale: 0.85 }}
+          animate={isDone ? { scale: [0.6, 1.15, 1] } : { scale: 1 }}
+          transition={{ duration: 0.32, ease: [0.34, 1.3, 0.64, 1] }}
         >
           {isDone ? '✓' : ''}
-        </button>
+        </motion.button>
       </div>
     </div>
   );
 }
+
+export default memo(DoseTimelineItem);

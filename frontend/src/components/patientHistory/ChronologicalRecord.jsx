@@ -27,7 +27,15 @@ export default function ChronologicalRecord({ days }) {
 
         return (
           <div key={key} className="record-day">
-            <div className="timeline-day-row" style={{ borderBottom: 'none', padding: 0, cursor: 'pointer' }} onClick={() => setExpandedKey(isExpanded ? null : key)}>
+            <div
+              className="timeline-day-row"
+              role="button"
+              tabIndex={0}
+              aria-expanded={isExpanded}
+              aria-label={`Dia ${day.dayNumber}`}
+              onClick={() => setExpandedKey(isExpanded ? null : key)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedKey(isExpanded ? null : key); } }}
+            >
               <span className={`timeline-day-dot ${day.status}`} />
               <span className="timeline-day-label">
                 Dia {day.dayNumber} — {day.date.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
@@ -37,12 +45,12 @@ export default function ChronologicalRecord({ days }) {
             </div>
 
             {isExpanded && (
-              <div className="timeline-day-detail animate-in" style={{ paddingLeft: 22 }}>
+              <div className="timeline-day-detail animate-in">
                 {day.checkins.map((c) => (
                   <div key={c.id} className="record-event">
                     <span className="record-event-icon">💊</span>
                     <span>
-                      <strong style={{ color: 'var(--ink)' }}>{c.suplemento?.nome || 'Suplemento'}</strong> — {formatTime(c.dataHoraPrescrita)}
+                      <strong className="text-ink">{c.suplemento?.nome || 'Suplemento'}</strong> — {formatTime(c.dataHoraPrescrita)}
                       {c.dataHoraRealizada && ` · check-in às ${formatTime(c.dataHoraRealizada)}`} · {STATUS_LABEL[c.status] || c.status}
                     </span>
                   </div>
@@ -52,7 +60,7 @@ export default function ChronologicalRecord({ days }) {
                     {e.kind === 'nota' && (
                       <>
                         <span className="record-event-icon">📝</span>
-                        <span><strong style={{ color: 'var(--ink)' }}>{NOTE_TYPE_LABEL[e.tipo] || e.tipo}:</strong> {e.texto}</span>
+                        <span><strong className="text-ink">{NOTE_TYPE_LABEL[e.tipo] || e.tipo}:</strong> {e.texto}</span>
                       </>
                     )}
                     {e.kind === 'permissao' && (

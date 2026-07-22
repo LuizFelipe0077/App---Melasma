@@ -14,7 +14,15 @@ export default function PatientTable({ patients, onRowClick, onReleaseClick, onH
       {patients.map((p) => {
         const { tone, label } = adherenceTone(p.rate);
         return (
-          <div key={p.id} className="roster-row" onClick={() => onRowClick(p)}>
+          <div
+            key={p.id}
+            className="roster-row"
+            role="button"
+            tabIndex={0}
+            aria-label={`Gerenciar ${p.nome}`}
+            onClick={() => onRowClick(p)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(p); } }}
+          >
             <div>
               <div className="dose-name">{p.nome}</div>
               <div className="dose-meta">{p.email}</div>

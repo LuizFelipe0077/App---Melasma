@@ -114,7 +114,7 @@ export default function ManageSupplements({ pacienteId }) {
                 </div>
               </div>
             ) : (
-              <div key={sup.suplementoId} className="flex items-center justify-between" style={{ padding: 'var(--space-3) 0', borderBottom: 'var(--hairline) solid var(--line)' }}>
+              <div key={sup.suplementoId} className="list-row">
                 <div>
                   <div className="dose-name">{sup.nome} — {sup.dosagem}</div>
                   <div className="dose-meta">{(sup.horarios || []).join(', ')}</div>

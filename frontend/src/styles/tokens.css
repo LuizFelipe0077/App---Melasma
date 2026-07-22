@@ -114,7 +114,6 @@
   --success-wash: rgba(79, 125, 87, 0.12);
   --danger: var(--p-danger-ink);
   --danger-wash: rgba(181, 69, 63, 0.10);
-  --danger-fill: #B5453F;
   --warning: var(--p-warning-ink);
   --warning-wash: rgba(146, 102, 31, 0.12);
 

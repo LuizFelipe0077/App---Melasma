@@ -2,7 +2,7 @@ function colorFor(rate) {
   if (rate === null) return 'var(--surface-sunken)';
   if (rate >= 80) return 'var(--success)';
   if (rate >= 50) return 'var(--warning)';
-  return 'var(--danger-fill)';
+  return 'var(--danger)';
 }
 
 export default function ConsistencyMap({ map }) {
@@ -20,7 +20,7 @@ export default function ConsistencyMap({ map }) {
       ))}
       {map.worst && (
         <p className="body-sm" style={{ marginTop: 'var(--space-3)' }}>
-          Maior dificuldade no período da <strong style={{ color: 'var(--ink)' }}>{map.worst.label.toLowerCase()}</strong> ({map.worst.rate}% de adesão).
+          Maior dificuldade no período da <strong className="text-ink">{map.worst.label.toLowerCase()}</strong> ({map.worst.rate}% de adesão).
         </p>
       )}
     </div>

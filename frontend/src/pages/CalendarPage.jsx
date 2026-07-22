@@ -4,6 +4,7 @@ import Sheet from '../components/Sheet.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useDashboardData } from '../hooks/useDashboardData.js';
 import { buildDayRecords } from '../utils/buildDayRecords.js';
+import { buildTreatmentInfo } from '../utils/treatmentInfo.js';
 
 const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -13,7 +14,8 @@ const LEGEND = [
   { cls: 'completed', label: 'Dia perfeito — tudo concluído' },
   { cls: 'partial', label: 'Parcial — algumas doses pendentes' },
   { cls: 'missed', label: 'Sem check-in registrado' },
-  { cls: 'future', label: 'Ainda não chegou' }
+  { cls: 'future', label: 'Ainda não chegou' },
+  { cls: 'today', label: 'Hoje', swatchStyle: { boxShadow: 'inset 0 0 0 3px var(--ink)', background: 'var(--surface-sunken)' } }
 ];
 
 function formatTime(dateStr) {
@@ -43,15 +45,7 @@ export default function CalendarPage() {
     return buildDayRecords(data, session.dataInicio, start, end);
   }, [data, session.dataInicio, cursor]);
 
-  const treatmentInfo = useMemo(() => {
-    if (!session.dataInicio || !session.dataFim) return null;
-    const start = new Date(session.dataInicio);
-    const end = new Date(session.dataFim);
-    const today = new Date();
-    const total = Math.max(1, Math.round((end - start) / 86400000) + 1);
-    const remaining = Math.max(0, Math.ceil((end - today) / 86400000));
-    return { total, remaining, endLabel: end.toLocaleDateString('pt-BR') };
-  }, [session.dataInicio, session.dataFim]);
+  const treatmentInfo = useMemo(() => buildTreatmentInfo(session.dataInicio, session.dataFim), [session.dataInicio, session.dataFim]);
 
   const goToMonth = (delta) => {
     setCursor((prev) => {
@@ -72,9 +66,16 @@ export default function CalendarPage() {
       </div>
 
       {treatmentInfo && (
-        <p className="body-sm" style={{ marginBottom: 'var(--space-6)' }}>
-          Faltam <strong style={{ color: 'var(--ink)' }}>{treatmentInfo.remaining} dias</strong> para o fim do tratamento — término previsto em {treatmentInfo.endLabel}.
-        </p>
+        <div className="calendar-treatment-badge">
+          <div>
+            <span className="eyebrow">Dia do tratamento</span>
+            <p className="display-sm" style={{ marginTop: 2 }}>{treatmentInfo.elapsed} de {treatmentInfo.total}</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <span className="eyebrow">Faltam</span>
+            <p className="display-sm" style={{ marginTop: 2 }}>{treatmentInfo.remaining} dias</p>
+          </div>
+        </div>
       )}
 
       <section className="surface surface-pad">
@@ -88,7 +89,7 @@ export default function CalendarPage() {
             <div className="calendar-legend">
               {LEGEND.map((l) => (
                 <div className="calendar-legend-item" key={l.cls}>
-                  <span className={`calendar-legend-swatch heatmap-month-cell ${l.cls}`} style={{ borderRadius: 3 }} />
+                  <span className={`calendar-legend-swatch heatmap-month-cell ${l.cls}`} style={{ borderRadius: 3, ...(l.swatchStyle || {}) }} />
                   {l.label}
                 </div>
               ))}

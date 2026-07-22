@@ -9,8 +9,8 @@ const CLASS_COLOR = {
   'Excelente': 'var(--success)',
   'Boa': 'var(--accent)',
   'Moderada': 'var(--warning)',
-  'Baixa': '#C97A3A',
-  'Crítica': 'var(--danger-fill)'
+  'Baixa': 'var(--warning)',
+  'Crítica': 'var(--danger)'
 };
 
 export default function AdherenceGauge({ value, classification }) {

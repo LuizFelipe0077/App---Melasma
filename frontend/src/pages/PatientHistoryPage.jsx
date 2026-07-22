@@ -235,7 +235,7 @@ export default function PatientHistoryPage() {
       </div>
 
       {treatmentStats && (
-        <div className="flex gap-4 no-print" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap' }}>
+        <div className="metric-grid no-print" style={{ marginBottom: 'var(--space-6)' }}>
           <div className="surface metric-card"><div className="metric-value">{treatmentStats.elapsed}</div><div className="metric-label">Dias concluídos</div></div>
           <div className="surface metric-card"><div className="metric-value">{treatmentStats.remaining}</div><div className="metric-label">Dias restantes</div></div>
           <div className="surface metric-card"><div className="metric-value">{treatmentStats.percent}%</div><div className="metric-label">Do tratamento concluído</div></div>
@@ -269,7 +269,7 @@ export default function PatientHistoryPage() {
               <div style={{ marginBottom: 'var(--space-7)' }}><ConsistencyMap map={consistencyMap} /></div>
 
               <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Resumo geral</h2>
-              <div className="flex gap-4" style={{ marginBottom: 'var(--space-7)', flexWrap: 'wrap' }}>
+              <div className="metric-grid" style={{ marginBottom: 'var(--space-7)' }}>
                 <div className="surface metric-card"><div className="metric-value">{(dashboard.totalConsumido || 0) + (dashboard.totalAtrasado || 0)}</div><div className="metric-label">Check-ins realizados</div></div>
                 <div className="surface metric-card"><div className="metric-value">{dashboard.totalPrescrito}</div><div className="metric-label">Suplementos programados</div></div>
                 <div className="surface metric-card"><div className="metric-value">{dashboard.taxaAdesaoGeral}%</div><div className="metric-label">Adesão</div></div>

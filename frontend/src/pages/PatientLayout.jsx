@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import AppCanvas from '../components/AppCanvas.jsx';
+import ProtocolPendingScreen from '../components/ProtocolPendingScreen.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useConfirm } from '../context/ConfirmContext.jsx';
 import { protocolToThemeClass, useTheme } from '../context/ThemeContext.jsx';
@@ -25,6 +26,11 @@ export default function PatientLayout() {
     const ok = await confirm({ title: 'Encerrar sessão', description: 'Tem certeza que deseja sair?', confirmLabel: 'Sair' });
     if (ok) logout();
   };
+
+  const protocolNotStarted = session.dataInicio && new Date() < new Date(session.dataInicio);
+  if (protocolNotStarted) {
+    return <ProtocolPendingScreen dataInicio={session.dataInicio} onLogout={handleLogout} />;
+  }
 
   return (
     <AppCanvas mark="✧" navItems={NAV_ITEMS} onLogout={handleLogout}>
