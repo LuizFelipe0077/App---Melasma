@@ -11,6 +11,7 @@ import { GoogleSheetsCheckinRepository } from '../src/infrastructure/repositorie
 import { GoogleSheetsProtocoloRepository } from '../src/infrastructure/repositories/GoogleSheetsProtocoloRepository.js';
 import { GoogleSheetsGamificacaoRepository } from '../src/infrastructure/repositories/GoogleSheetsGamificacaoRepository.js';
 import { GoogleSheetsPermissaoRepository } from '../src/infrastructure/repositories/GoogleSheetsPermissaoRepository.js';
+import { GoogleSheetsObservacaoRepository } from '../src/infrastructure/repositories/GoogleSheetsObservacaoRepository.js';
 
 import { CriarPacienteUseCase } from '../src/application/useCases/CriarPacienteUseCase.js';
 import { RegistrarCheckinUseCase } from '../src/application/useCases/RegistrarCheckinUseCase.js';
@@ -23,6 +24,8 @@ import { EditarPacienteUseCase } from '../src/application/useCases/EditarPacient
 import { ExcluirPacienteUseCase } from '../src/application/useCases/ExcluirPacienteUseCase.js';
 import { Protocolo } from '../src/domain/entities/Protocolo.js';
 import { Suplemento } from '../src/domain/entities/Suplemento.js';
+import { CriarObservacaoClinicaUseCase } from '../src/application/useCases/CriarObservacaoClinicaUseCase.js';
+import { ListarObservacoesClinicasUseCase } from '../src/application/useCases/ListarObservacoesClinicasUseCase.js';
 
 async function runTests() {
   process.env.ADMIN_EMAIL = 'admin@clinica.com';
@@ -440,6 +443,44 @@ async function runTests() {
     } catch (e) {
       if (!e.message.includes('não encontrado')) throw e;
     }
+  });
+
+  // --- Test 11: Observações Clínicas (additive, admin-only) ---
+  await test('Casos de Uso - Criar/Listar Observações Clínicas', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const observacaoRepo = new GoogleSheetsObservacaoRepository();
+    const cryptoService = new BcryptGasService();
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, new GoogleSheetsProtocoloRepository(), new GoogleSheetsCheckinRepository());
+    const criarObsUC = new CriarObservacaoClinicaUseCase(pacienteRepo, observacaoRepo);
+    const listarObsUC = new ListarObservacoesClinicasUseCase(observacaoRepo);
+
+    const reg = await registerUC.execute({
+      nome: 'Paciente Observado',
+      email: 'observado@email.com',
+      telefone: '(11) 93333-3333',
+      senha: 'observado123',
+      dataInicio: new Date().toISOString(),
+      dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      suplementos: []
+    });
+
+    criarObsUC.execute({ pacienteId: reg.id, operadorId: 'admin_root', texto: 'Paciente relatou leve incômodo.', tipo: 'REACAO' });
+    criarObsUC.execute({ pacienteId: reg.id, operadorId: 'admin_root', texto: 'Retorno agendado para revisão.', tipo: 'RETORNO' });
+
+    try {
+      criarObsUC.execute({ pacienteId: reg.id, operadorId: 'admin_root', texto: 'texto válido', tipo: 'TIPO_INVALIDO' });
+      throw new Error('Deveria ter rejeitado um tipo inválido.');
+    } catch (e) {
+      if (!e.message.includes('Tipo de observação inválido')) throw e;
+    }
+
+    const notas = listarObsUC.execute({ pacienteId: reg.id });
+    if (notas.length !== 2) throw new Error(`Esperava 2 observações, veio ${notas.length}.`);
+    const textos = notas.map(n => n.texto);
+    if (!textos.includes('Paciente relatou leve incômodo.') || !textos.includes('Retorno agendado para revisão.')) {
+      throw new Error('As observações criadas não foram encontradas na listagem.');
+    }
+    if (notas.some(n => n.pacienteId !== reg.id)) throw new Error('Observação vazando de outro paciente.');
   });
 
   console.log(`\n📊 RESULTADOS DO TESTE: ${passCount} Passados, ${failCount} Falhas.`);

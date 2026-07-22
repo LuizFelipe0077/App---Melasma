@@ -3,6 +3,7 @@ import { GoogleSheetsCheckinRepository } from '../repositories/GoogleSheetsCheck
 import { GoogleSheetsProtocoloRepository } from '../repositories/GoogleSheetsProtocoloRepository.js';
 import { GoogleSheetsGamificacaoRepository } from '../repositories/GoogleSheetsGamificacaoRepository.js';
 import { GoogleSheetsPermissaoRepository } from '../repositories/GoogleSheetsPermissaoRepository.js';
+import { GoogleSheetsObservacaoRepository } from '../repositories/GoogleSheetsObservacaoRepository.js';
 import { BcryptGasService } from '../services/BcryptGasService.js';
 import { TokenService } from '../services/TokenService.js';
 
@@ -18,6 +19,8 @@ import { GerarDashboardUseCase } from '../../application/useCases/GerarDashboard
 import { ListarPacientesUseCase } from '../../application/useCases/ListarPacientesUseCase.js';
 import { EditarPacienteUseCase } from '../../application/useCases/EditarPacienteUseCase.js';
 import { ExcluirPacienteUseCase } from '../../application/useCases/ExcluirPacienteUseCase.js';
+import { CriarObservacaoClinicaUseCase } from '../../application/useCases/CriarObservacaoClinicaUseCase.js';
+import { ListarObservacoesClinicasUseCase } from '../../application/useCases/ListarObservacoesClinicasUseCase.js';
 
 /**
  * AppModule (IoC Container)
@@ -39,6 +42,7 @@ class Container {
       this.services.protocoloRepository = new GoogleSheetsProtocoloRepository();
       this.services.gamificacaoRepository = new GoogleSheetsGamificacaoRepository();
       this.services.permissaoRepository = new GoogleSheetsPermissaoRepository();
+      this.services.observacaoRepository = new GoogleSheetsObservacaoRepository();
 
       // Infrastructure Services
       this.services.criptografiaService = new BcryptGasService();
@@ -116,6 +120,15 @@ class Container {
 
       this.useCases.excluirPacienteUseCase = new ExcluirPacienteUseCase(
         s.pacienteRepository
+      );
+
+      this.useCases.criarObservacaoClinicaUseCase = new CriarObservacaoClinicaUseCase(
+        s.pacienteRepository,
+        s.observacaoRepository
+      );
+
+      this.useCases.listarObservacoesClinicasUseCase = new ListarObservacoesClinicasUseCase(
+        s.observacaoRepository
       );
 
       this.useCases.initialized = true;

@@ -48,6 +48,9 @@ export class DatabaseSetup {
       'Gamificacao': [
         'id', 'pacienteId', 'xpTotal', 'streakAtual', 'maiorStreak', 'conquistas'
       ],
+      'Observacoes': [
+        'id', 'pacienteId', 'operadorId', 'texto', 'tipo', 'createdAt'
+      ],
       'Auditoria': [
         'id', 'timestamp', 'operadorId', 'tabela', 'registroId', 
         'tipoAcao', 'dadosAntigos', 'dadosNovos', 'ip', 'dispositivo', 'motivo'
