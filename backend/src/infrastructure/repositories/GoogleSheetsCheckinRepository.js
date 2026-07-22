@@ -18,7 +18,7 @@ export class GoogleSheetsCheckinRepository extends GoogleSheetsRepository {
   findByPacienteId(pacienteId) {
     const rows = this.readAllRows();
     const matches = rows.filter(r => r[SheetColumns.CHECKIN.PACIENTE_ID] === pacienteId);
-    return matches.map(r => CheckinMapper.toDomain(r));
+    return matches.map(r => CheckinMapper.toDomain(r)).filter(c => c !== null);
   }
 
   findByInterval(pacienteId, startDate, endDate) {
@@ -32,7 +32,7 @@ export class GoogleSheetsCheckinRepository extends GoogleSheetsRepository {
       return prescritaTime >= startMs && prescritaTime <= endMs;
     });
 
-    return matches.map(r => CheckinMapper.toDomain(r));
+    return matches.map(r => CheckinMapper.toDomain(r)).filter(c => c !== null);
   }
 
   save(checkin) {

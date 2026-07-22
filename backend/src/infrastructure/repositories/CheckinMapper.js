@@ -25,18 +25,30 @@ export class CheckinMapper {
 
   /**
    * Converts array row to CheckIn domain entity.
-   * @param {Array<any>} row 
+   * A single malformed row (e.g. legacy/manually-edited data with a status
+   * outside the CheckIn enum) must not take down every other valid check-in
+   * for the same patient — so a construction failure here is logged (visible
+   * in Stackdriver) and treated as "skip this row", the same convention
+   * PacienteMapper/ListarPacientesUseCase already use for bad rows.
+   * @param {Array<any>} row
    */
   static toDomain(row) {
     if (!row || row.length === 0) return null;
-    return new CheckIn({
-      id: new UUID(row[SheetColumns.CHECKIN.ID]),
-      pacienteId: new UUID(row[SheetColumns.CHECKIN.PACIENTE_ID]),
-      suplementoId: new UUID(row[SheetColumns.CHECKIN.SUPLEMENTO_ID]),
-      dataHoraPrescrita: new Date(row[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA]),
-      dataHoraRealizada: row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA] ? new Date(row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA]) : null,
-      status: row[SheetColumns.CHECKIN.STATUS],
-      retroativo: row[SheetColumns.CHECKIN.RETROATIVO] === 'TRUE' || row[SheetColumns.CHECKIN.RETROATIVO] === true
-    });
+    try {
+      return new CheckIn({
+        id: new UUID(row[SheetColumns.CHECKIN.ID]),
+        pacienteId: new UUID(row[SheetColumns.CHECKIN.PACIENTE_ID]),
+        suplementoId: new UUID(row[SheetColumns.CHECKIN.SUPLEMENTO_ID]),
+        dataHoraPrescrita: new Date(row[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA]),
+        dataHoraRealizada: row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA] ? new Date(row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA]) : null,
+        status: row[SheetColumns.CHECKIN.STATUS],
+        retroativo: row[SheetColumns.CHECKIN.RETROATIVO] === 'TRUE' || row[SheetColumns.CHECKIN.RETROATIVO] === true
+      });
+    } catch (error) {
+      if (typeof console !== 'undefined') {
+        console.error(`[CheckinMapper] Linha de Check_Ins ignorada (dado inválido): id=${row[SheetColumns.CHECKIN.ID]} status=${row[SheetColumns.CHECKIN.STATUS]} — ${error.message}`);
+      }
+      return null;
+    }
   }
 }
