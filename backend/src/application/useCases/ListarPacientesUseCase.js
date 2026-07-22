@@ -45,6 +45,7 @@ export class ListarPacientesUseCase {
         dataInicio: paciente.dataInicio.toISOString().split('T')[0],
         dataFim: paciente.dataFim.toISOString().split('T')[0],
         senhaHash: paciente.senhaHash.value,
+        protocoloNome: paciente.protocoloNome,
         rate: rate
       };
     });

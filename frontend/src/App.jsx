@@ -4,7 +4,9 @@ import LoginPage from './pages/LoginPage.jsx';
 import PatientDashboardPage from './pages/PatientDashboardPage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
 import CalendarPage from './pages/CalendarPage.jsx';
-import AdminDashboardPage from './pages/AdminDashboardPage.jsx';
+import AdminLayout from './pages/AdminLayout.jsx';
+import AdminPatientsPage from './pages/AdminPatientsPage.jsx';
+import PatientHistoryPage from './pages/PatientHistoryPage.jsx';
 import PatientLayout from './pages/PatientLayout.jsx';
 
 function RequireRole({ role, children }) {
@@ -41,10 +43,13 @@ export default function App() {
         path="/admin"
         element={
           <RequireRole role="ADMIN">
-            <AdminDashboardPage />
+            <AdminLayout />
           </RequireRole>
         }
-      />
+      >
+        <Route index element={<AdminPatientsPage />} />
+        <Route path="paciente/:pacienteId" element={<PatientHistoryPage />} />
+      </Route>
 
       <Route
         path="*"

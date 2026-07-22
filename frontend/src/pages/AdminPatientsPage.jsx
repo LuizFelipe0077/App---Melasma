@@ -1,22 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ApiClient } from '../api/apiClient.js';
-import AppCanvas from '../components/AppCanvas.jsx';
 import StatChip from '../components/StatChip.jsx';
 import PatientTable from '../components/PatientTable.jsx';
 import RegisterPatientWizard from '../components/RegisterPatientWizard.jsx';
 import ManagePatientModal from '../components/ManagePatientModal.jsx';
 import ReleaseModal from '../components/ReleaseModal.jsx';
-import { useAuth } from '../context/AuthContext.jsx';
-import { useConfirm } from '../context/ConfirmContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
-import { useTheme } from '../context/ThemeContext.jsx';
 
-const NAV_ITEMS = [{ to: '/admin', end: true, icon: '☷', label: 'Pacientes' }];
-
-export default function AdminDashboardPage() {
-  const { logout } = useAuth();
-  const { setThemeClass } = useTheme();
-  const confirm = useConfirm();
+export default function AdminPatientsPage() {
+  const navigate = useNavigate();
   const { showToast, showError } = useToast();
 
   const [patients, setPatients] = useState([]);
@@ -27,10 +20,6 @@ export default function AdminDashboardPage() {
   const [registerOpen, setRegisterOpen] = useState(false);
   const [managePatient, setManagePatient] = useState(null);
   const [releasePatientId, setReleasePatientId] = useState(null);
-
-  useEffect(() => {
-    setThemeClass('');
-  }, [setThemeClass]);
 
   const loadPatients = async () => {
     setLoading(true);
@@ -57,11 +46,6 @@ export default function AdminDashboardPage() {
     excellent: patients.filter((p) => p.rate >= 90).length,
     total: patients.length
   }), [patients]);
-
-  const handleLogout = async () => {
-    const ok = await confirm({ title: 'Encerrar sessão', description: 'Tem certeza que deseja sair?', confirmLabel: 'Sair' });
-    if (ok) logout();
-  };
 
   const handleCreatePatient = async (payload) => {
     try {
@@ -108,8 +92,12 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const openHistory = (patient) => {
+    navigate(`/admin/paciente/${patient.id}`, { state: { patient } });
+  };
+
   return (
-    <AppCanvas mark="✦" navItems={NAV_ITEMS} onLogout={handleLogout}>
+    <>
       <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         <h1 className="display-md">Pacientes</h1>
         <button className="btn btn-fill" onClick={() => setRegisterOpen(true)}>+ Novo paciente</button>
@@ -132,13 +120,13 @@ export default function AdminDashboardPage() {
         ) : error ? (
           <p className="empty-state">Erro ao carregar: {error.message}</p>
         ) : (
-          <PatientTable patients={filteredPatients} onRowClick={setManagePatient} onReleaseClick={setReleasePatientId} />
+          <PatientTable patients={filteredPatients} onRowClick={setManagePatient} onReleaseClick={setReleasePatientId} onHistoryClick={openHistory} />
         )}
       </section>
 
       <RegisterPatientWizard open={registerOpen} onClose={() => setRegisterOpen(false)} onSubmit={handleCreatePatient} />
       <ManagePatientModal open={!!managePatient} patient={managePatient} onClose={() => setManagePatient(null)} onSave={handleSavePatient} onDelete={handleDeletePatient} />
       <ReleaseModal open={!!releasePatientId} patientId={releasePatientId} onClose={() => setReleasePatientId(null)} onSubmit={handleRelease} />
-    </AppCanvas>
+    </>
   );
 }

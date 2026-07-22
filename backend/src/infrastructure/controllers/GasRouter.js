@@ -114,6 +114,23 @@ export class GasRouter {
         });
       },
 
+      'criarObservacaoClinica': (payload) => {
+        const adminUser = GasRouter._verifyAdminToken(payload.token, services.tokenService);
+        return useCases.criarObservacaoClinicaUseCase.execute({
+          pacienteId: payload.pacienteId,
+          operadorId: adminUser.userId,
+          texto: payload.texto,
+          tipo: payload.tipo
+        });
+      },
+
+      'listarObservacoesClinicas': (payload) => {
+        GasRouter._verifyAdminToken(payload.token, services.tokenService);
+        return useCases.listarObservacoesClinicasUseCase.execute({
+          pacienteId: payload.pacienteId
+        });
+      },
+
       'liberarEdicaoRetroativa': (payload) => {
         const adminUser = GasRouter._verifyAdminToken(payload.token, services.tokenService);
         return useCases.liberarEdicaoRetroativaUseCase.execute({

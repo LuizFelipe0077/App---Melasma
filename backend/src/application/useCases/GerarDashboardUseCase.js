@@ -166,6 +166,7 @@ export class GerarDashboardUseCase {
       gamificacao: gamificacao ? {
         xpTotal: gamificacao.xpTotal,
         streakAtual: gamificacao.streakAtual,
+        maiorStreak: gamificacao.maiorStreak,
         conquistas: gamificacao.conquistas
       } : null
     };
