@@ -603,6 +603,36 @@ async function runTests() {
     if (gamificacao.streakAtual !== 1) throw new Error(`Streak deveria ser 1, veio ${gamificacao.streakAtual}.`);
   });
 
+  await test('CheckinMapper - linha com status inválido (dado legado/corrompido) não derruba a listagem', async () => {
+    const checkinRepo = new GoogleSheetsCheckinRepository();
+    const pacienteId = UUID.generate().value;
+    const suplementoId = UUID.generate().value;
+
+    // Linha válida
+    checkinRepo.writeRow(
+      [UUID.generate().value, pacienteId, suplementoId, new Date().toISOString(), '', 'PENDENTE', 'FALSE'],
+      UUID.generate().value,
+      0
+    );
+
+    // Linha corrompida: status fora do enum (ex: dado legado/editado manualmente na planilha)
+    const badRowId = UUID.generate().value;
+    checkinRepo.writeRow(
+      [badRowId, pacienteId, suplementoId, new Date().toISOString(), '', 'CANCELADO', 'FALSE'],
+      badRowId,
+      0
+    );
+
+    // Não deve lançar exceção — a linha inválida deve ser ignorada (e logada), não derrubar as outras
+    const results = checkinRepo.findByPacienteId(pacienteId);
+    if (results.length !== 1) throw new Error(`Esperava 1 check-in válido (a linha corrompida deve ser ignorada), encontrou ${results.length}.`);
+    if (results[0].status !== 'PENDENTE') throw new Error(`Check-in válido deveria manter status PENDENTE, veio ${results[0].status}.`);
+
+    // findById na própria linha corrompida deve retornar null, não lançar
+    const badLookup = checkinRepo.findById(badRowId);
+    if (badLookup !== null) throw new Error('findById em linha corrompida deveria retornar null.');
+  });
+
   console.log(`\n📊 RESULTADOS DO TESTE: ${passCount} Passados, ${failCount} Falhas.`);
   if (failCount > 0) {
     process.exit(1);
