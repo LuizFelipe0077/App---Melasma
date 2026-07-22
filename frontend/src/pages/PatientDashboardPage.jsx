@@ -138,6 +138,11 @@ export default function PatientDashboardPage() {
         <ProgressRing value={rate} streak={streak} />
       </div>
 
+      <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Sua semana</h2>
+      <div className="surface surface-pad" style={{ marginBottom: 'var(--space-8)' }}>
+        {loading ? <div className="skeleton" style={{ height: 40 }} /> : <HeatmapStrip rate={rate} />}
+      </div>
+
       <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
         <h2 className="display-sm">Hoje</h2>
         {!loading && pendingSlots.length > 0 && (
@@ -169,11 +174,6 @@ export default function PatientDashboardPage() {
           ))}
         </div>
       )}
-
-      <h2 className="display-sm" style={{ margin: 'var(--space-8) 0 var(--space-4)' }}>Sua semana</h2>
-      <div className="surface surface-pad">
-        {loading ? <div className="skeleton" style={{ height: 40 }} /> : <HeatmapStrip rate={rate} />}
-      </div>
 
       <Sheet
         open={confirmAllOpen}

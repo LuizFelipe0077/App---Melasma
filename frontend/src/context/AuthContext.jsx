@@ -11,7 +11,9 @@ function readSession() {
     role,
     userId: sessionStorage.getItem('USER_ID'),
     nome: sessionStorage.getItem('USER_NAME'),
-    protocolo: sessionStorage.getItem('USER_PROTOCOL') || 'Melasma'
+    protocolo: sessionStorage.getItem('USER_PROTOCOL') || 'Melasma',
+    dataInicio: sessionStorage.getItem('USER_DATA_INICIO'),
+    dataFim: sessionStorage.getItem('USER_DATA_FIM')
   };
 }
 
@@ -24,6 +26,8 @@ export function AuthProvider({ children }) {
     sessionStorage.setItem('USER_ID', result.userId);
     sessionStorage.setItem('USER_NAME', result.nome);
     sessionStorage.setItem('USER_PROTOCOL', result.protocoloNome || 'Melasma');
+    if (result.dataInicio) sessionStorage.setItem('USER_DATA_INICIO', result.dataInicio);
+    if (result.dataFim) sessionStorage.setItem('USER_DATA_FIM', result.dataFim);
     setSession(readSession());
   }, []);
 

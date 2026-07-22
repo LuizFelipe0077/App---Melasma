@@ -42,13 +42,17 @@ export class RegistrarCheckinUseCase {
       throw new Error('Suplemento não cadastrado no protocolo.');
     }
 
-    // 3. Prevent duplicate check-ins for the same prescribed slot
+    // 3. Find any existing row for this exact slot. A PENDENTE row (either
+    // pre-generated at patient creation, or left behind by a previous
+    // cancelarCheckin) is NOT a duplicate — it's reused below instead of
+    // creating a second row for the same dose. Only an already-confirmed
+    // row (CONCLUIDO/ATRASADO) is a real duplicate.
     const intervalStart = new Date(datePrescrita.getTime() - 60000);
     const intervalEnd = new Date(datePrescrita.getTime() + 60000);
     const existingCheckins = this.#checkinRepository.findByInterval(pId.value, intervalStart, intervalEnd);
-    
-    const duplicate = existingCheckins.some(c => c.suplementoId.equals(sId));
-    if (duplicate) {
+
+    const existingForSlot = existingCheckins.find(c => c.suplementoId.equals(sId));
+    if (existingForSlot && existingForSlot.status !== StatusCheckin.PENDENTE) {
       throw new Error('Check-in já registrado para esta dose e horário.');
     }
 
@@ -70,8 +74,10 @@ export class RegistrarCheckinUseCase {
       }
     }
 
-    // 5. Instantiate Check-in
-    const checkin = new CheckIn({
+    // 5. Reuse the existing PENDENTE row for this slot if there is one,
+    // otherwise instantiate a new Check-in (e.g. a supplement added via
+    // adicionarSuplemento has no pre-generated row to reuse).
+    const checkin = existingForSlot || new CheckIn({
       id: UUID.generate(),
       pacienteId: pId,
       suplementoId: sId,
@@ -85,8 +91,12 @@ export class RegistrarCheckinUseCase {
     // Default tolerance window is 60 minutes.
     checkin.confirmIngestion(dateRealizada, 60, isAllowedRetroactive);
 
-    // 7. Save Check-in
-    this.#checkinRepository.save(checkin);
+    // 7. Persist — update the reused row in place, or save a brand new one.
+    if (existingForSlot) {
+      this.#checkinRepository.update(checkin);
+    } else {
+      this.#checkinRepository.save(checkin);
+    }
 
     // 8. Update Gamification aggregates
     let gamificacao = this.#gamificacaoRepository.findByPacienteId(pId.value);
