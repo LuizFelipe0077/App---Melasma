@@ -541,6 +541,68 @@ async function runTests() {
     if (historico.some(p => p.pacienteId !== reg.id)) throw new Error('Liberação vazando de outro paciente.');
   });
 
+  // --- Test 14: Marcar -> Cancelar -> Marcar de novo (regressão) ---
+  await test('Caso de Uso - RegistrarCheckin após CancelarCheckin no mesmo slot (marcar -> cancelar -> marcar de novo)', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const protocoloRepo = new GoogleSheetsProtocoloRepository();
+    const checkinRepo = new GoogleSheetsCheckinRepository();
+    const gamificacaoRepo = new GoogleSheetsGamificacaoRepository();
+    const cryptoService = new BcryptGasService();
+
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, protocoloRepo, checkinRepo);
+    const registrarUC = new RegistrarCheckinUseCase(pacienteRepo, protocoloRepo, checkinRepo, gamificacaoRepo, null);
+    const cancelarUC = new CancelarCheckinUseCase(checkinRepo, gamificacaoRepo);
+
+    const dataInicio = new Date();
+    const dataFim = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    const reg = await registerUC.execute({
+      nome: 'Paciente Regressao Checkin',
+      email: 'regressao-checkin@email.com',
+      telefone: '(11) 90000-0001',
+      senha: 'regressao123',
+      dataInicio: dataInicio.toISOString(),
+      dataFim: dataFim.toISOString(),
+      suplementos: []
+    });
+
+    const paciente = pacienteRepo.findById(reg.id);
+    const suplemento = new Suplemento({
+      id: UUID.generate(), protocoloId: paciente.protocoloId, nome: 'Vitamina D3', dosagem: '2000UI',
+      horarios: ['09:00'], instrucoes: '', quantidade: 1, diasSemana: ['todos'], dataInicio, dataFim, tipo: 'Vitamina'
+    });
+    protocoloRepo.save(new Protocolo({ id: paciente.protocoloId, nome: 'Melasma', suplementos: [suplemento], duracaoDias: 30 }));
+
+    const prescribedTime = new Date();
+    prescribedTime.setHours(9, 0, 0, 0);
+    const payload = { pacienteId: reg.id, suplementoId: suplemento.id.value, dataHoraPrescrita: prescribedTime.toISOString(), dataHoraRealizada: prescribedTime.toISOString() };
+
+    // 1. Marcar
+    const first = await registrarUC.execute(payload);
+    if (first.status !== 'CONCLUIDO') throw new Error(`Primeiro check-in deveria ser CONCLUIDO, veio ${first.status}.`);
+
+    // 2. Cancelar
+    const cancelResult = cancelarUC.execute({ userId: reg.id, role: 'PACIENTE', checkinId: first.checkinId });
+    if (!cancelResult.success) throw new Error('Cancelamento deveria ter sucesso.');
+    const reverted = checkinRepo.findById(first.checkinId);
+    if (reverted.status !== 'PENDENTE') throw new Error('Check-in deveria voltar para PENDENTE após cancelar.');
+
+    // 3. Marcar de novo — este é o passo que falhava antes da correção
+    // (a linha revertida para PENDENTE era tratada como duplicata).
+    const second = await registrarUC.execute(payload);
+    if (second.status !== 'CONCLUIDO') throw new Error(`Segundo check-in deveria ser CONCLUIDO, veio ${second.status}.`);
+    if (second.checkinId !== first.checkinId) throw new Error('A linha PENDENTE deveria ter sido reaproveitada (mesmo id), não duplicada.');
+
+    // 4. Confirma que não há linhas duplicadas para o mesmo slot
+    const allForPatient = checkinRepo.findByPacienteId(reg.id);
+    if (allForPatient.length !== 1) throw new Error(`Esperava exatamente 1 linha de check-in para o slot, encontrou ${allForPatient.length}.`);
+
+    // 5. Gamificação não deve ter sobrado XP/streak duplicado (crédito -> débito -> crédito = 1 crédito líquido)
+    const gamificacao = gamificacaoRepo.findByPacienteId(reg.id);
+    if (gamificacao.xpTotal !== 10) throw new Error(`XP deveria ser 10 (1 crédito líquido), veio ${gamificacao.xpTotal}.`);
+    if (gamificacao.streakAtual !== 1) throw new Error(`Streak deveria ser 1, veio ${gamificacao.streakAtual}.`);
+  });
+
   console.log(`\n📊 RESULTADOS DO TESTE: ${passCount} Passados, ${failCount} Falhas.`);
   if (failCount > 0) {
     process.exit(1);

@@ -62,15 +62,27 @@ export function handlePost(e) {
     }
 
   } catch (error) {
-    statusCode = error.message.includes('não autorizado') || 
-                 error.message.includes('Token') || 
+    statusCode = error.message.includes('não autorizado') ||
+                 error.message.includes('Token') ||
                  error.message.includes('bloqueada') ? 401 : 400;
-                 
-    // Evita vazamento de stack traces internos
-    const safeMessage = statusCode === 401
+
+    // Toda validação de negócio no domínio/aplicação lança `new Error(...)`
+    // puro com uma mensagem já segura para exibir (nenhuma delas vaza
+    // detalhe técnico — conferido em todo o backend). Uma exceção de
+    // runtime não tratada (TypeError, ReferenceError etc.) é que indica um
+    // bug de verdade, não uma validação intencional — só essa classe é
+    // mascarada, e agora fica registrada (Stackdriver) em vez de descartada
+    // silenciosamente como antes.
+    const isIntentionalDomainError = statusCode === 401 || error.constructor === Error;
+
+    if (!isIntentionalDomainError) {
+      console.error('[GasController] Erro inesperado:', error.message, error.stack);
+    }
+
+    const safeMessage = isIntentionalDomainError
       ? error.message
-      : 'Erro ao processar a requisição. Verifique os dados e tente novamente.';
-      
+      : 'Erro interno inesperado. Nossa equipe foi notificada — tente novamente em instantes.';
+
     responseData = {
       error: true,
       message: safeMessage
