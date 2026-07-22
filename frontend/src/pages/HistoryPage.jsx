@@ -46,7 +46,7 @@ export default function HistoryPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+      <div className="flex items-center justify-between mobile-stack-center" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         <h1 className="display-md">Histórico</h1>
         <div className="flex gap-2">
           {RANGE_OPTIONS.map((opt) => (

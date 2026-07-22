@@ -56,7 +56,7 @@ export default function CalendarPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-2)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+      <div className="flex items-center justify-between mobile-stack-center" style={{ marginBottom: 'var(--space-2)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         <h1 className="display-md">Calendário</h1>
         <div className="flex items-center gap-3">
           <button className="btn btn-ghost btn-sm" onClick={() => goToMonth(-1)} aria-label="Mês anterior">←</button>

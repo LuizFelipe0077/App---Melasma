@@ -314,6 +314,14 @@ textarea.field-input { resize: vertical; min-height: 90px; }
 .roster-row:hover { background-color: var(--surface-hover); }
 .roster-row:last-child { border-bottom: none; }
 
+.roster-row-meta { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; row-gap: var(--space-2); }
+.roster-row-buttons { display: flex; align-items: center; gap: var(--space-2); }
+@media (max-width: 640px) {
+  .roster-row { flex-direction: column; align-items: stretch; }
+  .roster-row-meta { justify-content: space-between; }
+  .roster-row-buttons { width: 100%; justify-content: flex-end; }
+}
+
 /* Same row anatomy as .roster-row (name/meta + trailing actions), but for
    contexts already padded by a parent (e.g. inside a Sheet) — no row-level
    click, so no cursor/hover affordance either, only the border-radius on
@@ -347,8 +355,15 @@ textarea.field-input { resize: vertical; min-height: 90px; }
 /* ==========================================================================
    Central de Acompanhamento do Paciente (admin)
    ========================================================================== */
-.back-link { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--ink-soft); background: none; border: none; cursor: pointer; font-size: var(--text-sm); padding: var(--space-2) 0; }
-.back-link:hover { color: var(--ink); }
+.back-link {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  color: var(--ink-soft); background-color: var(--surface-raised);
+  border: var(--hairline) solid var(--line); border-radius: var(--radius-pill);
+  cursor: pointer; font-size: var(--text-sm); font-weight: var(--weight-medium);
+  padding: var(--space-2) var(--space-4);
+  transition: all var(--motion-quick) var(--ease-glide);
+}
+.back-link:hover { color: var(--ink); background-color: var(--surface-hover); border-color: var(--line-strong); }
 
 .avatar {
   width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
@@ -368,7 +383,26 @@ textarea.field-input { resize: vertical; min-height: 90px; }
 .metric-value { font-family: var(--font-display); font-size: var(--display-sm); color: var(--ink); line-height: 1.1; }
 .metric-label { font-size: var(--text-xs); color: var(--ink-faint); margin-top: var(--space-1); }
 
-.filter-row { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.filter-row { display: flex; gap: var(--space-2); flex-wrap: wrap; justify-content: center; }
+
+/* Header rows that pair a title with an action/control group — stacks and
+   centers on narrow screens instead of cramping both onto one line. */
+@media (max-width: 640px) {
+  .mobile-stack-center { flex-direction: column; align-items: center; text-align: center; }
+}
+
+.quick-actions--column { flex-direction: column; align-items: stretch; }
+.quick-action-btn {
+  justify-content: flex-start; width: 100%;
+  border-radius: var(--radius-md); background-color: var(--surface-raised);
+  border: var(--hairline) solid var(--line); padding: var(--space-3) var(--space-4);
+}
+.quick-action-btn:hover:not(:disabled) { background-color: var(--surface-hover); border-color: var(--line-strong); }
+
+@media (max-width: 640px) {
+  .admin-search-input { max-width: 100% !important; width: 100%; }
+  .calendar-legend { flex-direction: column; align-items: flex-start; }
+}
 
 /* .record-day (the only wrapper this is used inside) already provides the
    border/padding between days — this is just the clickable header row. */

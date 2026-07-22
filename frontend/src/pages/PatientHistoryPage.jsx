@@ -17,6 +17,7 @@ import WeeklyEvolution from '../components/patientHistory/WeeklyEvolution.jsx';
 import ManagePatientModal from '../components/ManagePatientModal.jsx';
 import ReleaseModal from '../components/ReleaseModal.jsx';
 import { useToast } from '../context/ToastContext.jsx';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import { protocolToThemeClass, useTheme } from '../context/ThemeContext.jsx';
 import { buildDailyAdherence, buildDayRecords, buildWeeklyEvolution, computeAlerts } from '../utils/buildDayRecords.js';
 import { computeAdherenceIndex, computeClinicalSummary, computeConsistencyMap, computeRiskLevel, mergeChronologicalEvents } from '../utils/patientInsights.js';
@@ -46,6 +47,7 @@ export default function PatientHistoryPage() {
   const navigate = useNavigate();
   const { setThemeClass } = useTheme();
   const { showToast, showError } = useToast();
+  const confirm = useConfirm();
 
   const [patient, setPatient] = useState(location.state?.patient || null);
   const [patientLoading, setPatientLoading] = useState(!location.state?.patient);
@@ -168,6 +170,16 @@ export default function PatientHistoryPage() {
     URL.revokeObjectURL(url);
   };
 
+  const handleExportCsvClick = async () => {
+    const ok = await confirm({ title: 'Exportar CSV', description: `Baixar o histórico de ${patient.nome} em CSV?`, confirmLabel: 'Exportar' });
+    if (ok) handleExportCsv();
+  };
+
+  const handleExportPdfClick = async () => {
+    const ok = await confirm({ title: 'Exportar PDF', description: `Abrir a impressão/exportação em PDF do histórico de ${patient.nome}?`, confirmLabel: 'Exportar' });
+    if (ok) window.print();
+  };
+
   const handleSavePatient = async (payload) => {
     try {
       await ApiClient.call('editarPaciente', payload);
@@ -221,8 +233,8 @@ export default function PatientHistoryPage() {
           <p className="body-sm">{patient.protocoloNome || 'Protocolo não definido'} · {new Date(patient.dataInicio).toLocaleDateString('pt-BR')} a {new Date(patient.dataFim).toLocaleDateString('pt-BR')}</p>
         </div>
         <span className={`status-dot ${status.cls}`}>{status.label}</span>
-        <button className="btn btn-ghost btn-sm no-print" onClick={handleExportCsv}>Exportar CSV</button>
-        <button className="btn btn-ghost btn-sm no-print" onClick={() => window.print()}>Exportar PDF</button>
+        <button className="btn btn-ghost btn-sm no-print" onClick={handleExportCsvClick}>Exportar CSV</button>
+        <button className="btn btn-ghost btn-sm no-print" onClick={handleExportPdfClick}>Exportar PDF</button>
       </header>
 
       <div style={{ marginBottom: 'var(--space-6)' }}>
