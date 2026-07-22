@@ -131,6 +131,13 @@ export class GasRouter {
         });
       },
 
+      'listarPermissoesRetroativas': (payload) => {
+        GasRouter._verifyAdminToken(payload.token, services.tokenService);
+        return useCases.listarPermissoesRetroativasUseCase.execute({
+          pacienteId: payload.pacienteId
+        });
+      },
+
       'liberarEdicaoRetroativa': (payload) => {
         const adminUser = GasRouter._verifyAdminToken(payload.token, services.tokenService);
         return useCases.liberarEdicaoRetroativaUseCase.execute({
