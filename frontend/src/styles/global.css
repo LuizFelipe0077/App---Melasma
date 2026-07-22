@@ -64,7 +64,9 @@ body {
   box-shadow: var(--shadow-rail);
   z-index: var(--z-rail);
 }
-@media (min-width: 1024px) { .rail { display: flex; } }
+@media (min-width: 1024px) {
+  .rail { display: flex; position: sticky; top: 0; height: 100dvh; }
+}
 
 .rail-mark { font-family: var(--font-display); font-size: 1.5rem; color: var(--accent); }
 
@@ -158,6 +160,9 @@ body {
 }
 .dose-card.done { background-color: var(--success-wash); border-color: transparent; }
 .dose-card.checking { transform: scale(0.98); }
+@media (hover: hover) {
+  .dose-card:not(.done):hover { border-color: var(--line-strong); box-shadow: var(--shadow-card); }
+}
 .dose-time { font-family: var(--font-display); font-size: 1.05rem; color: var(--ink-soft); min-width: 56px; }
 .dose-name { font-weight: var(--weight-semibold); color: var(--ink); }
 .dose-meta { font-size: var(--text-sm); color: var(--ink-soft); }
@@ -264,13 +269,26 @@ textarea.field-input { resize: vertical; min-height: 90px; }
   display: flex; align-items: center; justify-content: center; font-size: var(--text-xs); color: var(--ink-faint);
 }
 .heatmap-month-cell.empty { background: transparent; }
-.heatmap-month-cell.completed { background-color: var(--accent); color: var(--ink-on-accent); }
-.heatmap-month-cell.partial { background-color: var(--warning-wash); color: var(--warning); }
-.heatmap-month-cell.missed { background-color: var(--danger-wash); color: var(--danger); }
+.heatmap-month-cell.completed { background-color: var(--success); color: #fff; }
+.heatmap-month-cell.partial { background-color: var(--warning); color: #fff; }
+.heatmap-month-cell.missed { background-color: var(--danger); color: #fff; }
 .heatmap-month-cell.future { opacity: 0.5; }
-.heatmap-month-cell.clickable { cursor: pointer; transition: transform var(--motion-quick) var(--ease-glide); }
-.heatmap-month-cell.clickable:hover { transform: scale(1.08); }
-.heatmap-month-cell.today { box-shadow: inset 0 0 0 2px var(--accent); }
+.heatmap-month-cell.clickable { cursor: pointer; transition: transform var(--motion-quick) var(--ease-settle); }
+.heatmap-month-cell.clickable:hover { transform: scale(1.1); }
+.heatmap-month-cell.clickable:active { transform: scale(0.94); }
+.heatmap-month-cell.today { box-shadow: inset 0 0 0 3px var(--ink); }
+
+.calendar-treatment-badge {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: var(--space-5); border-radius: var(--radius-md);
+  background-color: var(--surface-raised); box-shadow: var(--shadow-card);
+  margin-bottom: var(--space-6);
+}
+
+.dashboard-info-row {
+  display: flex; flex-wrap: wrap; gap: var(--space-5);
+  padding: var(--space-4) 0;
+}
 
 .calendar-legend { display: flex; gap: var(--space-4); flex-wrap: wrap; margin-top: var(--space-4); }
 .calendar-legend-item { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); color: var(--ink-soft); }

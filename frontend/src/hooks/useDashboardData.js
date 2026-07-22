@@ -15,6 +15,16 @@ export function useDashboardData(dataInicio, dataFim) {
 
   const reload = useCallback(() => setReloadToken((t) => t + 1), []);
 
+  /**
+   * Optimistic-update escape hatch: lets a caller write to local state
+   * immediately (before the network round-trip resolves) and roll back by
+   * calling it again with the previous snapshot. Accepts either a value or
+   * an updater function, mirroring useState's setter contract.
+   */
+  const mutate = useCallback((updater) => {
+    setData((prev) => (typeof updater === 'function' ? updater(prev) : updater));
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -40,5 +50,5 @@ export function useDashboardData(dataInicio, dataFim) {
     };
   }, [session.userId, dataInicio, dataFim, reloadToken]);
 
-  return { data, loading, error, reload };
+  return { data, loading, error, reload, mutate };
 }
