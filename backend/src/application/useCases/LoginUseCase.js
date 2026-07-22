@@ -103,7 +103,9 @@ export class LoginUseCase {
       role: 'PACIENTE',
       userId: paciente.id.value,
       nome: paciente.nome,
-      protocoloNome: paciente.protocoloNome
+      protocoloNome: paciente.protocoloNome,
+      dataInicio: paciente.dataInicio.toISOString(),
+      dataFim: paciente.dataFim.toISOString()
     };
   }
 }
