@@ -21,6 +21,7 @@ import { EditarPacienteUseCase } from '../../application/useCases/EditarPaciente
 import { ExcluirPacienteUseCase } from '../../application/useCases/ExcluirPacienteUseCase.js';
 import { CriarObservacaoClinicaUseCase } from '../../application/useCases/CriarObservacaoClinicaUseCase.js';
 import { ListarObservacoesClinicasUseCase } from '../../application/useCases/ListarObservacoesClinicasUseCase.js';
+import { ListarPermissoesRetroativasUseCase } from '../../application/useCases/ListarPermissoesRetroativasUseCase.js';
 
 /**
  * AppModule (IoC Container)
@@ -129,6 +130,10 @@ class Container {
 
       this.useCases.listarObservacoesClinicasUseCase = new ListarObservacoesClinicasUseCase(
         s.observacaoRepository
+      );
+
+      this.useCases.listarPermissoesRetroativasUseCase = new ListarPermissoesRetroativasUseCase(
+        s.permissaoRepository
       );
 
       this.useCases.initialized = true;

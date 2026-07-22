@@ -1,6 +1,10 @@
 import { UUID } from '../../domain/valueObjects/UUID.js';
 
-const TIPOS_VALIDOS = ['OBSERVACAO', 'REACAO', 'MUDANCA', 'SOLICITACAO', 'RETORNO'];
+const TIPOS_VALIDOS = [
+  'OBSERVACAO', 'REACAO', 'MUDANCA', 'SOLICITACAO', 'RETORNO',
+  // Intervenções (reaproveita o mesmo armazenamento de observações clínicas)
+  'CONTATO', 'MUDANCA_PROTOCOLO', 'ORIENTACAO', 'FEEDBACK'
+];
 
 export class CriarObservacaoClinicaUseCase {
   #pacienteRepository;

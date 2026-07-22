@@ -26,6 +26,8 @@ import { Protocolo } from '../src/domain/entities/Protocolo.js';
 import { Suplemento } from '../src/domain/entities/Suplemento.js';
 import { CriarObservacaoClinicaUseCase } from '../src/application/useCases/CriarObservacaoClinicaUseCase.js';
 import { ListarObservacoesClinicasUseCase } from '../src/application/useCases/ListarObservacoesClinicasUseCase.js';
+import { LiberarEdicaoRetroativaUseCase } from '../src/application/useCases/LiberarEdicaoRetroativaUseCase.js';
+import { ListarPermissoesRetroativasUseCase } from '../src/application/useCases/ListarPermissoesRetroativasUseCase.js';
 
 async function runTests() {
   process.env.ADMIN_EMAIL = 'admin@clinica.com';
@@ -481,6 +483,62 @@ async function runTests() {
       throw new Error('As observações criadas não foram encontradas na listagem.');
     }
     if (notas.some(n => n.pacienteId !== reg.id)) throw new Error('Observação vazando de outro paciente.');
+  });
+
+  // --- Test 12: Tipos de intervenção reaproveitando Observações Clínicas ---
+  await test('Caso de Uso - Novos tipos de intervenção (CONTATO/MUDANCA_PROTOCOLO/ORIENTACAO/FEEDBACK)', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const observacaoRepo = new GoogleSheetsObservacaoRepository();
+    const cryptoService = new BcryptGasService();
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, new GoogleSheetsProtocoloRepository(), new GoogleSheetsCheckinRepository());
+    const criarObsUC = new CriarObservacaoClinicaUseCase(pacienteRepo, observacaoRepo);
+    const listarObsUC = new ListarObservacoesClinicasUseCase(observacaoRepo);
+
+    const reg = await registerUC.execute({
+      nome: 'Paciente Intervencoes',
+      email: 'intervencoes@email.com',
+      telefone: '(11) 92222-2222',
+      senha: 'intervencoes123',
+      dataInicio: new Date().toISOString(),
+      dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      suplementos: []
+    });
+
+    criarObsUC.execute({ pacienteId: reg.id, operadorId: 'admin_root', texto: 'Contato feito por telefone.', tipo: 'CONTATO' });
+    criarObsUC.execute({ pacienteId: reg.id, operadorId: 'admin_root', texto: 'Protocolo ajustado.', tipo: 'MUDANCA_PROTOCOLO' });
+
+    const notas = listarObsUC.execute({ pacienteId: reg.id });
+    const tipos = notas.map(n => n.tipo).sort();
+    if (JSON.stringify(tipos) !== JSON.stringify(['CONTATO', 'MUDANCA_PROTOCOLO'])) {
+      throw new Error(`Tipos de intervenção não foram salvos corretamente: ${JSON.stringify(tipos)}`);
+    }
+  });
+
+  // --- Test 13: ListarPermissoesRetroativasUseCase (histórico completo, não só a ativa) ---
+  await test('Caso de Uso - ListarPermissoesRetroativasUseCase (histórico completo)', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const permissaoRepo = new GoogleSheetsPermissaoRepository();
+    const cryptoService = new BcryptGasService();
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, new GoogleSheetsProtocoloRepository(), new GoogleSheetsCheckinRepository());
+    const liberarUC = new LiberarEdicaoRetroativaUseCase(pacienteRepo, permissaoRepo);
+    const listarPermissoesUC = new ListarPermissoesRetroativasUseCase(permissaoRepo);
+
+    const reg = await registerUC.execute({
+      nome: 'Paciente Liberacoes',
+      email: 'liberacoes@email.com',
+      telefone: '(11) 91111-1111',
+      senha: 'liberacoes123',
+      dataInicio: new Date().toISOString(),
+      dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      suplementos: []
+    });
+
+    liberarUC.execute({ pacienteId: reg.id, horasLiberadas: 24, motivo: 'Esqueceu de registrar a dose de ontem.', operadorId: 'admin_root' });
+    liberarUC.execute({ pacienteId: reg.id, horasLiberadas: 48, motivo: 'Segunda liberação, motivo diferente.', operadorId: 'admin_root' });
+
+    const historico = listarPermissoesUC.execute({ pacienteId: reg.id });
+    if (historico.length !== 2) throw new Error(`Esperava 2 liberações no histórico, veio ${historico.length}.`);
+    if (historico.some(p => p.pacienteId !== reg.id)) throw new Error('Liberação vazando de outro paciente.');
   });
 
   console.log(`\n📊 RESULTADOS DO TESTE: ${passCount} Passados, ${failCount} Falhas.`);

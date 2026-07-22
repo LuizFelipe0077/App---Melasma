@@ -31,6 +31,23 @@ export class GoogleSheetsPermissaoRepository extends GoogleSheetsRepository {
     };
   }
 
+  findAllByPacienteId(pacienteId) {
+    const rows = this.readAllRows();
+    return rows
+      .filter((r) => r[1] === pacienteId)
+      .map((r) => ({
+        id: r[0],
+        pacienteId: r[1],
+        horasLiberadas: Number(r[2]),
+        motivo: r[3],
+        operadorId: r[4],
+        expiraEm: r[5],
+        status: r[6],
+        createdAt: r[7]
+      }))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
   save(permissao) {
     const row = [
       permissao.id,

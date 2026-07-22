@@ -27,6 +27,32 @@ Auditoria funcional da Central de Acompanhamento do Paciente. Testado no navegad
 | Dados sincronizados com Google Sheets | ➖ Não verificável nesta sessão | Nenhuma chamada real foi feita (ambiente de teste local); a lógica de leitura é a mesma `gerarDashboard`/`GoogleSheetsCheckinRepository` já em produção, sem alteração de schema além da aba nova `Observacoes` |
 | Performance | ✅ | 91 dias = ~91 nós DOM na timeline/heatmap, sem lag perceptível; só 1 dia expandido por vez |
 
+## Rodada 2 — Central de Decisão Clínica
+
+Testado com dados simulados mais ricos: 3 suplementos com adesão distinta (91%/100%/69%), 2 observações (1 tipo original, 1 tipo intervenção), 1 liberação retroativa histórica.
+
+| Teste | Resultado | Evidência |
+|---|---|---|
+| Índice de Adesão — cálculo e classificação | ✅ | 72 "Moderada", breakdown 76/94/21 — conferido manualmente: `76×0.6+94×0.25+21×0.15=72,25→72` |
+| Risco de Baixa Adesão | ✅ | "Muito Baixo" com os 4 fatores (dias perdidos, sequência, última atividade, check-ins 7d) todos coerentes com os dados |
+| Mapa de Consistência | ✅ | Manhã 89% / Tarde 100% / Noite 75%, callout "maior dificuldade... noite" correto |
+| Resumo Clínico | ✅ | "Ômega 3 (69%)" identificado corretamente como suplemento mais negligenciado (o de menor `taxaAdesao` simulada); "Tarde (100%)" como melhor horário; janelas de 7 dias de maior/menor consistência calculadas |
+| Abas (Visão Geral / Histórico Clínico / Intervenções) | ✅ | Navegação entre as 3 confirmada via clique real nos botões `role="tab"` |
+| Prontuário cronológico — check-ins | ✅ | Dia expandido mostra suplemento, horário, status |
+| Prontuário cronológico — observação mesclada | ✅ | Nota tipo REACAO apareceu no dia correto (criada 40 dias atrás → Dia 21 de um tratamento de 61 dias decorridos) |
+| Prontuário cronológico — liberação retroativa mesclada | ✅ | Evento "🔓 Liberação retroativa concedida (24h) — Esqueceu de registrar..." no dia correto |
+| Prontuário cronológico — quebra de sequência | ✅ | Marcação "⚠️ Quebra de sequência" no primeiro dia sem check-in após um dia com adesão |
+| Aba Intervenções — filtro | ✅ | Mostrou só a nota tipo CONTATO; a nota REACAO (tipo original) não apareceu ali |
+| Aba Intervenções — formulário restrito | ✅ | Seletor de tipo mostrou só os 4 tipos de intervenção |
+| Ação rápida "Adicionar observação" | ✅ | Abre `Sheet` com os 5 tipos originais (não os de intervenção) — confirma que os dois usos de `ClinicalNotes` não vazam tipos entre si |
+| Ação rápida "WhatsApp" | ✅ | `href` gerado: `https://wa.me/5511999998888` (DDI 55 + número simulado) |
+| Ação rápida "Enviar lembrete" | ✅ | Mesmo número + `?text=` com mensagem pré-escrita, URL-encoded corretamente |
+| Ação rápida "Editar paciente" | ✅ | Abre `ManagePatientModal` reaproveitado, pré-preenchido com os dados do paciente |
+| Ação rápida "Liberar edição" | ✅ | Abre `ReleaseModal` reaproveitado |
+| Sheets aninhados (nota + editar + descartar) | ✅ | Testado deliberadamente um cenário de 3 sheets empilhados — cada um fecha independentemente na ordem correta (Esc fecha o mais recente primeiro) |
+| Responsividade mobile (390px) | ✅ | Tab bar com scroll horizontal, ações rápidas quebram em múltiplas linhas |
+| `npm test` (13/13) | ✅ | Inclui os 2 testes novos: tipos de intervenção e histórico de liberações |
+
 ## Nota sobre o ambiente de teste
 
 Durante a sessão, identifiquei e removi um **Service Worker obsoleto** (registrado em uma sessão de teste anterior) que estava servindo um bundle JavaScript desatualizado para a aba de preview, mascarando mudanças de código recentes (o botão "Histórico" parecia não existir até eu desregistrar o SW e limpar o cache). Isso é uma característica do ambiente de teste local (cache do navegador), não do código da aplicação — não afeta usuários reais, cujo primeiro carregamento sempre busca os arquivos publicados mais recentes.
