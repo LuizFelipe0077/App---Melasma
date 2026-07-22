@@ -45,3 +45,53 @@ Nenhuma action, payload ou resposta existente foi alterada — apenas campos nov
 ## Performance
 
 90 dias na timeline/heatmap são ~91 elementos DOM — não há necessidade real de virtualização (limiar típico para justificar `react-window` é na casa dos milhares). Só um dia fica expandido por vez, então o conteúdo detalhado (lista de suplementos por dia) nunca é renderizado para mais de um dia simultaneamente.
+
+---
+
+## Evolução — Central de Decisão Clínica
+
+A página ganhou uma segunda camada: além de mostrar o histórico, ela agora **explica e prioriza** — índices calculados, risco, mapa de consistência por período do dia, resumo com insights derivados, ações rápidas e um prontuário cronológico de verdade, organizados em 3 abas (**Visão Geral**, **Histórico Clínico**, **Intervenções**).
+
+### Índice de Adesão (0-100)
+
+`adesão×0.6 + consistência×0.25 + sequência×0.15`, onde:
+- **Adesão** = `taxaAdesaoGeral` do período selecionado.
+- **Consistência** = `100 − min(100, desvio-padrão dos % semanais × 2)` — penaliza uma adesão que oscila muito entre semanas, mesmo com boa média.
+- **Sequência** = `min(100, streakAtual / maiorStreak × 100)` — quão perto o paciente está da sua melhor marca.
+
+Faixas: ≥90 Excelente · 75–89 Boa · 60–74 Moderada · 40–59 Baixa · <40 Crítica. O card mostra as 3 barras que compõem a nota — a "explicação visual" é literal, não apenas textual.
+
+### Risco de Baixa Adesão (0-100, maior = mais risco)
+
+`(diasPerdidos/diasPassados)×40 + (streakAtual==0 ? 20 : 0) + min(30, diasSemAtividade×5) + (checkins7d < esperado7d×50% ? 10 : 0)`.
+
+Faixas: <20 Muito Baixo · 20–39 Baixo · 40–59 Moderado · 60–79 Alto · ≥80 Crítico. "Frequência de acesso" usa o mesmo proxy dos alertas (check-in mais recente) — rotulado como tal na UI, não como rastreamento real de login.
+
+### Mapa de Consistência
+
+Agrupa check-ins pelo horário prescrito: Manhã (05h–12h), Tarde (12h–18h), Noite (18h–05h), calculando % de conclusão por período. Aponta explicitamente qual período tem mais falhas.
+
+### Resumo Clínico
+
+Dias perfeitos e maior sequência (reaproveitados); suplemento mais negligenciado (menor `taxaAdesao` entre os prescritos); melhor horário de adesão (período com maior % no Mapa de Consistência); período de maior consistência/dificuldade (melhor/pior janela de 7 dias corridos dentro do período carregado).
+
+**Nenhum destes indicadores exige chamada de API nova** — todos derivam de `gerarDashboard`, já carregado (`frontend/src/utils/patientInsights.js`).
+
+### Ações rápidas
+
+WhatsApp e "Enviar lembrete" abrem `wa.me/<telefone>` (o segundo com uma mensagem pré-escrita via `?text=`) — decisão explícita para não inventar um sistema de notificação/SMS que não existe no backend. Editar paciente e Liberar edição reaproveitam `ManagePatientModal`/`ReleaseModal` já existentes, agora também presentes nesta página. Adicionar observação abre um `Sheet` com o formulário de `ClinicalNotes`.
+
+### Aba Histórico Clínico — prontuário cronológico
+
+Substitui a timeline simples anterior por `ChronologicalRecord.jsx`, que mescla por dia: check-ins, observações clínicas (os 5 tipos originais), liberações retroativas concedidas naquele dia, e marcação automática de "quebra de sequência" (um dia sem check-in logo após um período de adesão).
+
+### Aba Intervenções
+
+Reaproveita o mesmo backend de Observações Clínicas — **nenhuma tabela nova**. `CriarObservacaoClinicaUseCase.TIPOS_VALIDOS` ganhou 4 valores (`CONTATO`, `MUDANCA_PROTOCOLO`, `ORIENTACAO`, `FEEDBACK`); `ClinicalNotes.jsx` ganhou dois props opcionais (`tipoOptions` restringe o formulário, `filterTipos` filtra a lista) para renderizar como uma visão separada dos mesmos dados. Um registro criado na aba Intervenções não aparece em "Adicionar observação" (e vice-versa), porque cada instância filtra por um conjunto de tipos diferente.
+
+### Backend — 2 mudanças mínimas adicionais
+
+1. `CriarObservacaoClinicaUseCase`: 4 tipos novos na lista já existente (1 linha).
+2. Nova action de leitura `listarPermissoesRetroativas` (`GoogleSheetsPermissaoRepository.findAllByPacienteId` + `ListarPermissoesRetroativasUseCase`) — expõe o histórico completo de liberações retroativas de um paciente; a aba `PermissoesRetroativas` já guardava isso, só não tinha uma rota de listagem. Sem mudança de schema.
+
+Nenhuma action/payload/resposta existente foi alterada nesta rodada. `npm test`: 13/13.

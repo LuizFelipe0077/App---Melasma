@@ -2,19 +2,36 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ApiClient } from '../api/apiClient.js';
 import AdherenceChart from '../components/patientHistory/AdherenceChart.jsx';
+import AdherenceIndexCard from '../components/patientHistory/AdherenceIndexCard.jsx';
 import AlertsPanel from '../components/patientHistory/AlertsPanel.jsx';
-import ClinicalNotes from '../components/patientHistory/ClinicalNotes.jsx';
+import ChronologicalRecord from '../components/patientHistory/ChronologicalRecord.jsx';
+import ClinicalNotes, { INTERVENCAO_TIPOS } from '../components/patientHistory/ClinicalNotes.jsx';
+import ClinicalSummary from '../components/patientHistory/ClinicalSummary.jsx';
+import ConsistencyMap from '../components/patientHistory/ConsistencyMap.jsx';
 import Heatmap from '../components/patientHistory/Heatmap.jsx';
-import Timeline from '../components/patientHistory/Timeline.jsx';
+import QuickActions from '../components/patientHistory/QuickActions.jsx';
+import RiskCard from '../components/patientHistory/RiskCard.jsx';
+import Sheet from '../components/Sheet.jsx';
+import Tabs from '../components/patientHistory/Tabs.jsx';
 import WeeklyEvolution from '../components/patientHistory/WeeklyEvolution.jsx';
+import ManagePatientModal from '../components/ManagePatientModal.jsx';
+import ReleaseModal from '../components/ReleaseModal.jsx';
+import { useToast } from '../context/ToastContext.jsx';
 import { protocolToThemeClass, useTheme } from '../context/ThemeContext.jsx';
 import { buildDailyAdherence, buildDayRecords, buildWeeklyEvolution, computeAlerts } from '../utils/buildDayRecords.js';
+import { computeAdherenceIndex, computeClinicalSummary, computeConsistencyMap, computeRiskLevel, mergeChronologicalEvents } from '../utils/patientInsights.js';
 
 const FILTERS = [
   { value: '7', label: '7 dias' },
   { value: '15', label: '15 dias' },
   { value: '30', label: '30 dias' },
   { value: 'all', label: 'Todo o tratamento' }
+];
+
+const TABS = [
+  { value: 'geral', label: 'Visão Geral' },
+  { value: 'clinico', label: 'Histórico Clínico' },
+  { value: 'intervencoes', label: 'Intervenções' }
 ];
 
 function statusFromRate(rate) {
@@ -28,13 +45,21 @@ export default function PatientHistoryPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { setThemeClass } = useTheme();
+  const { showToast, showError } = useToast();
 
   const [patient, setPatient] = useState(location.state?.patient || null);
   const [patientLoading, setPatientLoading] = useState(!location.state?.patient);
   const [filter, setFilter] = useState('all');
+  const [tab, setTab] = useState('geral');
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notes, setNotes] = useState([]);
+  const [permissoes, setPermissoes] = useState([]);
+
+  const [manageOpen, setManageOpen] = useState(false);
+  const [releaseOpen, setReleaseOpen] = useState(false);
+  const [quickNoteOpen, setQuickNoteOpen] = useState(false);
 
   // Direct URL access (no location.state) — look the patient up by id.
   useEffect(() => {
@@ -79,6 +104,14 @@ export default function PatientHistoryPage() {
       .finally(() => setLoading(false));
   }, [window_, patient]);
 
+  const loadNotesAndPermissoes = () => {
+    if (!patient) return;
+    ApiClient.call('listarObservacoesClinicas', { pacienteId: patient.id }).then(setNotes).catch(() => setNotes([]));
+    ApiClient.call('listarPermissoesRetroativas', { pacienteId: patient.id }).then(setPermissoes).catch(() => setPermissoes([]));
+  };
+
+  useEffect(loadNotesAndPermissoes, [patient]);
+
   const days = useMemo(() => {
     if (!dashboard || !window_ || !patient) return [];
     return buildDayRecords(dashboard, patient.dataInicio, window_.start, window_.end);
@@ -87,6 +120,17 @@ export default function PatientHistoryPage() {
   const weeklyEvolution = useMemo(() => buildWeeklyEvolution(days), [days]);
   const dailyAdherence = useMemo(() => buildDailyAdherence(days, 30), [days]);
   const alerts = useMemo(() => computeAlerts(days, dashboard?.gamificacao), [days, dashboard]);
+
+  const adherenceIndex = useMemo(() => (dashboard ? computeAdherenceIndex(dashboard.taxaAdesaoGeral, days, dashboard.gamificacao) : null), [dashboard, days]);
+  const risk = useMemo(() => (dashboard ? computeRiskLevel(days, dashboard.gamificacao) : null), [dashboard, days]);
+  const consistencyMap = useMemo(() => computeConsistencyMap(days), [days]);
+  const clinicalSummary = useMemo(
+    () => (dashboard ? computeClinicalSummary(days, dashboard.historicoAgrupadoPorSuplemento, dashboard.gamificacao, consistencyMap) : null),
+    [dashboard, days, consistencyMap]
+  );
+
+  const observacoesOriginais = useMemo(() => notes.filter((n) => !INTERVENCAO_TIPOS.some((t) => t.value === n.tipo)), [notes]);
+  const chronologicalDays = useMemo(() => mergeChronologicalEvents(days, observacoesOriginais, permissoes), [days, observacoesOriginais, permissoes]);
 
   const treatmentStats = useMemo(() => {
     if (!patient) return null;
@@ -124,6 +168,39 @@ export default function PatientHistoryPage() {
     URL.revokeObjectURL(url);
   };
 
+  const handleSavePatient = async (payload) => {
+    try {
+      await ApiClient.call('editarPaciente', payload);
+      showToast({ message: 'Paciente atualizado.' });
+      setManageOpen(false);
+      setPatient((p) => ({ ...p, ...payload, id: p.id }));
+    } catch (err) {
+      showError(`Erro ao salvar: ${err.message}`);
+      throw err;
+    }
+  };
+
+  const handleDeletePatient = async () => {
+    try {
+      await ApiClient.call('excluirPaciente', { pacienteId: patient.id });
+      showToast({ message: 'Paciente excluído.' });
+      navigate('/admin');
+    } catch (err) {
+      showError(`Erro ao excluir: ${err.message}`);
+    }
+  };
+
+  const handleRelease = async (payload) => {
+    try {
+      await ApiClient.call('liberarEdicaoRetroativa', payload);
+      showToast({ message: 'Liberação concedida.' });
+      setReleaseOpen(false);
+      loadNotesAndPermissoes();
+    } catch (err) {
+      showError(`Erro ao liberar: ${err.message}`);
+    }
+  };
+
   if (patientLoading) {
     return <div className="skeleton" style={{ height: 200 }} />;
   }
@@ -137,7 +214,7 @@ export default function PatientHistoryPage() {
     <>
       <button className="back-link no-print" onClick={() => navigate('/admin')}>← Voltar para pacientes</button>
 
-      <header className="flex items-center gap-4" style={{ margin: 'var(--space-5) 0 var(--space-6)', flexWrap: 'wrap' }}>
+      <header className="flex items-center gap-4" style={{ margin: 'var(--space-5) 0 var(--space-5)', flexWrap: 'wrap' }}>
         <div className="avatar">{patient.nome.charAt(0).toUpperCase()}</div>
         <div style={{ flex: 1, minWidth: 200 }}>
           <h1 className="display-sm">{patient.nome}</h1>
@@ -148,6 +225,15 @@ export default function PatientHistoryPage() {
         <button className="btn btn-ghost btn-sm no-print" onClick={() => window.print()}>Exportar PDF</button>
       </header>
 
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <QuickActions
+          patient={patient}
+          onEdit={() => setManageOpen(true)}
+          onRelease={() => setReleaseOpen(true)}
+          onAddNote={() => setQuickNoteOpen(true)}
+        />
+      </div>
+
       {treatmentStats && (
         <div className="flex gap-4 no-print" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap' }}>
           <div className="surface metric-card"><div className="metric-value">{treatmentStats.elapsed}</div><div className="metric-label">Dias concluídos</div></div>
@@ -155,6 +241,8 @@ export default function PatientHistoryPage() {
           <div className="surface metric-card"><div className="metric-value">{treatmentStats.percent}%</div><div className="metric-label">Do tratamento concluído</div></div>
         </div>
       )}
+
+      <Tabs tabs={TABS} active={tab} onChange={setTab} />
 
       <div className="filter-row no-print" style={{ marginBottom: 'var(--space-6)' }}>
         {FILTERS.map((f) => (
@@ -170,38 +258,72 @@ export default function PatientHistoryPage() {
         <div className="skeleton" style={{ height: 300 }} />
       ) : (
         <>
-          <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Resumo geral</h2>
-          <div className="flex gap-4" style={{ marginBottom: 'var(--space-7)', flexWrap: 'wrap' }}>
-            <div className="surface metric-card"><div className="metric-value">{(dashboard.totalConsumido || 0) + (dashboard.totalAtrasado || 0)}</div><div className="metric-label">Check-ins realizados</div></div>
-            <div className="surface metric-card"><div className="metric-value">{dashboard.totalPrescrito}</div><div className="metric-label">Suplementos programados</div></div>
-            <div className="surface metric-card"><div className="metric-value">{dashboard.taxaAdesaoGeral}%</div><div className="metric-label">Adesão</div></div>
-            <div className="surface metric-card"><div className="metric-value">{perfectDays}</div><div className="metric-label">Dias perfeitos</div></div>
-            <div className="surface metric-card"><div className="metric-value">{failedDays}</div><div className="metric-label">Dias com falhas</div></div>
-            <div className="surface metric-card"><div className="metric-value">{dashboard.gamificacao?.streakAtual ?? 0}</div><div className="metric-label">Sequência atual</div></div>
-            <div className="surface metric-card"><div className="metric-value">{dashboard.gamificacao?.maiorStreak ?? 0}</div><div className="metric-label">Maior sequência</div></div>
-          </div>
+          {tab === 'geral' && (
+            <>
+              <div className="flex gap-4" style={{ marginBottom: 'var(--space-7)', flexWrap: 'wrap', alignItems: 'stretch' }}>
+                <div style={{ flex: '1 1 420px' }}>{adherenceIndex && <AdherenceIndexCard index={adherenceIndex} />}</div>
+                <div style={{ flex: '1 1 280px' }}>{risk && <RiskCard risk={risk} />}</div>
+              </div>
 
-          <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Alertas</h2>
-          <div style={{ marginBottom: 'var(--space-7)' }}><AlertsPanel alerts={alerts} /></div>
+              {clinicalSummary && <div style={{ marginBottom: 'var(--space-7)' }}><ClinicalSummary summary={clinicalSummary} /></div>}
+              <div style={{ marginBottom: 'var(--space-7)' }}><ConsistencyMap map={consistencyMap} /></div>
 
-          <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Adesão — últimos 30 dias</h2>
-          <div className="surface surface-pad" style={{ marginBottom: 'var(--space-7)' }}><AdherenceChart points={dailyAdherence} /></div>
+              <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Resumo geral</h2>
+              <div className="flex gap-4" style={{ marginBottom: 'var(--space-7)', flexWrap: 'wrap' }}>
+                <div className="surface metric-card"><div className="metric-value">{(dashboard.totalConsumido || 0) + (dashboard.totalAtrasado || 0)}</div><div className="metric-label">Check-ins realizados</div></div>
+                <div className="surface metric-card"><div className="metric-value">{dashboard.totalPrescrito}</div><div className="metric-label">Suplementos programados</div></div>
+                <div className="surface metric-card"><div className="metric-value">{dashboard.taxaAdesaoGeral}%</div><div className="metric-label">Adesão</div></div>
+                <div className="surface metric-card"><div className="metric-value">{perfectDays}</div><div className="metric-label">Dias perfeitos</div></div>
+                <div className="surface metric-card"><div className="metric-value">{failedDays}</div><div className="metric-label">Dias com falhas</div></div>
+                <div className="surface metric-card"><div className="metric-value">{dashboard.gamificacao?.streakAtual ?? 0}</div><div className="metric-label">Sequência atual</div></div>
+                <div className="surface metric-card"><div className="metric-value">{dashboard.gamificacao?.maiorStreak ?? 0}</div><div className="metric-label">Maior sequência</div></div>
+              </div>
 
-          <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Mapa de calor</h2>
-          <div className="surface surface-pad" style={{ marginBottom: 'var(--space-7)' }}><Heatmap days={days} /></div>
+              <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Alertas</h2>
+              <div style={{ marginBottom: 'var(--space-7)' }}><AlertsPanel alerts={alerts} /></div>
 
-          <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Evolução semanal</h2>
-          <div style={{ marginBottom: 'var(--space-7)' }}><WeeklyEvolution weeks={weeklyEvolution} /></div>
+              <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Adesão — últimos 30 dias</h2>
+              <div className="surface surface-pad" style={{ marginBottom: 'var(--space-7)' }}><AdherenceChart points={dailyAdherence} /></div>
 
-          <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Linha do tempo</h2>
-          <div className="surface" style={{ marginBottom: 'var(--space-7)', padding: '0 var(--space-4)' }}><Timeline days={days} /></div>
+              <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Mapa de calor</h2>
+              <div className="surface surface-pad" style={{ marginBottom: 'var(--space-7)' }}><Heatmap days={days} /></div>
 
-          <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Observações clínicas</h2>
-          <div className="surface surface-pad">
-            <ClinicalNotes pacienteId={patient.id} />
-          </div>
+              <h2 className="display-sm" style={{ marginBottom: 'var(--space-4)' }}>Evolução semanal</h2>
+              <div><WeeklyEvolution weeks={weeklyEvolution} /></div>
+            </>
+          )}
+
+          {tab === 'clinico' && (
+            <div className="surface" style={{ padding: '0 var(--space-4)' }}>
+              <ChronologicalRecord days={chronologicalDays} />
+            </div>
+          )}
+
+          {tab === 'intervencoes' && (
+            <div className="surface surface-pad">
+              <ClinicalNotes
+                pacienteId={patient.id}
+                tipoOptions={INTERVENCAO_TIPOS}
+                filterTipos={INTERVENCAO_TIPOS.map((t) => t.value)}
+                emptyLabel="Nenhuma intervenção registrada ainda."
+              />
+            </div>
+          )}
         </>
       )}
+
+      <ManagePatientModal
+        open={manageOpen}
+        patient={patient}
+        onClose={() => setManageOpen(false)}
+        onSave={handleSavePatient}
+        onDelete={handleDeletePatient}
+      />
+      <ReleaseModal open={releaseOpen} patientId={patient.id} onClose={() => setReleaseOpen(false)} onSubmit={handleRelease} />
+
+      <Sheet open={quickNoteOpen} onClose={() => setQuickNoteOpen(false)} title="Adicionar observação clínica">
+        <ClinicalNotes pacienteId={patient.id} />
+      </Sheet>
     </>
   );
 }
