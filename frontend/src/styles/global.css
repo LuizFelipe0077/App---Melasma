@@ -221,6 +221,7 @@ textarea.field-input { resize: vertical; min-height: 90px; }
   position: fixed; inset: 0; background: rgba(20, 18, 16, 0.35);
   display: flex; align-items: flex-end; justify-content: center;
   z-index: var(--z-sheet); padding: 0;
+  transition: opacity 0.2s ease-out;
 }
 @media (min-width: 640px) { .sheet-overlay { align-items: center; padding: var(--space-5); } }
 
