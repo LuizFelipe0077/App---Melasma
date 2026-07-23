@@ -4,6 +4,13 @@ function adherenceTone(rate) {
   return { tone: 'chip-warning', label: 'Regular' };
 }
 
+function protocolChipTone(protocoloNome) {
+  const normalized = (protocoloNome || '').toLowerCase();
+  if (normalized.includes('melasma')) return 'chip-protocol-melasma';
+  if (normalized.includes('desinflama')) return 'chip-protocol-desinflamacao';
+  return 'chip-neutral';
+}
+
 export default function PatientTable({ patients, onRowClick, onReleaseClick, onHistoryClick }) {
   if (patients.length === 0) {
     return <p className="empty-state">Nenhum paciente encontrado.</p>;
@@ -23,10 +30,14 @@ export default function PatientTable({ patients, onRowClick, onReleaseClick, onH
             onClick={() => onRowClick(p)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(p); } }}
           >
-            <div>
+            <div className="roster-row-info">
               <div className="dose-name">{p.nome}</div>
               <div className="dose-meta">{p.email}</div>
-              {p.protocoloNome && <span className="chip chip-neutral" style={{ marginTop: 'var(--space-2)' }}>{p.protocoloNome}</span>}
+              {p.protocoloNome && (
+                <span className={`chip ${protocolChipTone(p.protocoloNome)} roster-row-protocol-chip`} style={{ marginTop: 'var(--space-2)' }}>
+                  {p.protocoloNome}
+                </span>
+              )}
             </div>
             <div className="roster-row-meta">
               <div className="flex items-center gap-3">
