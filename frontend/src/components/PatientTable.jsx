@@ -26,6 +26,7 @@ export default function PatientTable({ patients, onRowClick, onReleaseClick, onH
             <div>
               <div className="dose-name">{p.nome}</div>
               <div className="dose-meta">{p.email}</div>
+              {p.protocoloNome && <span className="chip chip-neutral" style={{ marginTop: 'var(--space-2)' }}>{p.protocoloNome}</span>}
             </div>
             <div className="roster-row-meta">
               <div className="flex items-center gap-3">

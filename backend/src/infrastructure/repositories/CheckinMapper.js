@@ -1,6 +1,7 @@
 import { CheckIn } from '../../domain/entities/CheckIn.js';
 import { UUID } from '../../domain/valueObjects/UUID.js';
 import { SheetColumns } from './GoogleSheetsColumns.js';
+import { fromSheetDateTime, toSheetDateTime } from '../../shared/utils/DateTimeFormatter.js';
 
 /**
  * CheckinMapper.js
@@ -16,10 +17,10 @@ export class CheckinMapper {
     row[SheetColumns.CHECKIN.ID] = checkin.id.value;
     row[SheetColumns.CHECKIN.PACIENTE_ID] = checkin.pacienteId.value;
     row[SheetColumns.CHECKIN.SUPLEMENTO_ID] = checkin.suplementoId.value;
-    row[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA] = checkin.dataHoraPrescrita.toISOString();
-    row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA] = checkin.dataHoraRealizada ? checkin.dataHoraRealizada.toISOString() : '';
+    row[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA] = toSheetDateTime(checkin.dataHoraPrescrita);
+    row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA] = checkin.dataHoraRealizada ? toSheetDateTime(checkin.dataHoraRealizada) : '';
     row[SheetColumns.CHECKIN.STATUS] = checkin.status;
-    row[SheetColumns.CHECKIN.RETROATIVO] = checkin.retroativo ? 'TRUE' : 'FALSE';
+    row[SheetColumns.CHECKIN.RETROATIVO] = checkin.retroativo ? 'SIM' : 'NAO';
     return row;
   }
 
@@ -39,10 +40,10 @@ export class CheckinMapper {
         id: new UUID(row[SheetColumns.CHECKIN.ID]),
         pacienteId: new UUID(row[SheetColumns.CHECKIN.PACIENTE_ID]),
         suplementoId: new UUID(row[SheetColumns.CHECKIN.SUPLEMENTO_ID]),
-        dataHoraPrescrita: new Date(row[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA]),
-        dataHoraRealizada: row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA] ? new Date(row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA]) : null,
+        dataHoraPrescrita: fromSheetDateTime(row[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA]),
+        dataHoraRealizada: row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA] ? fromSheetDateTime(row[SheetColumns.CHECKIN.DATA_HORA_REALIZADA]) : null,
         status: row[SheetColumns.CHECKIN.STATUS],
-        retroativo: row[SheetColumns.CHECKIN.RETROATIVO] === 'TRUE' || row[SheetColumns.CHECKIN.RETROATIVO] === true
+        retroativo: ['SIM', 'TRUE', true].includes(row[SheetColumns.CHECKIN.RETROATIVO])
       });
     } catch (error) {
       if (typeof console !== 'undefined') {

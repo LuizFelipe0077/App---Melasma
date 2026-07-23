@@ -17,6 +17,14 @@ export default function ManageSupplements({ pacienteId }) {
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
+    // Guards a real race: the parent modal syncs `patient` into its own form
+    // state via an effect, which runs one render after `patient` first
+    // becomes non-null — so on that first render `pacienteId` can still be
+    // the empty default. Firing gerarDashboard with an empty id crashes the
+    // backend's `new UUID(pacienteId)` with no friendly validation ahead of
+    // it. Skipping here means the next render (once the real id lands)
+    // re-triggers this effect and loads correctly, with no user-visible error.
+    if (!pacienteId) return;
     setLoading(true);
     try {
       const today = new Date();

@@ -1,4 +1,14 @@
 import { GoogleSheetsRepository } from './GoogleSheetsRepository.js';
+import { fromSheetDateTime, toSheetDateTime } from '../../shared/utils/DateTimeFormatter.js';
+
+// The sheet cell is stored PT-BR (DD/MM/AAAA HH:mm:ss) for a human opening
+// the spreadsheet directly — but the use case/frontend contract expects ISO,
+// same boundary-only translation used in CheckinMapper. toISO tolerates a
+// blank/unparseable cell by falling back to the raw value untouched.
+function toISO(sheetValue) {
+  const parsed = fromSheetDateTime(sheetValue);
+  return parsed ? parsed.toISOString() : sheetValue;
+}
 
 export class GoogleSheetsPermissaoRepository extends GoogleSheetsRepository {
   constructor() {
@@ -8,12 +18,12 @@ export class GoogleSheetsPermissaoRepository extends GoogleSheetsRepository {
   findActiveByPacienteId(pacienteId) {
     const rows = this.readAllRows();
     const now = new Date().getTime();
-    
+
     // Find a permission for the patient that has status ACTIVE and has not expired
     const activePerm = rows.find(r => {
       if (r[1] !== pacienteId) return false;
       if (r[6] !== 'ATIVA') return false;
-      const expTime = new Date(r[5]).getTime();
+      const expTime = fromSheetDateTime(r[5])?.getTime();
       return expTime > now;
     });
 
@@ -25,9 +35,9 @@ export class GoogleSheetsPermissaoRepository extends GoogleSheetsRepository {
       horasLiberadas: Number(activePerm[2]),
       motivo: activePerm[3],
       operadorId: activePerm[4],
-      expiraEm: activePerm[5],
+      expiraEm: toISO(activePerm[5]),
       status: activePerm[6],
-      createdAt: activePerm[7]
+      createdAt: toISO(activePerm[7])
     };
   }
 
@@ -41,9 +51,9 @@ export class GoogleSheetsPermissaoRepository extends GoogleSheetsRepository {
         horasLiberadas: Number(r[2]),
         motivo: r[3],
         operadorId: r[4],
-        expiraEm: r[5],
+        expiraEm: toISO(r[5]),
         status: r[6],
-        createdAt: r[7]
+        createdAt: toISO(r[7])
       }))
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }
@@ -55,9 +65,9 @@ export class GoogleSheetsPermissaoRepository extends GoogleSheetsRepository {
       permissao.horasLiberadas,
       permissao.motivo,
       permissao.operadorId,
-      permissao.expiraEm,
+      toSheetDateTime(permissao.expiraEm),
       permissao.status,
-      permissao.createdAt
+      toSheetDateTime(permissao.createdAt)
     ];
     this.writeRow(row, permissao.id, 0);
   }

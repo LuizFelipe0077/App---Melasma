@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ApiClient } from '../api/apiClient.js';
 import DoseTimelineItem from '../components/DoseTimelineItem.jsx';
 import HeatmapStrip from '../components/HeatmapStrip.jsx';
@@ -6,7 +6,7 @@ import ProgressRing from '../components/ProgressRing.jsx';
 import Sheet from '../components/Sheet.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
-import { useDashboardData } from '../hooks/useDashboardData.js';
+import { prefetchDashboard, useDashboardData } from '../hooks/useDashboardData.js';
 import { getMotivationMessage } from '../utils/motivationMessages.js';
 import { buildTreatmentInfo } from '../utils/treatmentInfo.js';
 
@@ -121,6 +121,27 @@ export default function PatientDashboardPage() {
   }, []);
 
   const { data: dashboard, loading, error, mutate } = useDashboardData(dataInicio, dataFim);
+
+  // Warms the cache Histórico/Calendário will read from, in the background,
+  // once the dashboard itself is done — so clicking into either page right
+  // after login usually finds data already there instead of paying Apps
+  // Script's own round-trip a second (and third) time. Ranges here must
+  // match each page's own default calc exactly, or the cache key misses.
+  useEffect(() => {
+    if (loading || !dashboard) return;
+    const today = new Date();
+    prefetchDashboard(
+      session.userId,
+      new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30).toISOString(),
+      new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString()
+    );
+    prefetchDashboard(
+      session.userId,
+      new Date(today.getFullYear(), today.getMonth(), 1).toISOString(),
+      new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59).toISOString()
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, dashboard, session.userId]);
 
   const slots = useMemo(() => buildTodaySlots(dashboard), [dashboard]);
   const pendingSlots = useMemo(() => slots.filter((s) => s.checkin.status === 'PENDENTE'), [slots]);

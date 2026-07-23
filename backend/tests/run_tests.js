@@ -3,6 +3,7 @@ import { Email } from '../src/domain/valueObjects/Email.js';
 import { Telefone } from '../src/domain/valueObjects/Telefone.js';
 import { PasswordHash } from '../src/domain/valueObjects/PasswordHash.js';
 import { PacienteFactory } from '../src/domain/entities/PacienteFactory.js';
+import { CheckIn, StatusCheckin } from '../src/domain/entities/CheckIn.js';
 import { BcryptGasService } from '../src/infrastructure/services/BcryptGasService.js';
 import { TokenService } from '../src/infrastructure/services/TokenService.js';
 
@@ -12,6 +13,8 @@ import { GoogleSheetsProtocoloRepository } from '../src/infrastructure/repositor
 import { GoogleSheetsGamificacaoRepository } from '../src/infrastructure/repositories/GoogleSheetsGamificacaoRepository.js';
 import { GoogleSheetsPermissaoRepository } from '../src/infrastructure/repositories/GoogleSheetsPermissaoRepository.js';
 import { GoogleSheetsObservacaoRepository } from '../src/infrastructure/repositories/GoogleSheetsObservacaoRepository.js';
+import { SheetColumns } from '../src/infrastructure/repositories/GoogleSheetsColumns.js';
+import { fromSheetDateTime, toSheetDateTime } from '../src/shared/utils/DateTimeFormatter.js';
 
 import { CriarPacienteUseCase } from '../src/application/useCases/CriarPacienteUseCase.js';
 import { RegistrarCheckinUseCase } from '../src/application/useCases/RegistrarCheckinUseCase.js';
@@ -631,6 +634,88 @@ async function runTests() {
     // findById na própria linha corrompida deve retornar null, não lançar
     const badLookup = checkinRepo.findById(badRowId);
     if (badLookup !== null) throw new Error('findById em linha corrompida deveria retornar null.');
+  });
+
+  await test('DateTimeFormatter - formata em PT-BR e lê de volta ISO legado sem quebrar', () => {
+    const original = new Date(2026, 6, 22, 8, 5, 30); // 22/07/2026 08:05:30 (mês 0-indexado)
+    const sheetText = toSheetDateTime(original);
+    if (sheetText !== '22/07/2026 08:05:30') throw new Error(`Formato PT-BR incorreto: ${sheetText}`);
+
+    const roundTripped = fromSheetDateTime(sheetText);
+    if (roundTripped.getTime() !== original.getTime()) throw new Error('Round-trip PT-BR não bateu com a data original.');
+
+    // Linha legada, gravada antes desta mudança, em ISO puro — precisa continuar legível
+    const legacyIso = '2026-07-22T11:05:30.000Z';
+    const legacyParsed = fromSheetDateTime(legacyIso);
+    if (isNaN(legacyParsed.getTime())) throw new Error('Data legada em ISO deveria continuar sendo lida corretamente.');
+
+    // Célula vazia/sem valor não deve lançar exceção
+    if (fromSheetDateTime('') !== null) throw new Error('String vazia deveria retornar null.');
+    if (fromSheetDateTime(null) !== null) throw new Error('null deveria retornar null.');
+  });
+
+  await test('CheckinMapper - grava data/hora em PT-BR na planilha e lê de volta corretamente', () => {
+    const checkinRepo = new GoogleSheetsCheckinRepository();
+    const pacienteId = UUID.generate();
+    const suplementoId = UUID.generate();
+    const prescrita = new Date(2026, 6, 22, 8, 0, 0);
+    const realizada = new Date(2026, 6, 22, 8, 15, 0);
+
+    const checkin = new CheckIn({
+      id: UUID.generate(), pacienteId, suplementoId,
+      dataHoraPrescrita: prescrita, dataHoraRealizada: null, status: StatusCheckin.PENDENTE, retroativo: false
+    });
+    checkin.confirmIngestion(realizada, 60, false);
+    checkinRepo.save(checkin);
+
+    // Confirma que a célula em si está em PT-BR, não ISO
+    const rawRows = checkinRepo.readAllRows();
+    const rawRow = rawRows.find((r) => r[SheetColumns.CHECKIN.ID] === checkin.id.value);
+    if (!/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/.test(rawRow[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA])) {
+      throw new Error(`Célula deveria estar em DD/MM/AAAA HH:mm:ss, veio: ${rawRow[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA]}`);
+    }
+    if (rawRow[SheetColumns.CHECKIN.RETROATIVO] !== 'NAO') {
+      throw new Error(`Retroativo deveria gravar 'NAO' em português, veio: ${rawRow[SheetColumns.CHECKIN.RETROATIVO]}`);
+    }
+
+    // E que o domínio reconstrói exatamente a mesma data ao ler de volta
+    const reloaded = checkinRepo.findById(checkin.id.value);
+    if (reloaded.dataHoraPrescrita.getTime() !== prescrita.getTime()) throw new Error('dataHoraPrescrita não bateu após round-trip PT-BR.');
+    if (reloaded.dataHoraRealizada.getTime() !== realizada.getTime()) throw new Error('dataHoraRealizada não bateu após round-trip PT-BR.');
+  });
+
+  await test('GoogleSheetsPermissaoRepository/ObservacaoRepository - PT-BR na planilha, ISO no retorno', () => {
+    const permissaoRepo = new GoogleSheetsPermissaoRepository();
+    const observacaoRepo = new GoogleSheetsObservacaoRepository();
+    const pacienteId = UUID.generate().value;
+    const nowIso = new Date(2026, 6, 22, 9, 0, 0).toISOString();
+
+    const permissaoId = UUID.generate().value;
+    permissaoRepo.save({
+      id: permissaoId, pacienteId, horasLiberadas: 24, motivo: 'teste',
+      operadorId: UUID.generate().value, expiraEm: nowIso, status: 'ATIVA', createdAt: nowIso
+    });
+    const rawPermRows = permissaoRepo.readAllRows();
+    const rawPermRow = rawPermRows.find((r) => r[0] === permissaoId);
+    if (!/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/.test(rawPermRow[5])) {
+      throw new Error(`Célula expiraEm deveria estar em PT-BR, veio: ${rawPermRow[5]}`);
+    }
+    const [reloadedPerm] = permissaoRepo.findAllByPacienteId(pacienteId);
+    if (new Date(reloadedPerm.createdAt).getTime() !== new Date(nowIso).getTime()) {
+      throw new Error('createdAt de permissão retroativa não bateu após round-trip PT-BR.');
+    }
+
+    const obsId = UUID.generate().value;
+    observacaoRepo.save({ id: obsId, pacienteId, operadorId: UUID.generate().value, texto: 'nota de teste', tipo: 'OBSERVACAO', createdAt: nowIso });
+    const rawObsRows = observacaoRepo.readAllRows();
+    const rawObsRow = rawObsRows.find((r) => r[0] === obsId);
+    if (!/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/.test(rawObsRow[5])) {
+      throw new Error(`Célula createdAt da observação deveria estar em PT-BR, veio: ${rawObsRow[5]}`);
+    }
+    const [reloadedObs] = observacaoRepo.findByPacienteId(pacienteId);
+    if (new Date(reloadedObs.createdAt).getTime() !== new Date(nowIso).getTime()) {
+      throw new Error('createdAt de observação não bateu após round-trip PT-BR.');
+    }
   });
 
   console.log(`\n📊 RESULTADOS DO TESTE: ${passCount} Passados, ${failCount} Falhas.`);
