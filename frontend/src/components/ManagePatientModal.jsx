@@ -3,7 +3,7 @@ import ManageSupplements from './ManageSupplements.jsx';
 import Sheet from './Sheet.jsx';
 import { useConfirm } from '../context/ConfirmContext.jsx';
 
-const emptyForm = { id: '', nome: '', email: '', telefone: '', dataInicio: '', dataFim: '', status: 'ATIVO', novaSenha: '' };
+const emptyForm = { id: '', nome: '', email: '', telefone: '', dataInicio: '', dataFim: '', status: 'ATIVO', protocoloNome: 'Melasma', novaSenha: '' };
 
 export default function ManagePatientModal({ open, patient, onClose, onSave, onDelete }) {
   const confirm = useConfirm();
@@ -12,7 +12,11 @@ export default function ManagePatientModal({ open, patient, onClose, onSave, onD
 
   useEffect(() => {
     if (patient) {
-      setForm({ id: patient.id, nome: patient.nome, email: patient.email, telefone: patient.telefone, dataInicio: patient.dataInicio, dataFim: patient.dataFim, status: patient.status, novaSenha: '' });
+      setForm({
+        id: patient.id, nome: patient.nome, email: patient.email, telefone: patient.telefone,
+        dataInicio: patient.dataInicio, dataFim: patient.dataFim, status: patient.status,
+        protocoloNome: patient.protocoloNome || 'Melasma', novaSenha: ''
+      });
     }
   }, [patient]);
 
@@ -23,12 +27,14 @@ export default function ManagePatientModal({ open, patient, onClose, onSave, onD
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const ok = await confirm({ title: 'Salvar alterações', description: `Confirma as alterações no cadastro de ${form.nome}?`, confirmLabel: 'Salvar' });
+    if (!ok) return;
     setSaving(true);
     try {
       await onSave({
         pacienteId: form.id, nome: form.nome, email: form.email, telefone: form.telefone, status: form.status,
         dataInicio: new Date(form.dataInicio).toISOString(), dataFim: new Date(form.dataFim).toISOString(),
-        senha: form.novaSenha || null
+        senha: form.novaSenha || null, protocoloNome: form.protocoloNome
       });
     } finally {
       setSaving(false);
@@ -52,12 +58,21 @@ export default function ManagePatientModal({ open, patient, onClose, onSave, onD
           <div className="field"><label className="field-label">Início</label><input type="date" className="field-input" required value={form.dataInicio} onChange={(e) => setForm({ ...form, dataInicio: e.target.value })} /></div>
           <div className="field"><label className="field-label">Fim</label><input type="date" className="field-input" required value={form.dataFim} onChange={(e) => setForm({ ...form, dataFim: e.target.value })} /></div>
         </div>
-        <div className="field">
-          <label className="field-label">Status</label>
-          <select className="field-input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-            <option value="ATIVO">Ativo</option>
-            <option value="INATIVO">Inativo</option>
-          </select>
+        <div className="field-row">
+          <div className="field">
+            <label className="field-label">Status</label>
+            <select className="field-input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+              <option value="ATIVO">Ativo</option>
+              <option value="INATIVO">Inativo</option>
+            </select>
+          </div>
+          <div className="field">
+            <label className="field-label">Protocolo</label>
+            <select className="field-input" value={form.protocoloNome} onChange={(e) => setForm({ ...form, protocoloNome: e.target.value })}>
+              <option value="Melasma">Melasma</option>
+              <option value="Desinflamação">Desinflamação</option>
+            </select>
+          </div>
         </div>
         <div className="field">
           <label className="field-label">Nova senha (opcional)</label>

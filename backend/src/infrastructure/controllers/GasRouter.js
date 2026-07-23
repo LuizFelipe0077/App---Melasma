@@ -44,7 +44,8 @@ export class GasRouter {
           dataInicio: payload.dataInicio,
           dataFim: payload.dataFim,
           status: payload.status,
-          senha: payload.senha
+          senha: payload.senha,
+          protocoloNome: payload.protocoloNome
         });
       },
 

@@ -17,7 +17,7 @@ export class EditarPacienteUseCase {
    * Executes the editing of an existing patient.
    * @param {object} input DTO
    */
-  async execute({ id, nome, email, telefone, dataInicio, dataFim, status, senha }) {
+  async execute({ id, nome, email, telefone, dataInicio, dataFim, status, senha, protocoloNome }) {
     if (!id || !nome || !email || !telefone || !dataInicio || !dataFim || !status) {
       throw new Error('Parâmetros obrigatórios ausentes.');
     }
@@ -42,7 +42,10 @@ export class EditarPacienteUseCase {
       finalSenhaHash = this.#criptografiaService.hash(senha.trim());
     }
 
-    // Reconstitute domain object to enforce validations
+    // Reconstitute domain object to enforce validations. protocoloNome
+    // falls back to the patient's current value (not PacienteFactory's own
+    // "Melasma" default) — an edit that doesn't touch the protocol field
+    // must never silently reset it.
     const updatedPaciente = PacienteFactory.reconstitute({
       id: paciente.id.value,
       nome,
@@ -52,7 +55,8 @@ export class EditarPacienteUseCase {
       protocoloId: paciente.protocoloId ? paciente.protocoloId.value : null,
       status,
       dataInicio,
-      dataFim
+      dataFim,
+      protocoloNome: protocoloNome || paciente.protocoloNome
     });
 
     this.#pacienteRepository.update(updatedPaciente);
