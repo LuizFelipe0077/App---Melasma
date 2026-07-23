@@ -98,7 +98,7 @@ export default function AdminPatientsPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between mobile-stack-center" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+      <div className="flex items-center justify-between mobile-title-left" style={{ marginBottom: 'var(--space-6)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         <h1 className="display-md">Pacientes</h1>
         <button className="btn btn-fill" onClick={() => setRegisterOpen(true)}>+ Novo paciente</button>
       </div>

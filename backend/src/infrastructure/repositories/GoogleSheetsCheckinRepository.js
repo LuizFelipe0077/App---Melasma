@@ -2,6 +2,7 @@ import { GoogleSheetsRepository } from './GoogleSheetsRepository.js';
 import { CheckinRepositoryInterface } from '../../application/repositories/CheckinRepositoryInterface.js';
 import { CheckinMapper } from './CheckinMapper.js';
 import { SheetColumns } from './GoogleSheetsColumns.js';
+import { fromSheetDateTime } from '../../shared/utils/DateTimeFormatter.js';
 
 export class GoogleSheetsCheckinRepository extends GoogleSheetsRepository {
   constructor() {
@@ -28,7 +29,9 @@ export class GoogleSheetsCheckinRepository extends GoogleSheetsRepository {
 
     const matches = rows.filter(r => {
       if (r[SheetColumns.CHECKIN.PACIENTE_ID] !== pacienteId) return false;
-      const prescritaTime = new Date(r[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA]).getTime();
+      const prescrita = fromSheetDateTime(r[SheetColumns.CHECKIN.DATA_HORA_PRESCRITA]);
+      if (!prescrita) return false;
+      const prescritaTime = prescrita.getTime();
       return prescritaTime >= startMs && prescritaTime <= endMs;
     });
 

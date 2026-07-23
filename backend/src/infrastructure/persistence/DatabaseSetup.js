@@ -26,34 +26,36 @@ export class DatabaseSetup {
     const ss = SpreadsheetApp.openById(ssId);
     
     // Define all required sheets and their corresponding headers
+    // Rótulos em português — são só o texto da linha 1, nunca lidos de volta
+    // pelo código (leitura sempre por índice numérico via GoogleSheetsColumns.js).
     const schema = {
       'Pacientes': [
-        'id', 'protocoloId', 'nome', 'email', 'telefone', 
-        'senhaHash', 'status', 'dataInicio', 'dataFim', 'observacoes', 'protocoloNome'
+        'ID', 'ID do Protocolo', 'Nome', 'E-mail', 'Telefone',
+        'Hash da Senha', 'Status', 'Data de Início', 'Data de Término', 'Observações', 'Nome do Protocolo'
       ],
       'Protocolos': [
-        'id', 'nome', 'duracaoDias'
+        'ID', 'Nome', 'Duração (dias)'
       ],
       'Suplementos': [
-        'id', 'protocoloId', 'nome', 'dosagem', 'horarios', 'instrucoes'
+        'ID', 'ID do Protocolo', 'Nome', 'Dosagem', 'Horários', 'Instruções'
       ],
       'Check_Ins': [
-        'id', 'pacienteId', 'suplementoId', 'dtPrescrita', 
-        'dtRealizada', 'status', 'retroativo'
+        'ID', 'ID do Paciente', 'ID do Suplemento', 'Data/Hora Prevista',
+        'Data/Hora Realizada', 'Status', 'Retroativo'
       ],
       'PermissoesRetroativas': [
-        'id', 'pacienteId', 'horasLiberadas', 'motivo', 
-        'operadorId', 'expiraEm', 'status', 'createdAt'
+        'ID', 'ID do Paciente', 'Horas Liberadas', 'Motivo',
+        'ID do Operador', 'Expira Em', 'Status', 'Criado Em'
       ],
       'Gamificacao': [
-        'id', 'pacienteId', 'xpTotal', 'streakAtual', 'maiorStreak', 'conquistas'
+        'ID', 'ID do Paciente', 'XP Total', 'Sequência Atual', 'Maior Sequência', 'Conquistas'
       ],
       'Observacoes': [
-        'id', 'pacienteId', 'operadorId', 'texto', 'tipo', 'createdAt'
+        'ID', 'ID do Paciente', 'ID do Operador', 'Texto', 'Tipo', 'Criado Em'
       ],
       'Auditoria': [
-        'id', 'timestamp', 'operadorId', 'tabela', 'registroId', 
-        'tipoAcao', 'dadosAntigos', 'dadosNovos', 'ip', 'dispositivo', 'motivo'
+        'ID', 'Data/Hora', 'ID do Operador', 'Tabela', 'ID do Registro',
+        'Tipo de Ação', 'Dados Antigos', 'Dados Novos', 'IP', 'Dispositivo', 'Motivo'
       ]
     };
 

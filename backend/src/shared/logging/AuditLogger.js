@@ -12,6 +12,23 @@
  */
 import { UUID } from '../../domain/valueObjects/UUID.js';
 
+// Grava tudo em português para ficar legível abrindo a planilha diretamente
+// — os valores originais em inglês nunca são lidos de volta pelo código
+// (a trilha de auditoria é só gravada, nunca consultada programaticamente).
+const TIPO_ACAO_PT = {
+  CREATE: 'CRIACAO',
+  UPDATE: 'ATUALIZACAO',
+  DELETE: 'EXCLUSAO',
+  READ: 'LEITURA',
+  LOGIN: 'LOGIN',
+  LOGOUT: 'LOGOUT',
+  EXPORT: 'EXPORTACAO',
+  SECURITY_LOGIN_SUCCESS: 'LOGIN_COM_SUCESSO',
+  SECURITY_LOGIN_FAILURE: 'FALHA_DE_LOGIN',
+  SECURITY_LOCKOUT: 'CONTA_BLOQUEADA',
+  SECURITY_TOKEN_EXPIRED: 'TOKEN_EXPIRADO'
+};
+
 export class AuditLogger {
 
   /**
@@ -35,7 +52,7 @@ export class AuditLogger {
       operadorId: operadorId || 'SYSTEM',
       tabela,
       registroId: registroId || 'N/A',
-      tipoAcao,
+      tipoAcao: TIPO_ACAO_PT[tipoAcao] || tipoAcao,
       dadosAntigos: dadosAntigos ? JSON.stringify(dadosAntigos) : '',
       dadosNovos: dadosNovos ? JSON.stringify(dadosNovos) : '',
       ip,
@@ -56,8 +73,8 @@ export class AuditLogger {
           if (!sheet) {
             sheet = ss.insertSheet('Auditoria');
             sheet.getRange(1, 1, 1, 11).setValues([[
-              'id', 'timestamp', 'operadorId', 'tabela', 'registroId',
-              'tipoAcao', 'dadosAntigos', 'dadosNovos', 'ip', 'dispositivo', 'motivo'
+              'ID', 'Data/Hora', 'ID do Operador', 'Tabela', 'ID do Registro',
+              'Tipo de Ação', 'Dados Antigos', 'Dados Novos', 'IP', 'Dispositivo', 'Motivo'
             ]]);
           }
           sheet.appendRow([

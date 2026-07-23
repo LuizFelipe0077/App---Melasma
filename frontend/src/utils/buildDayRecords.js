@@ -41,15 +41,25 @@ export function buildDayRecords(dashboard, dataInicioTratamento, startWindow, en
     const isFuture = cursor > today;
     const isBeforeTreatment = cursor < treatmentStart;
 
+    // A dose feita fora da janela de tolerância vira ATRASADO, não
+    // CONCLUIDO — e ainda assim foi tomada, então conta como "feita" aqui
+    // (mesmo critério já usado em buildWeeklyEvolution/computeAlerts/
+    // buildDailyAdherence abaixo). Também não dá para usar
+    // "checkins.length === 0" como sinônimo de "nada foi tomado": every
+    // dose agendada já nasce com uma linha PENDENTE pré-gerada na criação
+    // do paciente, então esse array quase nunca está vazio de fato.
     let status;
     if (isFuture || isBeforeTreatment) {
       status = 'future';
-    } else if (checkins.length === 0) {
-      status = 'missed';
-    } else if (checkins.every((c) => c.status === 'CONCLUIDO')) {
-      status = 'completed';
     } else {
-      status = 'partial';
+      const doneCount = checkins.filter((c) => c.status === 'CONCLUIDO' || c.status === 'ATRASADO').length;
+      if (checkins.length === 0 || doneCount === 0) {
+        status = 'missed';
+      } else if (doneCount === checkins.length) {
+        status = 'completed';
+      } else {
+        status = 'partial';
+      }
     }
 
     days.push({
