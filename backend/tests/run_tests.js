@@ -255,6 +255,46 @@ async function runTests() {
     }
   });
 
+  await test('Caso de Uso - EditarPacienteUseCase não reseta o protocolo quando o campo não é enviado', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const cryptoService = new BcryptGasService();
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, new GoogleSheetsProtocoloRepository(), new GoogleSheetsCheckinRepository());
+    const editarUC = new EditarPacienteUseCase(pacienteRepo, cryptoService);
+
+    const reg = await registerUC.execute({
+      nome: 'Paciente Desinflamação', email: 'desinflamacao-teste@email.com', telefone: '(11) 96666-6666', senha: 'senha1234',
+      dataInicio: new Date().toISOString(), dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      protocoloNome: 'Desinflamação'
+    });
+
+    const beforeEdit = pacienteRepo.findById(reg.id);
+    if (beforeEdit.protocoloNome !== 'Desinflamação') throw new Error(`Paciente deveria nascer com protocolo Desinflamação, veio ${beforeEdit.protocoloNome}.`);
+
+    // Edita só o telefone, sem informar protocoloNome — regressão real encontrada
+    // em produção: PacienteFactory.reconstitute tinha 'Melasma' como default e
+    // sobrescrevia silenciosamente qualquer paciente que não fosse Melasma.
+    await editarUC.execute({
+      id: reg.id, nome: beforeEdit.nome, email: beforeEdit.email.value, telefone: '(11) 95555-5555',
+      dataInicio: beforeEdit.dataInicio.toISOString(), dataFim: beforeEdit.dataFim.toISOString(), status: beforeEdit.status, senha: null
+    });
+
+    const afterEdit = pacienteRepo.findById(reg.id);
+    if (afterEdit.protocoloNome !== 'Desinflamação') {
+      throw new Error(`Protocolo deveria continuar Desinflamação após editar outro campo, veio ${afterEdit.protocoloNome}.`);
+    }
+
+    // E que informar protocoloNome explicitamente ainda troca normalmente
+    await editarUC.execute({
+      id: reg.id, nome: beforeEdit.nome, email: beforeEdit.email.value, telefone: '(11) 95555-5555',
+      dataInicio: beforeEdit.dataInicio.toISOString(), dataFim: beforeEdit.dataFim.toISOString(), status: beforeEdit.status, senha: null,
+      protocoloNome: 'Melasma'
+    });
+    const afterExplicitChange = pacienteRepo.findById(reg.id);
+    if (afterExplicitChange.protocoloNome !== 'Melasma') {
+      throw new Error(`Troca explícita de protocolo deveria funcionar, veio ${afterExplicitChange.protocoloNome}.`);
+    }
+  });
+
   // --- Test 8: ExcluirPacienteUseCase ---
   await test('Caso de Uso - ExcluirPacienteUseCase', async () => {
     const pacienteRepo = new GoogleSheetsPacienteRepository();
