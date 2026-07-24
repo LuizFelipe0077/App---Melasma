@@ -11,7 +11,7 @@ function protocolChipTone(protocoloNome) {
   return 'chip-neutral';
 }
 
-export default function PatientTable({ patients, onRowClick, onReleaseClick, onHistoryClick }) {
+export default function PatientTable({ patients, onRowClick, onReleaseClick }) {
   if (patients.length === 0) {
     return <p className="empty-state">Nenhum paciente encontrado.</p>;
   }
@@ -26,7 +26,7 @@ export default function PatientTable({ patients, onRowClick, onReleaseClick, onH
             className="roster-row"
             role="button"
             tabIndex={0}
-            aria-label={`Gerenciar ${p.nome}`}
+            aria-label={`Ver histórico de ${p.nome}`}
             onClick={() => onRowClick(p)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(p); } }}
           >
@@ -45,12 +45,6 @@ export default function PatientTable({ patients, onRowClick, onReleaseClick, onH
                 <span className={`chip ${tone}`}>{label}</span>
               </div>
               <div className="roster-row-buttons">
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={(e) => { e.stopPropagation(); onHistoryClick(p); }}
-                >
-                  Histórico
-                </button>
                 <button
                   className="btn btn-ghost btn-sm"
                   onClick={(e) => { e.stopPropagation(); onReleaseClick(p); }}
