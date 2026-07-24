@@ -4,6 +4,7 @@ import { Telefone } from '../src/domain/valueObjects/Telefone.js';
 import { PasswordHash } from '../src/domain/valueObjects/PasswordHash.js';
 import { PacienteFactory } from '../src/domain/entities/PacienteFactory.js';
 import { CheckIn, StatusCheckin } from '../src/domain/entities/CheckIn.js';
+import { LiberacaoRetroativa } from '../src/domain/entities/LiberacaoRetroativa.js';
 import { BcryptGasService } from '../src/infrastructure/services/BcryptGasService.js';
 import { TokenService } from '../src/infrastructure/services/TokenService.js';
 
@@ -11,7 +12,7 @@ import { GoogleSheetsPacienteRepository } from '../src/infrastructure/repositori
 import { GoogleSheetsCheckinRepository } from '../src/infrastructure/repositories/GoogleSheetsCheckinRepository.js';
 import { GoogleSheetsProtocoloRepository } from '../src/infrastructure/repositories/GoogleSheetsProtocoloRepository.js';
 import { GoogleSheetsGamificacaoRepository } from '../src/infrastructure/repositories/GoogleSheetsGamificacaoRepository.js';
-import { GoogleSheetsPermissaoRepository } from '../src/infrastructure/repositories/GoogleSheetsPermissaoRepository.js';
+import { GoogleSheetsLiberacaoRetroativaRepository } from '../src/infrastructure/repositories/GoogleSheetsLiberacaoRetroativaRepository.js';
 import { GoogleSheetsObservacaoRepository } from '../src/infrastructure/repositories/GoogleSheetsObservacaoRepository.js';
 import { SheetColumns } from '../src/infrastructure/repositories/GoogleSheetsColumns.js';
 import { fromSheetDateTime, toSheetDateTime } from '../src/shared/utils/DateTimeFormatter.js';
@@ -29,8 +30,8 @@ import { Protocolo } from '../src/domain/entities/Protocolo.js';
 import { Suplemento } from '../src/domain/entities/Suplemento.js';
 import { CriarObservacaoClinicaUseCase } from '../src/application/useCases/CriarObservacaoClinicaUseCase.js';
 import { ListarObservacoesClinicasUseCase } from '../src/application/useCases/ListarObservacoesClinicasUseCase.js';
-import { LiberarEdicaoRetroativaUseCase } from '../src/application/useCases/LiberarEdicaoRetroativaUseCase.js';
-import { ListarPermissoesRetroativasUseCase } from '../src/application/useCases/ListarPermissoesRetroativasUseCase.js';
+import { LiberarRetroativoUseCase } from '../src/application/useCases/LiberarRetroativoUseCase.js';
+import { ListarLiberacoesRetroativasUseCase } from '../src/application/useCases/ListarLiberacoesRetroativasUseCase.js';
 
 async function runTests() {
   process.env.ADMIN_EMAIL = 'admin@clinica.com';
@@ -557,31 +558,104 @@ async function runTests() {
     }
   });
 
-  // --- Test 13: ListarPermissoesRetroativasUseCase (histórico completo, não só a ativa) ---
-  await test('Caso de Uso - ListarPermissoesRetroativasUseCase (histórico completo)', async () => {
+  // --- Test 13: ListarLiberacoesRetroativasUseCase (histórico completo, não só a ativa) ---
+  await test('Caso de Uso - ListarLiberacoesRetroativasUseCase (histórico completo)', async () => {
     const pacienteRepo = new GoogleSheetsPacienteRepository();
-    const permissaoRepo = new GoogleSheetsPermissaoRepository();
+    const liberacaoRepo = new GoogleSheetsLiberacaoRetroativaRepository();
     const cryptoService = new BcryptGasService();
     const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, new GoogleSheetsProtocoloRepository(), new GoogleSheetsCheckinRepository());
-    const liberarUC = new LiberarEdicaoRetroativaUseCase(pacienteRepo, permissaoRepo);
-    const listarPermissoesUC = new ListarPermissoesRetroativasUseCase(permissaoRepo);
+    const liberarUC = new LiberarRetroativoUseCase(pacienteRepo, liberacaoRepo);
+    const listarLiberacoesUC = new ListarLiberacoesRetroativasUseCase(liberacaoRepo);
 
+    const dataInicioTratamento = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
     const reg = await registerUC.execute({
       nome: 'Paciente Liberacoes',
       email: 'liberacoes@email.com',
       telefone: '(11) 91111-1111',
       senha: 'liberacoes123',
-      dataInicio: new Date().toISOString(),
+      dataInicio: dataInicioTratamento.toISOString(),
       dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       suplementos: []
     });
 
-    liberarUC.execute({ pacienteId: reg.id, horasLiberadas: 24, motivo: 'Esqueceu de registrar a dose de ontem.', operadorId: 'admin_root' });
-    liberarUC.execute({ pacienteId: reg.id, horasLiberadas: 48, motivo: 'Segunda liberação, motivo diferente.', operadorId: 'admin_root' });
+    const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const anteontem = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    liberarUC.execute({ pacienteId: reg.id, dataLiberada: ontem, motivo: 'Esqueceu de registrar a dose de ontem.', operadorId: 'admin_root' });
+    liberarUC.execute({ pacienteId: reg.id, dataLiberada: anteontem, motivo: 'Segunda liberação, data diferente.', operadorId: 'admin_root' });
 
-    const historico = listarPermissoesUC.execute({ pacienteId: reg.id });
+    const historico = listarLiberacoesUC.execute({ pacienteId: reg.id });
     if (historico.length !== 2) throw new Error(`Esperava 2 liberações no histórico, veio ${historico.length}.`);
     if (historico.some(p => p.pacienteId !== reg.id)) throw new Error('Liberação vazando de outro paciente.');
+  });
+
+  // --- Test 13b: LiberarRetroativoUseCase — validações de data ---
+  await test('Caso de Uso - LiberarRetroativoUseCase rejeita data futura e data anterior ao início do tratamento', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const liberacaoRepo = new GoogleSheetsLiberacaoRetroativaRepository();
+    const cryptoService = new BcryptGasService();
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, new GoogleSheetsProtocoloRepository(), new GoogleSheetsCheckinRepository());
+    const liberarUC = new LiberarRetroativoUseCase(pacienteRepo, liberacaoRepo);
+
+    const dataInicioTratamento = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+    const reg = await registerUC.execute({
+      nome: 'Paciente Validacao Data', email: 'validacao-data@email.com', telefone: '(11) 92222-2222', senha: 'validacao123',
+      dataInicio: dataInicioTratamento.toISOString(), dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      suplementos: []
+    });
+
+    const amanha = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    try {
+      liberarUC.execute({ pacienteId: reg.id, dataLiberada: amanha, motivo: '', operadorId: 'admin_root' });
+      throw new Error('Deveria ter rejeitado data futura.');
+    } catch (e) {
+      if (!e.message.includes('futura')) throw e;
+    }
+
+    const antesDoTratamento = new Date(dataInicioTratamento.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
+    try {
+      liberarUC.execute({ pacienteId: reg.id, dataLiberada: antesDoTratamento, motivo: '', operadorId: 'admin_root' });
+      throw new Error('Deveria ter rejeitado data anterior ao início do tratamento.');
+    } catch (e) {
+      if (!e.message.includes('anterior ao início do tratamento')) throw e;
+    }
+
+    // Motivo vazio/opcional deve ser aceito quando a data é válida
+    const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const resultado = liberarUC.execute({ pacienteId: reg.id, dataLiberada: ontem, motivo: '', operadorId: 'admin_root' });
+    if (!resultado.liberacaoId) throw new Error('Liberação com motivo vazio deveria ter sido aceita.');
+  });
+
+  // --- Test 13c: findAtivaParaPacienteEData — o método que fecha o buraco de segurança ---
+  await test('GoogleSheetsLiberacaoRetroativaRepository.findAtivaParaPacienteEData - só casa data exata, ignora expiradas', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const liberacaoRepo = new GoogleSheetsLiberacaoRetroativaRepository();
+    const cryptoService = new BcryptGasService();
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, new GoogleSheetsProtocoloRepository(), new GoogleSheetsCheckinRepository());
+    const liberarUC = new LiberarRetroativoUseCase(pacienteRepo, liberacaoRepo);
+
+    const dataInicioTratamento = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+    const reg = await registerUC.execute({
+      nome: 'Paciente Data Exata', email: 'data-exata@email.com', telefone: '(11) 93333-3333', senha: 'dataexata123',
+      dataInicio: dataInicioTratamento.toISOString(), dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      suplementos: []
+    });
+
+    const diaLiberado = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    liberarUC.execute({ pacienteId: reg.id, dataLiberada: diaLiberado.toISOString(), motivo: '', operadorId: 'admin_root' });
+
+    const encontrada = liberacaoRepo.findAtivaParaPacienteEData(reg.id, diaLiberado);
+    if (!encontrada) throw new Error('Deveria encontrar a liberação para a data exata liberada.');
+
+    const outraData = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    const naoEncontrada = liberacaoRepo.findAtivaParaPacienteEData(reg.id, outraData);
+    if (naoEncontrada) throw new Error('Não deveria encontrar liberação para uma data diferente da liberada — vazamento de escopo.');
+
+    // Liberação já expirada (status ainda ATIVA na planilha) não deve mais ser encontrada
+    const rowsAntes = liberacaoRepo.readAllRows();
+    const rowExpirada = rowsAntes.find((r) => r[SheetColumns.LIBERACAO.PACIENTE_ID] === reg.id);
+    rowExpirada[SheetColumns.LIBERACAO.EXPIRA_EM] = toSheetDateTime(new Date(Date.now() - 60000));
+    const aindaAtiva = liberacaoRepo.findAtivaParaPacienteEData(reg.id, diaLiberado);
+    if (aindaAtiva) throw new Error('Liberação expirada não deveria mais ser retornada como ativa, mesmo com status ATIVA na planilha.');
   });
 
   // --- Test 14: Marcar -> Cancelar -> Marcar de novo (regressão) ---
@@ -644,6 +718,105 @@ async function runTests() {
     const gamificacao = gamificacaoRepo.findByPacienteId(reg.id);
     if (gamificacao.xpTotal !== 10) throw new Error(`XP deveria ser 10 (1 crédito líquido), veio ${gamificacao.xpTotal}.`);
     if (gamificacao.streakAtual !== 1) throw new Error(`Streak deveria ser 1, veio ${gamificacao.streakAtual}.`);
+  });
+
+  // --- Test 14b: RegistrarCheckinUseCase — o gate retroativo, 100% resolvido no servidor ---
+  await test('Caso de Uso - RegistrarCheckinUseCase bloqueia retroativo sem liberação e sem qualquer bypass client-side', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const protocoloRepo = new GoogleSheetsProtocoloRepository();
+    const checkinRepo = new GoogleSheetsCheckinRepository();
+    const gamificacaoRepo = new GoogleSheetsGamificacaoRepository();
+    const liberacaoRepo = new GoogleSheetsLiberacaoRetroativaRepository();
+    const cryptoService = new BcryptGasService();
+
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, protocoloRepo, checkinRepo);
+    const registrarUC = new RegistrarCheckinUseCase(pacienteRepo, protocoloRepo, checkinRepo, gamificacaoRepo, liberacaoRepo);
+    const liberarUC = new LiberarRetroativoUseCase(pacienteRepo, liberacaoRepo);
+
+    const dataInicio = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+    const dataFim = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    const reg = await registerUC.execute({
+      nome: 'Paciente Gate Retroativo', email: 'gate-retroativo@email.com', telefone: '(11) 90000-0002', senha: 'gate123',
+      dataInicio: dataInicio.toISOString(), dataFim: dataFim.toISOString(), suplementos: []
+    });
+
+    const paciente = pacienteRepo.findById(reg.id);
+    const suplemento = new Suplemento({
+      id: UUID.generate(), protocoloId: paciente.protocoloId, nome: 'Ômega 3', dosagem: '1000mg',
+      horarios: ['08:00'], instrucoes: '', quantidade: 1, diasSemana: ['todos'], dataInicio, dataFim, tipo: 'Vitamina'
+    });
+    protocoloRepo.save(new Protocolo({ id: paciente.protocoloId, nome: 'Melasma', suplementos: [suplemento], duracaoDias: 30 }));
+
+    const diaAlvo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    diaAlvo.setHours(8, 0, 0, 0);
+    const outroDia = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    outroDia.setHours(8, 0, 0, 0);
+
+    const payloadBase = { pacienteId: reg.id, suplementoId: suplemento.id.value, dataHoraPrescrita: diaAlvo.toISOString(), dataHoraRealizada: diaAlvo.toISOString() };
+
+    // 1. Sem nenhuma liberação — deve falhar
+    try {
+      await registrarUC.execute(payloadBase);
+      throw new Error('Deveria ter rejeitado check-in retroativo sem liberação.');
+    } catch (e) {
+      if (!e.message.includes('liberação válida')) throw e;
+    }
+
+    // 1b. Prova de que o antigo bypass client-side não existe mais: mesmo
+    // enviando um campo forceRetroactive:true (como um payload manipulado
+    // via DevTools faria), o use case nem o lê mais — continua rejeitando.
+    try {
+      await registrarUC.execute({ ...payloadBase, forceRetroactive: true });
+      throw new Error('forceRetroactive não deveria ter nenhum efeito — o bypass antigo não pode mais existir.');
+    } catch (e) {
+      if (!e.message.includes('liberação válida')) throw e;
+    }
+
+    // 2. Liberação concedida para uma data DIFERENTE — ainda deve falhar
+    liberarUC.execute({ pacienteId: reg.id, dataLiberada: outroDia.toISOString(), motivo: '', operadorId: 'admin_root' });
+    try {
+      await registrarUC.execute(payloadBase);
+      throw new Error('Deveria ter rejeitado — a liberação existente é para outra data.');
+    } catch (e) {
+      if (!e.message.includes('liberação válida')) throw e;
+    }
+
+    // 3. Liberação concedida para a data exata — deve funcionar e marcar usadaEm
+    liberarUC.execute({ pacienteId: reg.id, dataLiberada: diaAlvo.toISOString(), motivo: 'Esqueceu ontem.', operadorId: 'admin_root' });
+    const resultado = await registrarUC.execute(payloadBase);
+    if (resultado.status !== 'CONCLUIDO' && resultado.status !== 'ATRASADO') {
+      throw new Error(`Check-in retroativo autorizado deveria ter sido registrado, veio status ${resultado.status}.`);
+    }
+
+    const liberacaoUsada = liberacaoRepo.findAtivaParaPacienteEData(reg.id, diaAlvo);
+    if (!liberacaoUsada || !liberacaoUsada.usadaEm) {
+      throw new Error('Liberação usada deveria ter usadaEm preenchido após o check-in retroativo.');
+    }
+
+    // 4. Liberação expirada não autoriza mais, mesmo com status ATIVA gravado
+    const outroSuplemento = new Suplemento({
+      id: UUID.generate(), protocoloId: paciente.protocoloId, nome: 'Zinco', dosagem: '15mg',
+      horarios: ['20:00'], instrucoes: '', quantidade: 1, diasSemana: ['todos'], dataInicio, dataFim, tipo: 'Mineral'
+    });
+    protocoloRepo.save(new Protocolo({ id: paciente.protocoloId, nome: 'Melasma', suplementos: [suplemento, outroSuplemento], duracaoDias: 30 }));
+
+    // Two grants now exist for this patient (outroDia + diaAlvo) — target
+    // specifically the diaAlvo one, identified as the one already marked
+    // usadaEm in step 3, not just "any ATIVA row".
+    const rows = liberacaoRepo.readAllRows();
+    const rowLiberacao = rows.find((r) => r[SheetColumns.LIBERACAO.PACIENTE_ID] === reg.id && r[SheetColumns.LIBERACAO.UTILIZADA_EM] !== '');
+    if (!rowLiberacao) throw new Error('Não encontrou a linha da liberação usada em step 3 para simular expiração.');
+    rowLiberacao[SheetColumns.LIBERACAO.EXPIRA_EM] = toSheetDateTime(new Date(Date.now() - 60000));
+
+    const diaAlvoNoite = new Date(diaAlvo);
+    diaAlvoNoite.setHours(20, 0, 0, 0);
+    try {
+      await registrarUC.execute({ pacienteId: reg.id, suplementoId: outroSuplemento.id.value, dataHoraPrescrita: diaAlvoNoite.toISOString(), dataHoraRealizada: diaAlvoNoite.toISOString() });
+      throw new Error('Deveria ter rejeitado — a liberação já expirou.');
+    } catch (e) {
+      if (!e.message.includes('liberação válida')) throw e;
+    }
   });
 
   await test('CheckinMapper - linha com status inválido (dado legado/corrompido) não derruba a listagem', async () => {
@@ -724,25 +897,27 @@ async function runTests() {
     if (reloaded.dataHoraRealizada.getTime() !== realizada.getTime()) throw new Error('dataHoraRealizada não bateu após round-trip PT-BR.');
   });
 
-  await test('GoogleSheetsPermissaoRepository/ObservacaoRepository - PT-BR na planilha, ISO no retorno', () => {
-    const permissaoRepo = new GoogleSheetsPermissaoRepository();
+  await test('GoogleSheetsLiberacaoRetroativaRepository/ObservacaoRepository - PT-BR na planilha, ISO no retorno', () => {
+    const liberacaoRepo = new GoogleSheetsLiberacaoRetroativaRepository();
     const observacaoRepo = new GoogleSheetsObservacaoRepository();
     const pacienteId = UUID.generate().value;
     const nowIso = new Date(2026, 6, 22, 9, 0, 0).toISOString();
 
-    const permissaoId = UUID.generate().value;
-    permissaoRepo.save({
-      id: permissaoId, pacienteId, horasLiberadas: 24, motivo: 'teste',
-      operadorId: UUID.generate().value, expiraEm: nowIso, status: 'ATIVA', createdAt: nowIso
+    const liberacaoId = UUID.generate().value;
+    const liberacao = new LiberacaoRetroativa({
+      id: new UUID(liberacaoId), pacienteId: new UUID(pacienteId),
+      dataLiberada: new Date(2026, 6, 21), concedidaEm: new Date(nowIso), expiraEm: new Date(nowIso),
+      operadorId: UUID.generate().value, motivo: 'teste', status: 'ATIVA', usadaEm: null
     });
-    const rawPermRows = permissaoRepo.readAllRows();
-    const rawPermRow = rawPermRows.find((r) => r[0] === permissaoId);
-    if (!/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/.test(rawPermRow[5])) {
-      throw new Error(`Célula expiraEm deveria estar em PT-BR, veio: ${rawPermRow[5]}`);
+    liberacaoRepo.save(liberacao);
+    const rawLibRows = liberacaoRepo.readAllRows();
+    const rawLibRow = rawLibRows.find((r) => r[0] === liberacaoId);
+    if (!/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/.test(rawLibRow[SheetColumns.LIBERACAO.EXPIRA_EM])) {
+      throw new Error(`Célula expiraEm deveria estar em PT-BR, veio: ${rawLibRow[SheetColumns.LIBERACAO.EXPIRA_EM]}`);
     }
-    const [reloadedPerm] = permissaoRepo.findAllByPacienteId(pacienteId);
-    if (new Date(reloadedPerm.createdAt).getTime() !== new Date(nowIso).getTime()) {
-      throw new Error('createdAt de permissão retroativa não bateu após round-trip PT-BR.');
+    const [reloadedLib] = liberacaoRepo.findAllByPacienteId(pacienteId);
+    if (reloadedLib.concedidaEm.getTime() !== new Date(nowIso).getTime()) {
+      throw new Error('concedidaEm de liberação retroativa não bateu após round-trip PT-BR.');
     }
 
     const obsId = UUID.generate().value;

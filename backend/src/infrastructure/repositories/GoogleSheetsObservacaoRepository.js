@@ -1,7 +1,7 @@
 import { GoogleSheetsRepository } from './GoogleSheetsRepository.js';
 import { fromSheetDateTime, toSheetDateTime } from '../../shared/utils/DateTimeFormatter.js';
 
-// Same boundary-only translation as CheckinMapper/GoogleSheetsPermissaoRepository:
+// Same boundary-only translation as CheckinMapper/LiberacaoRetroativaMapper:
 // the sheet cell is PT-BR, the DTO returned to the use case/frontend stays ISO.
 function toISO(sheetValue) {
   const parsed = fromSheetDateTime(sheetValue);

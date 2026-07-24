@@ -3,6 +3,7 @@ import { ApiClient } from '../api/apiClient.js';
 import DoseTimelineItem from '../components/DoseTimelineItem.jsx';
 import HeatmapStrip from '../components/HeatmapStrip.jsx';
 import ProgressRing from '../components/ProgressRing.jsx';
+import RetroactiveCard from '../components/RetroactiveCard.jsx';
 import Sheet from '../components/Sheet.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
@@ -259,6 +260,8 @@ export default function PatientDashboardPage() {
     <>
       <div className="eyebrow" style={{ marginBottom: 'var(--space-2)' }}>{GREETING_BY_HOUR(new Date().getHours())}</div>
       <h1 className="display-md" style={{ marginBottom: 'var(--space-5)' }}>{session.nome.split(' ')[0]}</h1>
+
+      <RetroactiveCard />
 
       {!loading && (
         <div className="dashboard-info-row">

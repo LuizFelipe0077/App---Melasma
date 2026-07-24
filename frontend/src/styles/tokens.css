@@ -117,6 +117,12 @@
   --warning: var(--p-warning-ink);
   --warning-wash: rgba(146, 102, 31, 0.12);
 
+  /* Retroativo: sempre azul fixo, deliberadamente fora do --accent trocado
+     por protocolo — precisa ser reconhecível independente do tema do
+     paciente (Melasma terracota / Desinflamação verde). */
+  --retroactive: #2563EB;
+  --retroactive-wash: rgba(37, 99, 235, 0.12);
+
   --shadow-card: 0 1px 2px rgba(38, 35, 32, 0.04), 0 6px 20px -8px rgba(38, 35, 32, 0.10);
   --shadow-sheet: 0 -12px 40px -8px rgba(38, 35, 32, 0.20);
   --shadow-rail: 4px 0 24px -12px rgba(38, 35, 32, 0.12);

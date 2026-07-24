@@ -3,27 +3,28 @@ import { CheckIn, StatusCheckin } from '../../domain/entities/CheckIn.js';
 import { CheckinRealizadoEvent } from '../../domain/events/CheckinRealizadoEvent.js';
 import { eventDispatcher } from '../../domain/events/DomainEventDispatcher.js';
 import { Gamificacao } from '../../domain/entities/Gamificacao.js';
+import { AuditLogger } from '../../shared/logging/AuditLogger.js';
 
 export class RegistrarCheckinUseCase {
   #pacienteRepository;
   #protocoloRepository;
   #checkinRepository;
   #gamificacaoRepository;
-  #permissaoRepository;
+  #liberacaoRepository;
 
-  constructor(pacienteRepository, protocoloRepository, checkinRepository, gamificacaoRepository, permissaoRepository) {
+  constructor(pacienteRepository, protocoloRepository, checkinRepository, gamificacaoRepository, liberacaoRepository) {
     this.#pacienteRepository = pacienteRepository;
     this.#protocoloRepository = protocoloRepository;
     this.#checkinRepository = checkinRepository;
     this.#gamificacaoRepository = gamificacaoRepository;
-    this.#permissaoRepository = permissaoRepository;
+    this.#liberacaoRepository = liberacaoRepository;
   }
 
   /**
    * Registers a supplement check-in for a patient.
-   * @param {object} input DTO (pacienteId, suplementoId, dataHoraPrescrita, dataHoraRealizada, forceRetroactive)
+   * @param {object} input DTO (pacienteId, suplementoId, dataHoraPrescrita, dataHoraRealizada)
    */
-  execute({ pacienteId, suplementoId, dataHoraPrescrita, dataHoraRealizada, forceRetroactive = false }) {
+  execute({ pacienteId, suplementoId, dataHoraPrescrita, dataHoraRealizada }) {
     const pId = new UUID(pacienteId);
     const sId = new UUID(suplementoId);
     const datePrescrita = new Date(dataHoraPrescrita);
@@ -56,22 +57,25 @@ export class RegistrarCheckinUseCase {
       throw new Error('Check-in já registrado para esta dose e horário.');
     }
 
-    // 4. Check for retroactive blocks (midnight rule)
+    // 4. Retroactive gate — resolved entirely server-side. There is no
+    // client-supplied flag anywhere in this DTO that can authorize a
+    // retroactive check-in; the only source of truth is a grant that
+    // matches this exact patient AND this exact calendar date AND is still
+    // within its 24h window at the moment of this call.
     const todayStr = new Date().toDateString();
     const prescribedStr = datePrescrita.toDateString();
-    let isAllowedRetroactive = forceRetroactive;
+    let isAllowedRetroactive = false;
+    let liberacaoUsada = null;
 
-    if (prescribedStr !== todayStr && !isAllowedRetroactive) {
-      if (this.#permissaoRepository) {
-        const activePerm = this.#permissaoRepository.findActiveByPacienteId(pId.value);
-        if (activePerm) {
-          isAllowedRetroactive = true;
-        }
-      }
+    if (prescribedStr !== todayStr) {
+      liberacaoUsada = this.#liberacaoRepository
+        ? this.#liberacaoRepository.findAtivaParaPacienteEData(pId.value, datePrescrita)
+        : null;
 
-      if (!isAllowedRetroactive) {
-        throw new Error('Não é possível realizar check-ins retroativos de dias anteriores sem liberação do clínico.');
+      if (!liberacaoUsada) {
+        throw new Error('Não é possível realizar check-ins retroativos sem uma liberação válida para esta data específica.');
       }
+      isAllowedRetroactive = true;
     }
 
     // 5. Reuse the existing PENDENTE row for this slot if there is one,
@@ -96,6 +100,23 @@ export class RegistrarCheckinUseCase {
       this.#checkinRepository.update(checkin);
     } else {
       this.#checkinRepository.save(checkin);
+    }
+
+    // 7b. Record usage on the grant (audit trail — "utilizada" vs "expirou
+    // sem uso") and log the event. marcarUtilizada is idempotent, so a
+    // second retroactive check-in against the same grant just reuses the
+    // same "first used at" timestamp.
+    if (liberacaoUsada) {
+      liberacaoUsada.marcarUtilizada(new Date());
+      this.#liberacaoRepository.update(liberacaoUsada);
+      AuditLogger.log({
+        operadorId: pId.value,
+        tabela: 'LiberacoesRetroativas',
+        registroId: liberacaoUsada.id.value,
+        tipoAcao: 'UPDATE',
+        dadosNovos: { checkinId: checkin.id.value, suplementoId: sId.value, usadaEm: liberacaoUsada.usadaEm.toISOString() },
+        motivo: 'Check-in retroativo registrado usando liberação ativa'
+      });
     }
 
     // 8. Update Gamification aggregates

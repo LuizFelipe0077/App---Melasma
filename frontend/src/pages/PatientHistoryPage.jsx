@@ -109,7 +109,7 @@ export default function PatientHistoryPage() {
   const loadNotesAndPermissoes = () => {
     if (!patient) return;
     ApiClient.call('listarObservacoesClinicas', { pacienteId: patient.id }).then(setNotes).catch(() => setNotes([]));
-    ApiClient.call('listarPermissoesRetroativas', { pacienteId: patient.id }).then(setPermissoes).catch(() => setPermissoes([]));
+    ApiClient.call('listarLiberacoesRetroativas', { pacienteId: patient.id }).then(setPermissoes).catch(() => setPermissoes([]));
   };
 
   useEffect(loadNotesAndPermissoes, [patient]);
@@ -204,7 +204,7 @@ export default function PatientHistoryPage() {
 
   const handleRelease = async (payload) => {
     try {
-      await ApiClient.call('liberarEdicaoRetroativa', payload);
+      await ApiClient.call('liberarRetroativo', payload);
       showToast({ message: 'Liberação concedida.' });
       setReleaseOpen(false);
       loadNotesAndPermissoes();
@@ -331,7 +331,7 @@ export default function PatientHistoryPage() {
         onSave={handleSavePatient}
         onDelete={handleDeletePatient}
       />
-      <ReleaseModal open={releaseOpen} patientId={patient.id} onClose={() => setReleaseOpen(false)} onSubmit={handleRelease} />
+      <ReleaseModal open={releaseOpen} patientId={patient.id} patientName={patient.nome} onClose={() => setReleaseOpen(false)} onSubmit={handleRelease} />
 
       <Sheet open={quickNoteOpen} onClose={() => setQuickNoteOpen(false)} title="Adicionar observação clínica">
         <ClinicalNotes pacienteId={patient.id} />

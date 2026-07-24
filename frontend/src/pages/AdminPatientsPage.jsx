@@ -19,7 +19,7 @@ export default function AdminPatientsPage() {
 
   const [registerOpen, setRegisterOpen] = useState(false);
   const [managePatient, setManagePatient] = useState(null);
-  const [releasePatientId, setReleasePatientId] = useState(null);
+  const [releasePatient, setReleasePatient] = useState(null);
 
   const loadPatients = async () => {
     setLoading(true);
@@ -84,9 +84,9 @@ export default function AdminPatientsPage() {
 
   const handleRelease = async (payload) => {
     try {
-      await ApiClient.call('liberarEdicaoRetroativa', payload);
+      await ApiClient.call('liberarRetroativo', payload);
       showToast({ message: 'Liberação concedida.' });
-      setReleasePatientId(null);
+      setReleasePatient(null);
     } catch (err) {
       showError(`Erro ao liberar: ${err.message}`);
     }
@@ -120,13 +120,13 @@ export default function AdminPatientsPage() {
         ) : error ? (
           <p className="empty-state">Erro ao carregar: {error.message}</p>
         ) : (
-          <PatientTable patients={filteredPatients} onRowClick={setManagePatient} onReleaseClick={setReleasePatientId} onHistoryClick={openHistory} />
+          <PatientTable patients={filteredPatients} onRowClick={setManagePatient} onReleaseClick={setReleasePatient} onHistoryClick={openHistory} />
         )}
       </section>
 
       <RegisterPatientWizard open={registerOpen} onClose={() => setRegisterOpen(false)} onSubmit={handleCreatePatient} />
       <ManagePatientModal open={!!managePatient} patient={managePatient} onClose={() => setManagePatient(null)} onSave={handleSavePatient} onDelete={handleDeletePatient} />
-      <ReleaseModal open={!!releasePatientId} patientId={releasePatientId} onClose={() => setReleasePatientId(null)} onSubmit={handleRelease} />
+      <ReleaseModal open={!!releasePatient} patientId={releasePatient?.id} patientName={releasePatient?.nome} onClose={() => setReleasePatient(null)} onSubmit={handleRelease} />
     </>
   );
 }

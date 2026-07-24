@@ -1,5 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { ApiClient } from '../api/apiClient.js';
 import HeatmapMonth from '../components/HeatmapMonth.jsx';
+import RetroactiveCheckinSheet from '../components/RetroactiveCheckinSheet.jsx';
 import Sheet from '../components/Sheet.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useDashboardData } from '../hooks/useDashboardData.js';
@@ -15,7 +17,8 @@ const LEGEND = [
   { cls: 'partial', label: 'Parcial — algumas doses pendentes' },
   { cls: 'missed', label: 'Sem check-in registrado' },
   { cls: 'future', label: 'Ainda não chegou' },
-  { cls: 'today', label: 'Hoje', swatchStyle: { boxShadow: 'inset 0 0 0 3px var(--ink)', background: 'var(--surface-sunken)' } }
+  { cls: 'today', label: 'Hoje', swatchStyle: { boxShadow: 'inset 0 0 0 3px var(--ink)', background: 'var(--surface-sunken)' } },
+  { cls: 'released', label: 'Retroativo liberado', swatchStyle: { boxShadow: 'inset 0 0 0 3px var(--retroactive)', background: 'var(--surface-sunken)' } }
 ];
 
 function formatTime(dateStr) {
@@ -29,6 +32,12 @@ export default function CalendarPage() {
     return { year: now.getFullYear(), month: now.getMonth() };
   });
   const [selectedDay, setSelectedDay] = useState(null);
+  const [liberacaoAtiva, setLiberacaoAtiva] = useState(null);
+  const [retroSheetOpen, setRetroSheetOpen] = useState(false);
+
+  useEffect(() => {
+    ApiClient.call('obterLiberacaoRetroativaAtiva', {}).then(setLiberacaoAtiva).catch(() => setLiberacaoAtiva(null));
+  }, []);
 
   const { dataInicio, dataFim } = useMemo(() => {
     const start = new Date(cursor.year, cursor.month, 1);
@@ -42,8 +51,19 @@ export default function CalendarPage() {
     if (!data || !session.dataInicio) return [];
     const start = new Date(cursor.year, cursor.month, 1);
     const end = new Date(cursor.year, cursor.month + 1, 0);
-    return buildDayRecords(data, session.dataInicio, start, end);
-  }, [data, session.dataInicio, cursor]);
+    const records = buildDayRecords(data, session.dataInicio, start, end);
+    if (!liberacaoAtiva) return records;
+    const releasedKey = new Date(liberacaoAtiva.dataLiberada).toDateString();
+    return records.map((d) => (d.date.toDateString() === releasedKey ? { ...d, released: true } : d));
+  }, [data, session.dataInicio, cursor, liberacaoAtiva]);
+
+  const handleDayClick = (day) => {
+    if (day.released) {
+      setRetroSheetOpen(true);
+    } else {
+      setSelectedDay(day);
+    }
+  };
 
   const treatmentInfo = useMemo(() => buildTreatmentInfo(session.dataInicio, session.dataFim), [session.dataInicio, session.dataFim]);
 
@@ -85,7 +105,7 @@ export default function CalendarPage() {
           <div className="skeleton" style={{ height: 260 }} />
         ) : (
           <>
-            <HeatmapMonth year={cursor.year} month={cursor.month} days={days} onDayClick={setSelectedDay} />
+            <HeatmapMonth year={cursor.year} month={cursor.month} days={days} onDayClick={handleDayClick} />
             <div className="calendar-legend">
               {LEGEND.map((l) => (
                 <div className="calendar-legend-item" key={l.cls}>
@@ -134,6 +154,14 @@ export default function CalendarPage() {
           )
         )}
       </Sheet>
+
+      {liberacaoAtiva && (
+        <RetroactiveCheckinSheet
+          open={retroSheetOpen}
+          dataLiberada={liberacaoAtiva.dataLiberada}
+          onClose={() => setRetroSheetOpen(false)}
+        />
+      )}
     </>
   );
 }

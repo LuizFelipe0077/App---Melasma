@@ -42,11 +42,15 @@ export const SheetColumns = {
     NOME: 1,
     SUPLEMENTOS: 2 // Array serializado
   },
-  PERMISSAO: {
-    PACIENTE_ID: 0,
-    OPERADOR_ID: 1,
-    HORAS_LIBERADAS: 2,
-    DATA_HORA_CONCESSAO: 3,
-    MOTIVO: 4
+  LIBERACAO: {
+    ID: 0,
+    PACIENTE_ID: 1,
+    DATA_LIBERADA: 2,
+    CONCEDIDA_EM: 3,
+    EXPIRA_EM: 4,
+    OPERADOR_ID: 5,
+    MOTIVO: 6,
+    STATUS: 7,
+    UTILIZADA_EM: 8
   }
 };

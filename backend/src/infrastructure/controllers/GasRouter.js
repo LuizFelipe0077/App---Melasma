@@ -62,8 +62,7 @@ export class GasRouter {
           pacienteId: user.role === 'ADMIN' ? payload.pacienteId : user.userId,
           suplementoId: payload.suplementoId,
           dataHoraPrescrita: payload.dataHoraPrescrita,
-          dataHoraRealizada: payload.dataHoraRealizada,
-          forceRetroactive: payload.forceRetroactive || false
+          dataHoraRealizada: payload.dataHoraRealizada
         });
       },
 
@@ -132,20 +131,27 @@ export class GasRouter {
         });
       },
 
-      'listarPermissoesRetroativas': (payload) => {
+      'listarLiberacoesRetroativas': (payload) => {
         GasRouter._verifyAdminToken(payload.token, services.tokenService);
-        return useCases.listarPermissoesRetroativasUseCase.execute({
+        return useCases.listarLiberacoesRetroativasUseCase.execute({
           pacienteId: payload.pacienteId
         });
       },
 
-      'liberarEdicaoRetroativa': (payload) => {
+      'liberarRetroativo': (payload) => {
         const adminUser = GasRouter._verifyAdminToken(payload.token, services.tokenService);
-        return useCases.liberarEdicaoRetroativaUseCase.execute({
+        return useCases.liberarRetroativoUseCase.execute({
           pacienteId: payload.pacienteId,
-          horasLiberadas: Number(payload.horasLiberadas),
+          dataLiberada: payload.dataLiberada,
           motivo: payload.motivo,
           operadorId: adminUser.userId
+        });
+      },
+
+      'obterLiberacaoRetroativaAtiva': (payload) => {
+        const user = GasRouter._verifyToken(payload.token, services.tokenService);
+        return useCases.obterLiberacaoRetroativaAtivaUseCase.execute({
+          pacienteId: user.role === 'ADMIN' ? payload.pacienteId : user.userId
         });
       },
 

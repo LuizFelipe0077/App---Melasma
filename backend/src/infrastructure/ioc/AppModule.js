@@ -2,7 +2,7 @@ import { GoogleSheetsPacienteRepository } from '../repositories/GoogleSheetsPaci
 import { GoogleSheetsCheckinRepository } from '../repositories/GoogleSheetsCheckinRepository.js';
 import { GoogleSheetsProtocoloRepository } from '../repositories/GoogleSheetsProtocoloRepository.js';
 import { GoogleSheetsGamificacaoRepository } from '../repositories/GoogleSheetsGamificacaoRepository.js';
-import { GoogleSheetsPermissaoRepository } from '../repositories/GoogleSheetsPermissaoRepository.js';
+import { GoogleSheetsLiberacaoRetroativaRepository } from '../repositories/GoogleSheetsLiberacaoRetroativaRepository.js';
 import { GoogleSheetsObservacaoRepository } from '../repositories/GoogleSheetsObservacaoRepository.js';
 import { BcryptGasService } from '../services/BcryptGasService.js';
 import { TokenService } from '../services/TokenService.js';
@@ -14,14 +14,15 @@ import { CancelarCheckinUseCase } from '../../application/useCases/CancelarCheck
 import { AdicionarSuplementoUseCase } from '../../application/useCases/AdicionarSuplementoUseCase.js';
 import { EditarSuplementoUseCase } from '../../application/useCases/EditarSuplementoUseCase.js';
 import { RemoverSuplementoUseCase } from '../../application/useCases/RemoverSuplementoUseCase.js';
-import { LiberarEdicaoRetroativaUseCase } from '../../application/useCases/LiberarEdicaoRetroativaUseCase.js';
+import { LiberarRetroativoUseCase } from '../../application/useCases/LiberarRetroativoUseCase.js';
 import { GerarDashboardUseCase } from '../../application/useCases/GerarDashboardUseCase.js';
 import { ListarPacientesUseCase } from '../../application/useCases/ListarPacientesUseCase.js';
 import { EditarPacienteUseCase } from '../../application/useCases/EditarPacienteUseCase.js';
 import { ExcluirPacienteUseCase } from '../../application/useCases/ExcluirPacienteUseCase.js';
 import { CriarObservacaoClinicaUseCase } from '../../application/useCases/CriarObservacaoClinicaUseCase.js';
 import { ListarObservacoesClinicasUseCase } from '../../application/useCases/ListarObservacoesClinicasUseCase.js';
-import { ListarPermissoesRetroativasUseCase } from '../../application/useCases/ListarPermissoesRetroativasUseCase.js';
+import { ListarLiberacoesRetroativasUseCase } from '../../application/useCases/ListarLiberacoesRetroativasUseCase.js';
+import { ObterLiberacaoRetroativaAtivaUseCase } from '../../application/useCases/ObterLiberacaoRetroativaAtivaUseCase.js';
 
 /**
  * AppModule (IoC Container)
@@ -42,7 +43,7 @@ class Container {
       this.services.checkinRepository = new GoogleSheetsCheckinRepository();
       this.services.protocoloRepository = new GoogleSheetsProtocoloRepository();
       this.services.gamificacaoRepository = new GoogleSheetsGamificacaoRepository();
-      this.services.permissaoRepository = new GoogleSheetsPermissaoRepository();
+      this.services.liberacaoRepository = new GoogleSheetsLiberacaoRetroativaRepository();
       this.services.observacaoRepository = new GoogleSheetsObservacaoRepository();
 
       // Infrastructure Services
@@ -72,11 +73,11 @@ class Container {
       );
 
       this.useCases.registrarCheckinUseCase = new RegistrarCheckinUseCase(
-        s.pacienteRepository, 
-        s.protocoloRepository, 
-        s.checkinRepository, 
+        s.pacienteRepository,
+        s.protocoloRepository,
+        s.checkinRepository,
         s.gamificacaoRepository,
-        s.permissaoRepository
+        s.liberacaoRepository
       );
 
       this.useCases.cancelarCheckinUseCase = new CancelarCheckinUseCase(
@@ -97,9 +98,9 @@ class Container {
         s.protocoloRepository
       );
 
-      this.useCases.liberarEdicaoRetroativaUseCase = new LiberarEdicaoRetroativaUseCase(
-        s.pacienteRepository, 
-        s.permissaoRepository
+      this.useCases.liberarRetroativoUseCase = new LiberarRetroativoUseCase(
+        s.pacienteRepository,
+        s.liberacaoRepository
       );
 
       this.useCases.gerarDashboardUseCase = new GerarDashboardUseCase(
@@ -132,8 +133,12 @@ class Container {
         s.observacaoRepository
       );
 
-      this.useCases.listarPermissoesRetroativasUseCase = new ListarPermissoesRetroativasUseCase(
-        s.permissaoRepository
+      this.useCases.listarLiberacoesRetroativasUseCase = new ListarLiberacoesRetroativasUseCase(
+        s.liberacaoRepository
+      );
+
+      this.useCases.obterLiberacaoRetroativaAtivaUseCase = new ObterLiberacaoRetroativaAtivaUseCase(
+        s.liberacaoRepository
       );
 
       this.useCases.initialized = true;
