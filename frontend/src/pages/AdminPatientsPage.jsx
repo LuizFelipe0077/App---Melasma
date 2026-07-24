@@ -4,7 +4,6 @@ import { ApiClient } from '../api/apiClient.js';
 import StatChip from '../components/StatChip.jsx';
 import PatientTable from '../components/PatientTable.jsx';
 import RegisterPatientWizard from '../components/RegisterPatientWizard.jsx';
-import ManagePatientModal from '../components/ManagePatientModal.jsx';
 import ReleaseModal from '../components/ReleaseModal.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 
@@ -18,7 +17,6 @@ export default function AdminPatientsPage() {
   const [search, setSearch] = useState('');
 
   const [registerOpen, setRegisterOpen] = useState(false);
-  const [managePatient, setManagePatient] = useState(null);
   const [releasePatient, setReleasePatient] = useState(null);
 
   const loadPatients = async () => {
@@ -56,29 +54,6 @@ export default function AdminPatientsPage() {
     } catch (err) {
       showError(`Erro ao cadastrar: ${err.message}`);
       throw err;
-    }
-  };
-
-  const handleSavePatient = async (payload) => {
-    try {
-      await ApiClient.call('editarPaciente', payload);
-      showToast({ message: 'Paciente atualizado.' });
-      setManagePatient(null);
-      await loadPatients();
-    } catch (err) {
-      showError(`Erro ao salvar: ${err.message}`);
-      throw err;
-    }
-  };
-
-  const handleDeletePatient = async (pacienteId) => {
-    try {
-      await ApiClient.call('excluirPaciente', { pacienteId });
-      showToast({ message: 'Paciente excluído.' });
-      setManagePatient(null);
-      await loadPatients();
-    } catch (err) {
-      showError(`Erro ao excluir: ${err.message}`);
     }
   };
 
@@ -120,12 +95,11 @@ export default function AdminPatientsPage() {
         ) : error ? (
           <p className="empty-state">Erro ao carregar: {error.message}</p>
         ) : (
-          <PatientTable patients={filteredPatients} onRowClick={setManagePatient} onReleaseClick={setReleasePatient} onHistoryClick={openHistory} />
+          <PatientTable patients={filteredPatients} onRowClick={openHistory} onReleaseClick={setReleasePatient} />
         )}
       </section>
 
       <RegisterPatientWizard open={registerOpen} onClose={() => setRegisterOpen(false)} onSubmit={handleCreatePatient} />
-      <ManagePatientModal open={!!managePatient} patient={managePatient} onClose={() => setManagePatient(null)} onSave={handleSavePatient} onDelete={handleDeletePatient} />
       <ReleaseModal open={!!releasePatient} patientId={releasePatient?.id} patientName={releasePatient?.nome} onClose={() => setReleasePatient(null)} onSubmit={handleRelease} />
     </>
   );
