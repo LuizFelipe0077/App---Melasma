@@ -127,7 +127,13 @@ export default function RegisterPatientWizard({ open, onClose, onSubmit }) {
         {step === 3 && (
           <div className="animate-in">
             <div className="surface surface-pad" style={{ marginBottom: 'var(--space-4)' }}>
-              <SupplementFields draft={draft} onChange={setDraft} />
+              <SupplementFields
+                draft={draft}
+                onChange={setDraft}
+                dataInicio={protocol.dataInicio}
+                dataFim={protocol.dataFim}
+                protocoloNome={protocol.protocoloNome}
+              />
               <button type="button" className="btn btn-fill w-full" onClick={addSupplement}>Adicionar item</button>
             </div>
             {supplements.length === 0 ? (

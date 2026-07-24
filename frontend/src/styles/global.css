@@ -97,7 +97,7 @@ body {
 @media (min-width: 1024px) { .canvas-content { padding: var(--space-8) var(--space-8); max-width: 960px; } }
 
 .pill-nav {
-  position: fixed; left: 50%; bottom: var(--space-4); transform: translateX(-50%);
+  position: fixed; left: 50%; bottom: max(var(--space-4), env(safe-area-inset-bottom)); transform: translateX(-50%);
   display: flex; gap: var(--space-1);
   background-color: var(--surface-raised);
   border-radius: var(--radius-pill);
@@ -230,7 +230,7 @@ textarea.field-input { resize: vertical; min-height: 90px; }
   background-color: var(--surface-raised);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   box-shadow: var(--shadow-sheet);
-  padding: var(--space-3) var(--space-5) var(--space-6);
+  padding: var(--space-3) var(--space-5) max(var(--space-6), env(safe-area-inset-bottom));
 }
 @media (min-width: 640px) { .sheet { border-radius: var(--radius-lg); } }
 
@@ -293,6 +293,48 @@ textarea.field-input { resize: vertical; min-height: 90px; }
   background: var(--retroactive); color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 9px; line-height: 1; box-shadow: 0 0 0 2px var(--surface-raised);
 }
+
+/* ==========================================================================
+   Supplement schedule date picker (RegisterPatientWizard / ManageSupplements)
+   ========================================================================== */
+.date-picker-modes { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+.date-picker-mode-btn {
+  padding: 6px 14px; border-radius: var(--radius-pill); border: var(--hairline) solid var(--line);
+  background: var(--surface-raised); color: var(--ink-soft); font-size: var(--text-sm); cursor: pointer;
+  transition: transform var(--motion-quick) var(--ease-settle);
+}
+.date-picker-mode-btn:hover { transform: scale(1.04); }
+.date-picker-mode-btn.active { background: var(--accent); border-color: var(--accent); color: var(--ink-on-accent); }
+
+.date-picker-weekdays { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+.date-picker-weekday-btn {
+  width: 44px; height: 36px; border-radius: var(--radius-sm); border: var(--hairline) solid var(--line);
+  background: var(--surface-raised); color: var(--ink-soft); font-size: var(--text-xs); font-weight: var(--weight-semibold);
+  cursor: pointer; transition: transform var(--motion-quick) var(--ease-settle);
+}
+.date-picker-weekday-btn:hover { transform: scale(1.06); }
+.date-picker-weekday-btn.active { color: var(--ink-on-accent); border-color: transparent; }
+
+.date-picker-month-nav { display: flex; align-items: center; justify-content: center; gap: var(--space-3); margin-bottom: var(--space-3); font-weight: var(--weight-medium); }
+
+.date-picker-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.date-picker-cell {
+  position: relative; aspect-ratio: 1; border-radius: var(--radius-sm); border: none;
+  background-color: var(--surface-sunken); color: var(--ink-faint); font-size: var(--text-xs);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  transition: transform var(--motion-quick) var(--ease-settle);
+}
+.date-picker-cell.empty { background: transparent; }
+.date-picker-cell.out-of-range { opacity: 0.35; }
+.date-picker-cell.active { color: var(--ink-on-accent); font-weight: var(--weight-semibold); }
+.date-picker-cell.interactive:not(.out-of-range) { cursor: pointer; }
+.date-picker-cell.interactive:not(.out-of-range):hover { transform: scale(1.1); }
+.date-picker-cell.interactive:not(.out-of-range):active { transform: scale(0.92); }
+.date-picker-cell.interactive:not(.out-of-range)::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.5);
+  transform: scale(0); opacity: 0; transition: transform 0.35s var(--ease-glide), opacity 0.35s var(--ease-glide);
+}
+.date-picker-cell.interactive:not(.out-of-range):active::after { transform: scale(1.6); opacity: 1; transition: none; }
 
 .calendar-treatment-badge {
   display: flex; justify-content: space-between; align-items: center;
@@ -466,6 +508,16 @@ textarea.field-input { resize: vertical; min-height: 90px; }
 .retroactive-card-title { display: flex; align-items: center; gap: var(--space-2); color: var(--retroactive); font-weight: var(--weight-semibold); margin-bottom: var(--space-2); }
 .retroactive-card-countdown { font-weight: var(--weight-semibold); color: var(--retroactive); }
 .chip-retroactive { background-color: var(--retroactive-wash); color: var(--retroactive); }
+
+.retroactive-entry { border-top: var(--hairline) solid rgba(37, 99, 235, 0.2); padding-top: var(--space-3); margin-top: var(--space-3); }
+.retroactive-entry:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+.retroactive-entry-header {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  background: none; border: none; padding: var(--space-2) 0; cursor: pointer;
+  font-family: inherit; font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--retroactive);
+}
+.retroactive-entry-date { font-weight: var(--weight-semibold); }
+.retroactive-entry-body { padding-top: var(--space-2); }
 
 .note-card { padding: var(--space-4); border-radius: var(--radius-md); border: var(--hairline) solid var(--line); background: var(--surface-raised); }
 .note-type-tag { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; }

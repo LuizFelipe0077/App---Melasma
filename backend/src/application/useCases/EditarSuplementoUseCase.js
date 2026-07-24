@@ -13,7 +13,7 @@ export class EditarSuplementoUseCase {
    * entity with the same id/protocoloId/date range and the updated fields.
    * @param {object} input DTO
    */
-  execute({ suplementoId, nome, dosagem, quantidade, tipo, horarios, diasSemana, instrucoes, notificacao }) {
+  execute({ suplementoId, nome, dosagem, quantidade, tipo, horarios, diasSemana, datasEspecificas, instrucoes, notificacao }) {
     const existing = this.#protocoloRepository.findSuplementoById(suplementoId);
     if (!existing) {
       throw new Error('Suplemento não encontrado.');
@@ -28,6 +28,7 @@ export class EditarSuplementoUseCase {
       instrucoes: instrucoes ?? existing.instrucoes,
       quantidade: quantidade ?? existing.quantidade,
       diasSemana: diasSemana ?? existing.diasSemana,
+      datasEspecificas: datasEspecificas ?? existing.datasEspecificas,
       dataInicio: existing.dataInicio,
       dataFim: existing.dataFim,
       tipo: tipo ?? existing.tipo,

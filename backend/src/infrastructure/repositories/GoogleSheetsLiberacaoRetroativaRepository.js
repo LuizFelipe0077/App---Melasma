@@ -33,18 +33,21 @@ export class GoogleSheetsLiberacaoRetroativaRepository extends GoogleSheetsRepos
     return null;
   }
 
-  /** Any currently-active grant for this patient, regardless of which date — used for the patient-facing card/calendar highlight. */
-  findAtivaByPacienteId(pacienteId) {
+  /**
+   * ALL currently-active grants for this patient, regardless of date —
+   * powers the patient-facing card/calendar highlight. A patient can have
+   * several simultaneously active grants (different dates, each with its
+   * own independent 24h window); sorted by expiraEm ascending so the
+   * soonest-to-expire is surfaced first.
+   */
+  findAllAtivasByPacienteId(pacienteId) {
     const rows = this.readAllRows();
     const now = new Date();
-    for (const r of rows) {
-      if (r[SheetColumns.LIBERACAO.PACIENTE_ID] !== pacienteId) continue;
-      const liberacao = LiberacaoRetroativaMapper.toDomain(r);
-      if (liberacao && liberacao.estaAtiva(now)) {
-        return liberacao;
-      }
-    }
-    return null;
+    const matches = rows
+      .filter(r => r[SheetColumns.LIBERACAO.PACIENTE_ID] === pacienteId)
+      .map(r => LiberacaoRetroativaMapper.toDomain(r))
+      .filter(l => l && l.estaAtiva(now));
+    return matches.sort((a, b) => a.expiraEm.getTime() - b.expiraEm.getTime());
   }
 
   findAllByPacienteId(pacienteId) {

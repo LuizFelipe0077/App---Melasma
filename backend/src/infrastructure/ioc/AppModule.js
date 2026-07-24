@@ -22,7 +22,7 @@ import { ExcluirPacienteUseCase } from '../../application/useCases/ExcluirPacien
 import { CriarObservacaoClinicaUseCase } from '../../application/useCases/CriarObservacaoClinicaUseCase.js';
 import { ListarObservacoesClinicasUseCase } from '../../application/useCases/ListarObservacoesClinicasUseCase.js';
 import { ListarLiberacoesRetroativasUseCase } from '../../application/useCases/ListarLiberacoesRetroativasUseCase.js';
-import { ObterLiberacaoRetroativaAtivaUseCase } from '../../application/useCases/ObterLiberacaoRetroativaAtivaUseCase.js';
+import { ListarLiberacoesRetroativasAtivasUseCase } from '../../application/useCases/ListarLiberacoesRetroativasAtivasUseCase.js';
 
 /**
  * AppModule (IoC Container)
@@ -137,7 +137,7 @@ class Container {
         s.liberacaoRepository
       );
 
-      this.useCases.obterLiberacaoRetroativaAtivaUseCase = new ObterLiberacaoRetroativaAtivaUseCase(
+      this.useCases.listarLiberacoesRetroativasAtivasUseCase = new ListarLiberacoesRetroativasAtivasUseCase(
         s.liberacaoRepository
       );
 

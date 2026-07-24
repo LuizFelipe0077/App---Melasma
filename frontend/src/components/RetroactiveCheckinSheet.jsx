@@ -1,91 +1,75 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { ApiClient } from '../api/apiClient.js';
 import DoseTimelineItem from './DoseTimelineItem.jsx';
 import Sheet from './Sheet.jsx';
 import { useToast } from '../context/ToastContext.jsx';
+import { useDashboardData } from '../hooks/useDashboardData.js';
+import { applyOptimisticCheckin, buildSlotsForDate } from '../utils/checkinSlots.js';
 
-/**
- * Builds check-in slots for one specific past date (not "today" — see
- * PatientDashboardPage's buildTodaySlots, which this mirrors but
- * parameterized by date instead of hardcoded to now).
- */
-function buildSlotsForDate(dashboard, targetDate) {
-  const activeSuplementos = dashboard?.historicoAgrupadoPorSuplemento || [];
-  const rawCheckins = dashboard?.rawCheckins || [];
-  const targetStr = targetDate.toDateString();
-  const slots = [];
-
-  for (const sup of activeSuplementos) {
-    for (const horario of sup.horarios) {
-      const prescribedTime = new Date(targetDate);
-      const [hours, minutes] = horario.split(':');
-      prescribedTime.setHours(Number(hours), Number(minutes), 0, 0);
-
-      const match = rawCheckins.find((c) => {
-        if (c.suplementoId !== sup.suplementoId) return false;
-        const cDate = new Date(c.dataHoraPrescrita);
-        return cDate.toDateString() === targetStr && cDate.getHours() === Number(hours) && cDate.getMinutes() === Number(minutes);
-      });
-
-      const checkinInfo = match
-        ? { id: match.id, status: match.status, dataHoraPrescrita: prescribedTime, dataHoraRealizada: match.dataHoraRealizada ? new Date(match.dataHoraRealizada) : null }
-        : { id: null, status: 'PENDENTE', dataHoraPrescrita: prescribedTime, dataHoraRealizada: null };
-
-      slots.push({
-        suplemento: { id: sup.suplementoId, nome: sup.nome, dosagem: sup.dosagem, instrucoes: sup.instrucoes },
-        checkin: checkinInfo
-      });
-    }
-  }
-
-  return slots.sort((a, b) => a.checkin.dataHoraPrescrita - b.checkin.dataHoraPrescrita);
+function dayRange(date) {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+  return { start, end };
 }
 
 export default function RetroactiveCheckinSheet({ open, dataLiberada, onClose }) {
-  const { showToast, showError } = useToast();
-  const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { showError } = useToast();
 
   const targetDate = useMemo(() => (dataLiberada ? new Date(dataLiberada) : null), [dataLiberada]);
+  const { start, end } = useMemo(() => (targetDate ? dayRange(targetDate) : { start: null, end: null }), [targetDate]);
 
-  const load = () => {
-    if (!targetDate) return;
-    setLoading(true);
-    setError(null);
-    const iso = targetDate.toISOString();
-    ApiClient.call('gerarDashboard', { dataInicio: iso, dataFim: iso })
-      .then(setDashboard)
-      .catch(setError)
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    if (open) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, dataLiberada]);
+  // Same hook/cache the main dashboard uses — the day was already prefetched
+  // (see PatientDashboardPage's warmup effect for each active grant), so
+  // this is normally an instant cache hit, not a fresh network wait.
+  const { data: dashboard, loading, error, mutate } = useDashboardData(
+    start ? start.toISOString() : null,
+    end ? end.toISOString() : null
+  );
 
   const slots = useMemo(() => (targetDate ? buildSlotsForDate(dashboard, targetDate) : []), [dashboard, targetDate]);
 
+  // Same optimistic-then-sync pattern as the "Hoje" dashboard: mutate()
+  // synchronously before the network call, patch the server's authoritative
+  // response over it on success, roll back to the pre-tap snapshot on
+  // failure — no reload-after-every-tap, no spinner, no full refetch.
   const handleCheck = async (suplemento, checkin) => {
+    const previous = dashboard;
+    mutate(applyOptimisticCheckin(previous, suplemento, checkin, 'check'));
+
     try {
-      await ApiClient.call('registrarCheckin', {
+      const result = await ApiClient.call('registrarCheckin', {
         suplementoId: suplemento.id,
         dataHoraPrescrita: checkin.dataHoraPrescrita.toISOString()
       });
-      showToast({ message: `${suplemento.nome} registrado` });
-      load();
+      mutate((current) => {
+        if (!current) return current;
+        const rawCheckins = current.rawCheckins.map((c) =>
+          (c.id === result.checkinId || c.id.toString().startsWith('temp-')) && c.suplementoId === suplemento.id
+            ? { ...c, id: result.checkinId, status: result.status }
+            : c
+        );
+        return {
+          ...current,
+          rawCheckins,
+          gamificacao: current.gamificacao ? { ...current.gamificacao, streakAtual: result.streak, xpTotal: result.xpTotal } : current.gamificacao
+        };
+      });
     } catch (err) {
+      mutate(previous);
       showError(err.message);
     }
   };
 
   const handleUndo = async (suplemento, checkin) => {
+    const previous = dashboard;
+    mutate(applyOptimisticCheckin(previous, suplemento, checkin, 'undo'));
+
     try {
       await ApiClient.call('cancelarCheckin', { checkinId: checkin.id });
-      showToast({ message: `${suplemento.nome} cancelado` });
-      load();
     } catch (err) {
+      mutate(previous);
       showError(err.message);
     }
   };

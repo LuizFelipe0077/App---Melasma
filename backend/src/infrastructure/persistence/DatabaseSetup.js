@@ -37,7 +37,8 @@ export class DatabaseSetup {
         'ID', 'Nome', 'Duração (dias)'
       ],
       'Suplementos': [
-        'ID', 'ID do Protocolo', 'Nome', 'Dosagem', 'Horários', 'Instruções'
+        'ID', 'ID do Protocolo', 'Nome', 'Dosagem', 'Horários', 'Instruções', 'Quantidade',
+        'Dias da Semana', 'Data de Início', 'Data de Término', 'Tipo', 'Notificação', 'Datas Específicas'
       ],
       'Check_Ins': [
         'ID', 'ID do Paciente', 'ID do Suplemento', 'Data/Hora Prevista',

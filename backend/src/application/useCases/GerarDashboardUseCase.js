@@ -1,30 +1,6 @@
 import { UUID } from '../../domain/valueObjects/UUID.js';
 import { StatusCheckin } from '../../domain/entities/CheckIn.js';
-
-function isDayActive(currentDate, dataInicio, diasSemana) {
-  if (!Array.isArray(diasSemana) || diasSemana.includes('todos') || diasSemana.includes('Todos os dias')) return true;
-  
-  const weekdayMap = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const dayStr = weekdayMap[currentDate.getDay()];
-  
-  // Specific weekdays
-  if (diasSemana.includes(dayStr)) return true;
-  
-  // Weekends
-  if (diasSemana.includes('finais_de_semana') || diasSemana.includes('Finais de semana')) {
-    const dayNum = currentDate.getDay();
-    if (dayNum === 0 || dayNum === 6) return true;
-  }
-  
-  // Alternate days
-  if (diasSemana.includes('dias_alternados') || diasSemana.includes('Dias alternados')) {
-    const diffTime = Math.abs(currentDate.getTime() - dataInicio.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays % 2 === 0) return true;
-  }
-  
-  return false;
-}
+import { isDayActive } from '../../shared/utils/ScheduleMatcher.js';
 
 function countPrescribedDoses(suplemento, start, end) {
   let count = 0;
@@ -34,7 +10,7 @@ function countPrescribedDoses(suplemento, start, end) {
 
   while (current <= end) {
     if (current >= sStart && current <= sEnd) {
-      if (isDayActive(current, sStart, suplemento.diasSemana)) {
+      if (isDayActive(current, sStart, suplemento.diasSemana, suplemento.datasEspecificas)) {
         count += suplemento.horarios.length;
       }
     }
@@ -123,6 +99,7 @@ export class GerarDashboardUseCase {
         horarios: suplemento.horarios,
         instrucoes: suplemento.instrucoes,
         diasSemana: suplemento.diasSemana,
+        datasEspecificas: suplemento.datasEspecificas.map((d) => d.toISOString()),
         tipo: suplemento.tipo,
         prescrito: dosesPrescritas,
         consumido: consumidos,

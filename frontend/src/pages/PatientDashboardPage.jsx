@@ -8,95 +8,13 @@ import Sheet from '../components/Sheet.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { prefetchDashboard, useDashboardData } from '../hooks/useDashboardData.js';
+import { useLiberacoesData } from '../hooks/useLiberacoesData.js';
+import { applyOptimisticCheckin, buildSlotsForDate } from '../utils/checkinSlots.js';
 import { getMotivationMessage } from '../utils/motivationMessages.js';
 import { buildTreatmentInfo } from '../utils/treatmentInfo.js';
 
 function buildTodaySlots(dashboard) {
-  const activeSuplementos = dashboard?.historicoAgrupadoPorSuplemento || [];
-  const rawCheckins = dashboard?.rawCheckins || [];
-  const todayStr = new Date().toDateString();
-  const slots = [];
-
-  for (const sup of activeSuplementos) {
-    for (const horario of sup.horarios) {
-      const prescribedTime = new Date();
-      const [hours, minutes] = horario.split(':');
-      prescribedTime.setHours(Number(hours), Number(minutes), 0, 0);
-
-      const match = rawCheckins.find((c) => {
-        if (c.suplementoId !== sup.suplementoId) return false;
-        const cDate = new Date(c.dataHoraPrescrita);
-        return cDate.toDateString() === todayStr && cDate.getHours() === Number(hours) && cDate.getMinutes() === Number(minutes);
-      });
-
-      const checkinInfo = match
-        ? { id: match.id, status: match.status, dataHoraPrescrita: prescribedTime, dataHoraRealizada: match.dataHoraRealizada ? new Date(match.dataHoraRealizada) : null }
-        : { id: null, status: 'PENDENTE', dataHoraPrescrita: prescribedTime, dataHoraRealizada: null };
-
-      slots.push({
-        suplemento: { id: sup.suplementoId, nome: sup.nome, dosagem: sup.dosagem, instrucoes: sup.instrucoes },
-        checkin: checkinInfo
-      });
-    }
-  }
-
-  return slots.sort((a, b) => a.checkin.dataHoraPrescrita - b.checkin.dataHoraPrescrita);
-}
-
-/**
- * Applies a check/undo to a local copy of the dashboard payload, mirroring
- * exactly what the backend would compute (RegistrarCheckinUseCase /
- * CancelarCheckinUseCase: ±10 XP, ±1 streak, ±1 consumido) — this is what
- * makes the optimistic update safe to show before the network confirms it.
- */
-function applyOptimisticCheckin(dashboard, suplemento, checkin, action) {
-  if (!dashboard) return dashboard;
-  const delta = action === 'check' ? 1 : -1;
-  const nowIso = new Date().toISOString();
-
-  const existingIndex = dashboard.rawCheckins.findIndex((c) => c.id === checkin.id);
-  const nextRawCheckins = [...dashboard.rawCheckins];
-  if (existingIndex >= 0) {
-    nextRawCheckins[existingIndex] = {
-      ...nextRawCheckins[existingIndex],
-      status: action === 'check' ? 'CONCLUIDO' : 'PENDENTE',
-      dataHoraRealizada: action === 'check' ? nowIso : null
-    };
-  } else if (action === 'check') {
-    nextRawCheckins.push({
-      id: `temp-${Date.now()}`,
-      suplementoId: suplemento.id,
-      dataHoraPrescrita: checkin.dataHoraPrescrita.toISOString(),
-      dataHoraRealizada: nowIso,
-      status: 'CONCLUIDO',
-      retroativo: false
-    });
-  }
-
-  const totalConsumido = Math.max(0, dashboard.totalConsumido + delta);
-  const taxaAdesaoGeral = dashboard.totalPrescrito > 0 ? Math.round((totalConsumido / dashboard.totalPrescrito) * 100) : 0;
-
-  const historicoAgrupadoPorSuplemento = dashboard.historicoAgrupadoPorSuplemento.map((sup) => {
-    if (sup.suplementoId !== suplemento.id) return sup;
-    const consumido = Math.max(0, sup.consumido + delta);
-    const perdido = Math.max(0, sup.prescrito - consumido - sup.atrasado);
-    return { ...sup, consumido, perdido, taxaAdesao: sup.prescrito > 0 ? Math.round((consumido / sup.prescrito) * 100) : 0 };
-  });
-
-  return {
-    ...dashboard,
-    rawCheckins: nextRawCheckins,
-    totalConsumido,
-    taxaAdesaoGeral,
-    historicoAgrupadoPorSuplemento,
-    gamificacao: dashboard.gamificacao
-      ? {
-          ...dashboard.gamificacao,
-          xpTotal: Math.max(0, dashboard.gamificacao.xpTotal + delta * 10),
-          streakAtual: Math.max(0, dashboard.gamificacao.streakAtual + delta)
-        }
-      : dashboard.gamificacao
-  };
+  return buildSlotsForDate(dashboard, new Date());
 }
 
 const GREETING_BY_HOUR = (hour) => {
@@ -123,6 +41,12 @@ export default function PatientDashboardPage() {
 
   const { data: dashboard, loading, error, mutate } = useDashboardData(dataInicio, dataFim);
 
+  // Mounting this hook here (not just inside RetroactiveCard) is what
+  // actually warms the shared liberações cache on login — RetroactiveCard
+  // and CalendarPage then read the same cache entry instead of each firing
+  // their own fetch.
+  const { data: liberacoesAtivas } = useLiberacoesData();
+
   // Warms the cache Histórico/Calendário will read from, in the background,
   // once the dashboard itself is done — so clicking into either page right
   // after login usually finds data already there instead of paying Apps
@@ -143,6 +67,20 @@ export default function PatientDashboardPage() {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, dashboard, session.userId]);
+
+  // Warms each active retroactive grant's own day range too, so tapping
+  // "Registrar Retroativo" (or a highlighted calendar day) opens instantly
+  // — RetroactiveCheckinSheet's useDashboardData call for that exact day is
+  // already a cache hit by the time the user gets there.
+  useEffect(() => {
+    for (const liberacao of liberacoesAtivas) {
+      const start = new Date(liberacao.dataLiberada);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(liberacao.dataLiberada);
+      end.setHours(23, 59, 59, 999);
+      prefetchDashboard(session.userId, start.toISOString(), end.toISOString());
+    }
+  }, [liberacoesAtivas, session.userId]);
 
   const slots = useMemo(() => buildTodaySlots(dashboard), [dashboard]);
   const pendingSlots = useMemo(() => slots.filter((s) => s.checkin.status === 'PENDENTE'), [slots]);

@@ -85,6 +85,7 @@ export class GasRouter {
           tipo: payload.tipo,
           horarios: payload.horarios,
           diasSemana: payload.diasSemana,
+          datasEspecificas: payload.datasEspecificas,
           instrucoes: payload.instrucoes,
           notificacao: payload.notificacao,
           dataInicio: payload.dataInicio,
@@ -102,6 +103,7 @@ export class GasRouter {
           tipo: payload.tipo,
           horarios: payload.horarios,
           diasSemana: payload.diasSemana,
+          datasEspecificas: payload.datasEspecificas,
           instrucoes: payload.instrucoes,
           notificacao: payload.notificacao
         });
@@ -148,9 +150,9 @@ export class GasRouter {
         });
       },
 
-      'obterLiberacaoRetroativaAtiva': (payload) => {
+      'listarLiberacoesRetroativasAtivas': (payload) => {
         const user = GasRouter._verifyToken(payload.token, services.tokenService);
-        return useCases.obterLiberacaoRetroativaAtivaUseCase.execute({
+        return useCases.listarLiberacoesRetroativasAtivasUseCase.execute({
           pacienteId: user.role === 'ADMIN' ? payload.pacienteId : user.userId
         });
       },

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ApiClient } from '../api/apiClient.js';
 import Sheet from './Sheet.jsx';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 
 const STATUS_LABEL = { CONCLUIDO: '✔ Tomou', ATRASADO: '✔ Tomou (atrasado)', PENDENTE: '✖ Não tomou' };
 
@@ -13,7 +14,19 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// A single instant (dataInicio === dataFim) matches nothing — Check_Ins
+// interval matching is inclusive-but-zero-width, so every real dose (never
+// exactly 00:00:00) falls outside it. A real day-start/day-end span is
+// required, same as CalendarPage's month range.
+function dayRange(dateStr) {
+  const start = new Date(`${dateStr}T00:00:00`);
+  const end = new Date(`${dateStr}T00:00:00`);
+  end.setHours(23, 59, 59, 999);
+  return { start, end };
+}
+
 export default function ReleaseModal({ open, patientId, patientName, onClose, onSubmit }) {
+  const confirm = useConfirm();
   const [data, setData] = useState('');
   const [motivo, setMotivo] = useState('');
   const [saving, setSaving] = useState(false);
@@ -34,8 +47,8 @@ export default function ReleaseModal({ open, patientId, patientName, onClose, on
     }
     let cancelled = false;
     setSummary({ loading: true, checkins: [], error: null });
-    const isoDate = new Date(`${data}T00:00:00`).toISOString();
-    ApiClient.call('gerarDashboard', { pacienteId: patientId, dataInicio: isoDate, dataFim: isoDate })
+    const { start, end } = dayRange(data);
+    ApiClient.call('gerarDashboard', { pacienteId: patientId, dataInicio: start.toISOString(), dataFim: end.toISOString() })
       .then((dashboard) => {
         if (cancelled) return;
         const byId = new Map((dashboard.historicoAgrupadoPorSuplemento || []).map((s) => [s.suplementoId, s]));
@@ -50,6 +63,14 @@ export default function ReleaseModal({ open, patientId, patientName, onClose, on
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const dataFormatada = new Date(`${data}T00:00:00`).toLocaleDateString('pt-BR');
+    const ok = await confirm({
+      title: 'Confirmar autorização',
+      description: `Deseja realmente liberar o registro retroativo do dia: ${dataFormatada} para este paciente? Esta autorização expirará automaticamente em 24 horas.`,
+      confirmLabel: 'Confirmar'
+    });
+    if (!ok) return;
+
     setSaving(true);
     try {
       await onSubmit({ pacienteId: patientId, dataLiberada: new Date(`${data}T00:00:00`).toISOString(), motivo });

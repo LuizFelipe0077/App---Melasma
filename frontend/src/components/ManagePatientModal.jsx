@@ -88,7 +88,7 @@ export default function ManagePatientModal({ open, patient, onClose, onSave, onD
         </div>
       </form>
 
-      <ManageSupplements pacienteId={form.id} />
+      <ManageSupplements pacienteId={form.id} dataInicio={form.dataInicio} dataFim={form.dataFim} protocoloNome={form.protocoloNome} />
     </Sheet>
   );
 }

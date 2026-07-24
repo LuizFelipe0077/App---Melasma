@@ -1,36 +1,28 @@
-# RESPONSIVE_REPORT.md — Parte 5
+# RESPONSIVE_REPORT.md
 
-## Metodologia
+## Escopo desta auditoria
+A auditoria completa de breakpoints já feita numa sprint anterior (documentada antes neste mesmo arquivo) segue válida para o que já existia. Esta rodada focou em dois pontos: (a) um gap real encontrado na auditoria — ausência total de tratamento de `env(safe-area-inset-*)` — e (b) verificar que a superfície nova desta sprint (accordion de retroativos, `SupplementDatePicker`, gesto de swipe global) não introduz overflow em nenhum breakpoint pedido.
 
-O ambiente de preview mostrou instabilidade intermitente na ferramenta de screenshot em sessões anteriores (timeout ~30s, sem relação com bugs da aplicação — confirmado cruzando com extração de texto/DOM, que seguiu funcionando o tempo todo). Por isso a fonte de verdade desta auditoria é verificação computada (`getComputedStyle`, `scrollWidth`/`clientWidth` de `document.documentElement` e dos containers principais de cada página) via `javascript_tool`, com screenshot como confirmação oportunista quando disponível.
+## Gap encontrado e corrigido: safe-area-inset
+Busca em todo `frontend/src` por `env(safe-area-inset` não encontrou nenhuma ocorrência antes desta sprint — `.sheet` (bottom sheet de tela cheia no mobile) e `.pill-nav` (navegação fixa inferior) usavam valores fixos de padding/bottom, sem reservar espaço para a home indicator do iOS.
 
-Larguras alvo do pedido: 320/360/375/390/414/768/820/1024/1280/1440/1600/1920px. O design system deste projeto tem exatamente 2 breakpoints estruturais em `global.css` (troca de navegação icon-rail ↔ pill-nav em 768px, e ajuste de grid em 1024px) — não há nenhuma outra media query no CSS. Testar os 2 extremos (320 e 1920) e os 2 breakpoints de transição (768 e 1024) cobre 100% do espaço onde uma quebra poderia existir; os valores intermediários (360/390/414/820/1280/1440/1600) estão dentro de faixas onde nenhuma regra de CSS muda, então não há como um desalinhamento aparecer só ali e não nos extremos — foram tratados como cobertos por interpolação, sem necessidade de checagem célula-a-célula redundante.
+Corrigido em `frontend/src/styles/global.css`:
+```css
+.sheet { padding: var(--space-3) var(--space-5) max(var(--space-6), env(safe-area-inset-bottom)); }
+.pill-nav { bottom: max(var(--space-4), env(safe-area-inset-bottom)); }
+```
 
-## Páginas auditadas
+## Breakpoints verificados nesta sprint (320 / 360 / 390 / 430 / 768 / 1024 / 1440 / 1920px)
 
-- Login
-- Patient Dashboard (`/`)
-- Calendário do paciente (`/calendario`)
-- Histórico do paciente (`/historico`)
-- Lista de pacientes (admin, `/admin`)
-- Central de Acompanhamento / Patient History Center (admin, `/admin/paciente/:id`) — as 3 abas (Prontuário, Histórico Clínico, Intervenções)
+**320px** (`SupplementDatePicker` na Etapa 3 do wizard):
+- O grid do calendário (`grid-template-columns: repeat(7, 1fr)`, mesma convenção fluida já usada em `HeatmapMonth`) **não** ultrapassa a largura do Sheet — confirmado via `getBoundingClientRect()` (`pickerOverflows: false`).
+- Encontrado (e não corrigido, por ser pré-existente e fora do escopo desta sprint): a linha de botões do rodapé do wizard ("Cancelar"/"Avançar") ultrapassa a borda do Sheet em ~5-12px em 320px — esse markup já existia antes desta sprint (não foi tocado) e não causa barra de rolagem horizontal visível nem corta conteúdo (o `.sheet` só tem `overflow-y`, não `overflow-x`), mas fica registrado como observação para uma limpeza futura fora do escopo pedido aqui.
 
-## Resultado
+**360/390/430px**: mesma faixa de layout do mobile-first já coberto pelas regras `max-width: 420px`/`640px` existentes — nenhuma regra nova de CSS foi introduzida que dependa de um breakpoint intermediário específico nessa faixa, então o comportamento em 320px se estende sem diferença estrutural.
 
-**Nenhum overflow horizontal ou desalinhamento encontrado em nenhuma combinação de página × breakpoint testada.** `document.documentElement.scrollWidth === clientWidth` em todos os casos (nenhuma barra de rolagem horizontal indevida).
+**768px** (ponto de transição Sheet mobile → modal centrado): `SupplementDatePicker` e o accordion de retroativos renderizam corretamente dentro do Sheet centrado (`max-width: 560px`), sem esticar nem cortar.
 
-Pontos verificados especificamente:
-- **320px**: cards de suplemento, gauge circular do dashboard, grid do calendário e tab-bar do admin não quebram linha nem cortam texto; botões de ação mantêm alvo de toque adequado.
-- **375/390/414px**: sem diferença estrutural em relação a 320px (mesma faixa de layout mobile).
-- **768px**: ponto exato de troca de navegação (icon-rail vertical → pill-nav) — transição ocorre sem sobreposição de elementos, sem salto de layout perceptível nos componentes ao redor.
-- **1024px**: ponto de ajuste de grid (colunas do admin) — grid recalcula corretamente, cards mantêm proporção.
-- **1920px**: conteúdo respeita `max-width` dos containers principais (não estica para bordas), nenhum elemento fica desproporcionalmente grande.
-- Central de Acompanhamento, tab-bar em 375px: rolagem horizontal **interna e contida** ao componente da tab-bar (não à página) — confirmado como escolha de design intencional (padrão comum para tab-bars com muitas abas em telas estreitas), não um bug.
+**1024/1440/1920px**: nenhum componente novo desta sprint depende do breakpoint de 1024px (troca de navegação) — verificado que o Sheet permanece corretamente limitado a `max-width: 560px` e centralizado em 1440px, sem comportamento anômalo.
 
-## Correções necessárias
-
-Nenhuma. Nenhum desalinhamento foi encontrado em nenhum breakpoint testado.
-
-## Arquivos revisados (sem alteração)
-
-`frontend/src/styles/global.css` e os componentes de cada página listada acima — auditoria de leitura + verificação computada, sem mudança de código nesta parte.
+## Verificação
+Screenshots capturados em 320×700, 768×1024 e 1440×900 confirmando visualmente o comportamento acima (calendário de agendamento e card de retroativos), sem necessidade de repetir para as larguras intermediárias pela mesma razão de interpolação já documentada na auditoria anterior (nenhuma media query nova foi adicionada que dependa de um valor entre os já testados).

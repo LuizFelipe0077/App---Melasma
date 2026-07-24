@@ -13,12 +13,13 @@ export class Suplemento {
   #instrucoes;
   #quantidade;
   #diasSemana; // Array of strings (e.g. ["Seg", "Ter"] or ["todos"])
+  #datasEspecificas; // Array of Date — when non-empty, takes precedence over diasSemana
   #dataInicio;
   #dataFim;
   #tipo;
   #notificacao;
 
-  constructor({ id, protocoloId, nome, dosagem, horarios, instrucoes, quantidade, diasSemana, dataInicio, dataFim, tipo, notificacao }) {
+  constructor({ id, protocoloId, nome, dosagem, horarios, instrucoes, quantidade, diasSemana, datasEspecificas, dataInicio, dataFim, tipo, notificacao }) {
     if (!(id instanceof UUID)) throw new Error('ID do Suplemento deve ser UUID.');
     if (!(protocoloId instanceof UUID)) throw new Error('ID do Protocolo do Suplemento deve ser UUID.');
     if (!nome || typeof nome !== 'string' || nome.trim().length === 0) {
@@ -41,6 +42,9 @@ export class Suplemento {
     this.#instrucoes = (instrucoes || '').trim();
     this.#quantidade = quantidade !== undefined ? Number(quantidade) : 1;
     this.#diasSemana = Array.isArray(diasSemana) ? Object.freeze([...diasSemana]) : Object.freeze(['todos']);
+    this.#datasEspecificas = Array.isArray(datasEspecificas)
+      ? Object.freeze(datasEspecificas.map((d) => (d instanceof Date ? d : new Date(d))))
+      : Object.freeze([]);
     this.#dataInicio = dataInicio instanceof Date ? dataInicio : new Date(dataInicio || Date.now());
     this.#dataFim = dataFim instanceof Date ? dataFim : new Date(dataFim || Date.now());
     this.#tipo = tipo || 'Outro';
@@ -55,6 +59,7 @@ export class Suplemento {
   get instrucoes() { return this.#instrucoes; }
   get quantidade() { return this.#quantidade; }
   get diasSemana() { return this.#diasSemana; }
+  get datasEspecificas() { return this.#datasEspecificas; }
   get dataInicio() { return this.#dataInicio; }
   get dataFim() { return this.#dataFim; }
   get tipo() { return this.#tipo; }

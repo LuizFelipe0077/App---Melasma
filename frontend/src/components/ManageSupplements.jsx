@@ -4,7 +4,7 @@ import { useConfirm } from '../context/ConfirmContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import SupplementFields, { draftFromSuplemento, emptySupplementDraft, parseSupplementDraft } from './SupplementFields.jsx';
 
-export default function ManageSupplements({ pacienteId }) {
+export default function ManageSupplements({ pacienteId, dataInicio, dataFim, protocoloNome }) {
   const { showError, showToast } = useToast();
   const confirm = useConfirm();
 
@@ -115,7 +115,7 @@ export default function ManageSupplements({ pacienteId }) {
           {supplements.map((sup) =>
             editingId === sup.suplementoId ? (
               <div key={sup.suplementoId} className="surface surface-pad">
-                <SupplementFields draft={editDraft} onChange={setEditDraft} />
+                <SupplementFields draft={editDraft} onChange={setEditDraft} dataInicio={dataInicio} dataFim={dataFim} protocoloNome={protocoloNome} />
                 <div className="flex gap-2 justify-end">
                   <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setEditingId(null)}>Cancelar</button>
                   <button type="button" className="btn btn-fill btn-sm" disabled={busy} onClick={saveEdit}>Salvar</button>
@@ -139,7 +139,7 @@ export default function ManageSupplements({ pacienteId }) {
 
       {adding && (
         <div className="surface surface-pad" style={{ marginTop: 'var(--space-3)' }}>
-          <SupplementFields draft={addDraft} onChange={setAddDraft} />
+          <SupplementFields draft={addDraft} onChange={setAddDraft} dataInicio={dataInicio} dataFim={dataFim} protocoloNome={protocoloNome} />
           <div className="flex gap-2 justify-end">
             <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => { setAdding(false); setAddDraft(emptySupplementDraft); }}>Cancelar</button>
             <button type="button" className="btn btn-fill btn-sm" disabled={busy} onClick={saveAdd}>Adicionar</button>
