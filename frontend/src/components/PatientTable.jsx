@@ -11,7 +11,7 @@ function protocolChipTone(protocoloNome) {
   return 'chip-neutral';
 }
 
-export default function PatientTable({ patients, onRowClick, onReleaseClick }) {
+export default function PatientTable({ patients, onRowClick }) {
   if (patients.length === 0) {
     return <p className="empty-state">Nenhum paciente encontrado.</p>;
   }
@@ -43,14 +43,6 @@ export default function PatientTable({ patients, onRowClick, onReleaseClick }) {
               <div className="flex items-center gap-3">
                 <span style={{ fontWeight: 'var(--weight-semibold)' }}>{p.rate}%</span>
                 <span className={`chip ${tone}`}>{label}</span>
-              </div>
-              <div className="roster-row-buttons">
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={(e) => { e.stopPropagation(); onReleaseClick(p); }}
-                >
-                  Liberar retroativo
-                </button>
               </div>
             </div>
           </div>

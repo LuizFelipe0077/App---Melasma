@@ -63,6 +63,13 @@ export default function PatientHistoryPage() {
   const [releaseOpen, setReleaseOpen] = useState(false);
   const [quickNoteOpen, setQuickNoteOpen] = useState(false);
 
+  // The admin roster keeps its own scroll position; navigating here from a
+  // row further down the list otherwise lands the browser mid-page instead
+  // of at the top of Histórico.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pacienteId]);
+
   // Direct URL access (no location.state) — look the patient up by id.
   useEffect(() => {
     if (patient) return;
