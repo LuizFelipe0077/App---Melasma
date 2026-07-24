@@ -15,7 +15,7 @@ export class AdicionarSuplementoUseCase {
    * Additive endpoint — does not touch criarPaciente's flow or contract.
    * @param {object} input DTO
    */
-  execute({ pacienteId, nome, dosagem, quantidade, tipo, horarios, diasSemana, instrucoes, notificacao, dataInicio, dataFim }) {
+  execute({ pacienteId, nome, dosagem, quantidade, tipo, horarios, diasSemana, datasEspecificas, instrucoes, notificacao, dataInicio, dataFim }) {
     const paciente = this.#pacienteRepository.findById(pacienteId);
     if (!paciente) {
       throw new Error('Paciente não encontrado.');
@@ -33,6 +33,7 @@ export class AdicionarSuplementoUseCase {
       instrucoes: instrucoes || '',
       quantidade,
       diasSemana,
+      datasEspecificas,
       dataInicio: dataInicio ? new Date(dataInicio) : paciente.dataInicio,
       dataFim: dataFim ? new Date(dataFim) : paciente.dataFim,
       tipo,

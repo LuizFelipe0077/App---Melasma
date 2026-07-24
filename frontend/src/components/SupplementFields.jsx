@@ -1,16 +1,31 @@
-const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+import SupplementDatePicker, { WEEKDAY_CODES } from './SupplementDatePicker.jsx';
 
-export const REPEAT_OPTIONS = [
-  { value: 'todos', label: 'Todos os dias' },
-  { value: 'dias_alternados', label: 'Dias alternados' },
-  { value: 'finais_de_semana', label: 'Finais de semana' },
-  { value: 'Seg,Qua,Sex', label: 'Segunda, Quarta e Sexta' },
-  { value: 'Ter,Qui', label: 'Terça e Quinta' }
-];
+const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 export const TIPO_OPTIONS = ['Manipulado', 'Industrializado', 'Fitoterápico', 'Vitamina', 'Mineral', 'Outro'];
 
-export const emptySupplementDraft = { nome: '', dosagem: '', quantidade: 1, tipo: 'Manipulado', horariosRaw: '', rep: 'todos', instrucoes: '' };
+const emptySchedule = { mode: 'todos', weekdays: [], specificDates: [] };
+
+export const emptySupplementDraft = { nome: '', dosagem: '', quantidade: 1, tipo: 'Manipulado', horariosRaw: '', instrucoes: '', schedule: emptySchedule };
+
+/** Reconstructs the picker's schedule state from a persisted supplement's diasSemana/datasEspecificas. */
+function scheduleFromSuplemento(sup) {
+  const datasEspecificas = Array.isArray(sup.datasEspecificas) ? sup.datasEspecificas : [];
+  if (datasEspecificas.length > 0) {
+    return { mode: 'especificas', weekdays: [], specificDates: datasEspecificas.map((d) => new Date(d)) };
+  }
+  const diasSemana = Array.isArray(sup.diasSemana) ? sup.diasSemana : ['todos'];
+  if (diasSemana.includes('todos') || diasSemana.includes('Todos os dias')) {
+    return { mode: 'todos', weekdays: [], specificDates: [] };
+  }
+  if (diasSemana.includes('dias_alternados') || diasSemana.includes('Dias alternados')) {
+    return { mode: 'dias_alternados', weekdays: [], specificDates: [] };
+  }
+  if (diasSemana.includes('finais_de_semana') || diasSemana.includes('Finais de semana')) {
+    return { mode: 'semana', weekdays: ['Sáb', 'Dom'], specificDates: [] };
+  }
+  return { mode: 'semana', weekdays: diasSemana.filter((d) => WEEKDAY_CODES.includes(d)), specificDates: [] };
+}
 
 export function draftFromSuplemento(sup) {
   return {
@@ -19,8 +34,8 @@ export function draftFromSuplemento(sup) {
     quantidade: sup.quantidade ?? 1,
     tipo: sup.tipo || 'Manipulado',
     horariosRaw: (sup.horarios || []).join(', '),
-    rep: Array.isArray(sup.diasSemana) ? sup.diasSemana.join(',') : 'todos',
-    instrucoes: sup.instrucoes || ''
+    instrucoes: sup.instrucoes || '',
+    schedule: scheduleFromSuplemento(sup)
   };
 }
 
@@ -35,7 +50,20 @@ export function parseSupplementDraft(draft, onError) {
     onError('Horários inválidos — use o formato HH:MM (ex: 08:00, 20:00).');
     return null;
   }
-  const diasSemana = draft.rep === 'todos' ? ['todos'] : draft.rep.split(',');
+
+  const { mode, weekdays, specificDates } = draft.schedule;
+  if (mode === 'semana' && weekdays.length === 0) {
+    onError('Selecione ao menos um dia da semana.');
+    return null;
+  }
+  if (mode === 'especificas' && specificDates.length === 0) {
+    onError('Selecione ao menos uma data específica no calendário.');
+    return null;
+  }
+
+  const diasSemana = mode === 'todos' ? ['todos'] : mode === 'dias_alternados' ? ['dias_alternados'] : mode === 'semana' ? weekdays : [];
+  const datasEspecificas = mode === 'especificas' ? specificDates.map((d) => d.toISOString()) : [];
+
   return {
     nome: draft.nome.trim(),
     dosagem: draft.dosagem.trim(),
@@ -43,11 +71,12 @@ export function parseSupplementDraft(draft, onError) {
     tipo: draft.tipo,
     horarios,
     diasSemana,
+    datasEspecificas,
     instrucoes: draft.instrucoes.trim()
   };
 }
 
-export default function SupplementFields({ draft, onChange }) {
+export default function SupplementFields({ draft, onChange, dataInicio, dataFim, protocoloNome }) {
   const set = (patch) => onChange({ ...draft, ...patch });
 
   return (
@@ -79,10 +108,14 @@ export default function SupplementFields({ draft, onChange }) {
         <input className="field-input" placeholder="Ex: 08:00, 20:00" value={draft.horariosRaw} onChange={(e) => set({ horariosRaw: e.target.value })} />
       </div>
       <div className="field">
-        <label className="field-label">Repetição</label>
-        <select className="field-input" value={draft.rep} onChange={(e) => set({ rep: e.target.value })}>
-          {REPEAT_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-        </select>
+        <label className="field-label">Agendamento</label>
+        <SupplementDatePicker
+          dataInicio={dataInicio}
+          dataFim={dataFim}
+          protocoloNome={protocoloNome}
+          schedule={draft.schedule}
+          onChange={(schedule) => set({ schedule })}
+        />
       </div>
       <div className="field">
         <label className="field-label">Instruções</label>

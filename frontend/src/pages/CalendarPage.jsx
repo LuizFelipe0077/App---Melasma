@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ApiClient } from '../api/apiClient.js';
+import { useMemo, useState } from 'react';
 import HeatmapMonth from '../components/HeatmapMonth.jsx';
 import RetroactiveCheckinSheet from '../components/RetroactiveCheckinSheet.jsx';
 import Sheet from '../components/Sheet.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useDashboardData } from '../hooks/useDashboardData.js';
+import { useLiberacoesData } from '../hooks/useLiberacoesData.js';
 import { buildDayRecords } from '../utils/buildDayRecords.js';
 import { buildTreatmentInfo } from '../utils/treatmentInfo.js';
 
@@ -32,12 +32,8 @@ export default function CalendarPage() {
     return { year: now.getFullYear(), month: now.getMonth() };
   });
   const [selectedDay, setSelectedDay] = useState(null);
-  const [liberacaoAtiva, setLiberacaoAtiva] = useState(null);
-  const [retroSheetOpen, setRetroSheetOpen] = useState(false);
-
-  useEffect(() => {
-    ApiClient.call('obterLiberacaoRetroativaAtiva', {}).then(setLiberacaoAtiva).catch(() => setLiberacaoAtiva(null));
-  }, []);
+  const [retroSheetDate, setRetroSheetDate] = useState(null);
+  const { data: liberacoesAtivas } = useLiberacoesData();
 
   const { dataInicio, dataFim } = useMemo(() => {
     const start = new Date(cursor.year, cursor.month, 1);
@@ -52,14 +48,14 @@ export default function CalendarPage() {
     const start = new Date(cursor.year, cursor.month, 1);
     const end = new Date(cursor.year, cursor.month + 1, 0);
     const records = buildDayRecords(data, session.dataInicio, start, end);
-    if (!liberacaoAtiva) return records;
-    const releasedKey = new Date(liberacaoAtiva.dataLiberada).toDateString();
-    return records.map((d) => (d.date.toDateString() === releasedKey ? { ...d, released: true } : d));
-  }, [data, session.dataInicio, cursor, liberacaoAtiva]);
+    if (!liberacoesAtivas || liberacoesAtivas.length === 0) return records;
+    const releasedKeys = new Set(liberacoesAtivas.map((l) => new Date(l.dataLiberada).toDateString()));
+    return records.map((d) => (releasedKeys.has(d.date.toDateString()) ? { ...d, released: true } : d));
+  }, [data, session.dataInicio, cursor, liberacoesAtivas]);
 
   const handleDayClick = (day) => {
     if (day.released) {
-      setRetroSheetOpen(true);
+      setRetroSheetDate(day.date);
     } else {
       setSelectedDay(day);
     }
@@ -155,11 +151,11 @@ export default function CalendarPage() {
         )}
       </Sheet>
 
-      {liberacaoAtiva && (
+      {retroSheetDate && (
         <RetroactiveCheckinSheet
-          open={retroSheetOpen}
-          dataLiberada={liberacaoAtiva.dataLiberada}
-          onClose={() => setRetroSheetOpen(false)}
+          open={!!retroSheetDate}
+          dataLiberada={retroSheetDate.toISOString()}
+          onClose={() => setRetroSheetDate(null)}
         />
       )}
     </>

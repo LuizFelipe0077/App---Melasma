@@ -5,31 +5,7 @@ import { UUID } from '../../domain/valueObjects/UUID.js';
 import { Protocolo } from '../../domain/entities/Protocolo.js';
 import { Suplemento } from '../../domain/entities/Suplemento.js';
 import { CheckIn, StatusCheckin } from '../../domain/entities/CheckIn.js';
-
-function isDayActive(currentDate, dataInicio, diasSemana) {
-  if (!Array.isArray(diasSemana) || diasSemana.includes('todos') || diasSemana.includes('Todos os dias')) return true;
-  
-  const weekdayMap = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const dayStr = weekdayMap[currentDate.getDay()];
-  
-  // Specific weekdays
-  if (diasSemana.includes(dayStr)) return true;
-  
-  // Weekends
-  if (diasSemana.includes('finais_de_semana') || diasSemana.includes('Finais de semana')) {
-    const dayNum = currentDate.getDay();
-    if (dayNum === 0 || dayNum === 6) return true;
-  }
-  
-  // Alternate days
-  if (diasSemana.includes('dias_alternados') || diasSemana.includes('Dias alternados')) {
-    const diffTime = Math.abs(currentDate.getTime() - dataInicio.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays % 2 === 0) return true;
-  }
-  
-  return false;
-}
+import { isDayActive } from '../../shared/utils/ScheduleMatcher.js';
 
 export class CriarPacienteUseCase {
   #pacienteRepository;
@@ -100,6 +76,7 @@ export class CriarPacienteUseCase {
         instrucoes: s.instrucoes || '',
         quantidade: s.quantidade,
         diasSemana: s.diasSemana,
+        datasEspecificas: s.datasEspecificas,
         dataInicio: new Date(s.dataInicio || dataInicio),
         dataFim: new Date(s.dataFim || dataFim),
         tipo: s.tipo,
@@ -127,7 +104,7 @@ export class CriarPacienteUseCase {
 
       let current = new Date(sStart);
       while (current <= sEnd) {
-        if (isDayActive(current, sStart, sup.diasSemana)) {
+        if (isDayActive(current, sStart, sup.diasSemana, sup.datasEspecificas)) {
           for (const slot of sup.horarios) {
             const prescribedTime = new Date(current);
             const [h, m] = slot.split(':');

@@ -18,6 +18,8 @@ import { SheetColumns } from '../src/infrastructure/repositories/GoogleSheetsCol
 import { fromSheetDateTime, toSheetDateTime } from '../src/shared/utils/DateTimeFormatter.js';
 
 import { CriarPacienteUseCase } from '../src/application/useCases/CriarPacienteUseCase.js';
+import { GerarDashboardUseCase } from '../src/application/useCases/GerarDashboardUseCase.js';
+import { isDayActive } from '../src/shared/utils/ScheduleMatcher.js';
 import { RegistrarCheckinUseCase } from '../src/application/useCases/RegistrarCheckinUseCase.js';
 import { CancelarCheckinUseCase } from '../src/application/useCases/CancelarCheckinUseCase.js';
 import { AdicionarSuplementoUseCase } from '../src/application/useCases/AdicionarSuplementoUseCase.js';
@@ -32,6 +34,7 @@ import { CriarObservacaoClinicaUseCase } from '../src/application/useCases/Criar
 import { ListarObservacoesClinicasUseCase } from '../src/application/useCases/ListarObservacoesClinicasUseCase.js';
 import { LiberarRetroativoUseCase } from '../src/application/useCases/LiberarRetroativoUseCase.js';
 import { ListarLiberacoesRetroativasUseCase } from '../src/application/useCases/ListarLiberacoesRetroativasUseCase.js';
+import { ListarLiberacoesRetroativasAtivasUseCase } from '../src/application/useCases/ListarLiberacoesRetroativasAtivasUseCase.js';
 
 async function runTests() {
   process.env.ADMIN_EMAIL = 'admin@clinica.com';
@@ -491,6 +494,101 @@ async function runTests() {
     }
   });
 
+  await test('ScheduleMatcher.isDayActive - datasEspecificas tem precedência sobre diasSemana e casa só a data exata', () => {
+    const dataInicio = new Date(2026, 6, 1);
+    const datasEspecificas = [new Date(2026, 6, 3), new Date(2026, 6, 9), new Date(2026, 6, 22)];
+
+    // Casa exatamente as datas especificadas
+    if (!isDayActive(new Date(2026, 6, 3), dataInicio, ['todos'], datasEspecificas)) {
+      throw new Error('Deveria estar ativo em 03/07 (data específica).');
+    }
+    if (!isDayActive(new Date(2026, 6, 22), dataInicio, ['todos'], datasEspecificas)) {
+      throw new Error('Deveria estar ativo em 22/07 (data específica).');
+    }
+    // Não casa nenhuma outra data, mesmo que diasSemana diga 'todos' — datasEspecificas
+    // sobrepõe completamente o padrão de dia da semana.
+    if (isDayActive(new Date(2026, 6, 4), dataInicio, ['todos'], datasEspecificas)) {
+      throw new Error('04/07 não é uma data específica selecionada — não deveria estar ativo mesmo com diasSemana=todos.');
+    }
+
+    // Sem datasEspecificas, cai de volta no comportamento de sempre (padrão de dia da semana)
+    if (!isDayActive(new Date(2026, 6, 4), dataInicio, ['todos'], [])) {
+      throw new Error('Sem datasEspecificas, "todos os dias" deveria continuar funcionando normalmente.');
+    }
+  });
+
+  await test('Caso de Uso - CriarPacienteUseCase gera check-ins apenas nas datas específicas do suplemento', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const protocoloRepo = new GoogleSheetsProtocoloRepository();
+    const checkinRepo = new GoogleSheetsCheckinRepository();
+    const cryptoService = new BcryptGasService();
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, protocoloRepo, checkinRepo);
+
+    const dataInicio = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
+    const dataFim = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const data1 = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+    const data2 = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+
+    const reg = await registerUC.execute({
+      nome: 'Paciente Datas Especificas', email: 'datas-especificas@email.com', telefone: '(11) 95555-5555', senha: 'datas12345',
+      dataInicio: dataInicio.toISOString(), dataFim: dataFim.toISOString(), protocoloNome: 'Melasma',
+      suplementos: [{
+        nome: 'Colágeno', dosagem: '10g', quantidade: 1, tipo: 'Manipulado', horarios: ['08:00'],
+        diasSemana: [], datasEspecificas: [data1.toISOString(), data2.toISOString()], instrucoes: ''
+      }]
+    });
+
+    const paciente = pacienteRepo.findById(reg.id);
+    const suplemento = protocoloRepo.findById(paciente.protocoloId.value).suplementos[0];
+    const allCheckins = checkinRepo.findByPacienteId(reg.id).filter((c) => c.suplementoId.equals(suplemento.id));
+
+    if (allCheckins.length !== 2) {
+      throw new Error(`Esperava exatamente 2 check-ins gerados (um por data específica), veio ${allCheckins.length}.`);
+    }
+    const datasGeradas = allCheckins.map((c) => c.dataHoraPrescrita.toDateString()).sort();
+    const datasEsperadas = [data1.toDateString(), data2.toDateString()].sort();
+    if (JSON.stringify(datasGeradas) !== JSON.stringify(datasEsperadas)) {
+      throw new Error(`Check-ins gerados em datas erradas: ${datasGeradas} (esperado ${datasEsperadas}).`);
+    }
+  });
+
+  await test('Caso de Uso - GerarDashboardUseCase conta prescrições corretamente para suplemento com datas específicas', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const protocoloRepo = new GoogleSheetsProtocoloRepository();
+    const checkinRepo = new GoogleSheetsCheckinRepository();
+    const gamificacaoRepo = new GoogleSheetsGamificacaoRepository();
+    const cryptoService = new BcryptGasService();
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, protocoloRepo, checkinRepo);
+    const dashboardUC = new GerarDashboardUseCase(pacienteRepo, protocoloRepo, checkinRepo, gamificacaoRepo);
+
+    const dataInicio = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
+    const dataFim = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const data1 = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+    const data2 = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+    const data3 = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
+
+    const reg = await registerUC.execute({
+      nome: 'Paciente Dashboard Datas', email: 'dashboard-datas@email.com', telefone: '(11) 96666-6666', senha: 'dashdatas123',
+      dataInicio: dataInicio.toISOString(), dataFim: dataFim.toISOString(), protocoloNome: 'Melasma',
+      suplementos: [{
+        nome: 'Vitamina D3', dosagem: '2000UI', quantidade: 1, tipo: 'Vitamina', horarios: ['08:00', '20:00'],
+        diasSemana: [], datasEspecificas: [data1.toISOString(), data2.toISOString(), data3.toISOString()], instrucoes: ''
+      }]
+    });
+
+    const dashboard = await dashboardUC.execute({ pacienteId: reg.id, dataInicio: dataInicio.toISOString(), dataFim: dataFim.toISOString() });
+    const sup = dashboard.historicoAgrupadoPorSuplemento[0];
+
+    // 3 datas específicas × 2 horários = 6 doses prescritas, não uma por dia do período inteiro
+    if (sup.prescrito !== 6) {
+      throw new Error(`Esperava 6 doses prescritas (3 datas × 2 horários), veio ${sup.prescrito}.`);
+    }
+    if (JSON.stringify(sup.datasEspecificas.map((d) => new Date(d).toDateString()).sort()) !==
+        JSON.stringify([data1, data2, data3].map((d) => d.toDateString()).sort())) {
+      throw new Error('datasEspecificas retornadas pelo dashboard não batem com as cadastradas — necessário para reabrir o suplemento na edição.');
+    }
+  });
+
   // --- Test 11: Observações Clínicas (additive, admin-only) ---
   await test('Casos de Uso - Criar/Listar Observações Clínicas', async () => {
     const pacienteRepo = new GoogleSheetsPacienteRepository();
@@ -656,6 +754,57 @@ async function runTests() {
     rowExpirada[SheetColumns.LIBERACAO.EXPIRA_EM] = toSheetDateTime(new Date(Date.now() - 60000));
     const aindaAtiva = liberacaoRepo.findAtivaParaPacienteEData(reg.id, diaLiberado);
     if (aindaAtiva) throw new Error('Liberação expirada não deveria mais ser retornada como ativa, mesmo com status ATIVA na planilha.');
+  });
+
+  await test('GoogleSheetsLiberacaoRetroativaRepository.findAllAtivasByPacienteId - múltiplos retroativos simultâneos, ordenados por expiração', async () => {
+    const pacienteRepo = new GoogleSheetsPacienteRepository();
+    const liberacaoRepo = new GoogleSheetsLiberacaoRetroativaRepository();
+    const cryptoService = new BcryptGasService();
+    const registerUC = new CriarPacienteUseCase(pacienteRepo, cryptoService, new GoogleSheetsProtocoloRepository(), new GoogleSheetsCheckinRepository());
+    const liberarUC = new LiberarRetroativoUseCase(pacienteRepo, liberacaoRepo);
+    const listarAtivasUC = new ListarLiberacoesRetroativasAtivasUseCase(liberacaoRepo);
+
+    const dataInicioTratamento = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+    const reg = await registerUC.execute({
+      nome: 'Paciente Multi Retroativo', email: 'multi-retroativo@email.com', telefone: '(11) 94444-4444', senha: 'multi12345',
+      dataInicio: dataInicioTratamento.toISOString(), dataFim: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      suplementos: []
+    });
+
+    const dia1 = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const dia2 = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    const dia3 = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    liberarUC.execute({ pacienteId: reg.id, dataLiberada: dia1.toISOString(), motivo: '', operadorId: 'admin_root' });
+    liberarUC.execute({ pacienteId: reg.id, dataLiberada: dia2.toISOString(), motivo: '', operadorId: 'admin_root' });
+    liberarUC.execute({ pacienteId: reg.id, dataLiberada: dia3.toISOString(), motivo: '', operadorId: 'admin_root' });
+
+    const ativas = listarAtivasUC.execute({ pacienteId: reg.id });
+    if (ativas.length !== 3) throw new Error(`Esperava 3 liberações ativas simultâneas, veio ${ativas.length}.`);
+
+    // Ordenadas por expiraEm crescente — todas foram concedidas em sequência rápida
+    // (mesma janela de 24h), então a ordem de expiração deve seguir a ordem de concessão.
+    for (let i = 0; i < ativas.length - 1; i++) {
+      if (new Date(ativas[i].expiraEm).getTime() > new Date(ativas[i + 1].expiraEm).getTime()) {
+        throw new Error('Liberações ativas deveriam vir ordenadas por expiraEm crescente.');
+      }
+    }
+
+    // Expirar manualmente a de dia2 — as outras duas continuam ativas normalmente
+    const rows = liberacaoRepo.readAllRows();
+    const rowDia2 = rows.find((r) => {
+      const liberada = fromSheetDateTime(r[SheetColumns.LIBERACAO.DATA_LIBERADA]);
+      return r[SheetColumns.LIBERACAO.PACIENTE_ID] === reg.id && liberada && liberada.toDateString() === dia2.toDateString();
+    });
+    rowDia2[SheetColumns.LIBERACAO.EXPIRA_EM] = toSheetDateTime(new Date(Date.now() - 60000));
+
+    const ativasDepois = listarAtivasUC.execute({ pacienteId: reg.id });
+    if (ativasDepois.length !== 2) throw new Error(`Esperava 2 liberações ativas após expirar uma, veio ${ativasDepois.length}.`);
+
+    // O gate de segurança (findAtivaParaPacienteEData) continua funcionando
+    // corretamente para cada data individual mesmo com múltiplos grants ativos.
+    if (!liberacaoRepo.findAtivaParaPacienteEData(reg.id, dia1)) throw new Error('dia1 deveria continuar autorizando check-in retroativo.');
+    if (!liberacaoRepo.findAtivaParaPacienteEData(reg.id, dia3)) throw new Error('dia3 deveria continuar autorizando check-in retroativo.');
+    if (liberacaoRepo.findAtivaParaPacienteEData(reg.id, dia2)) throw new Error('dia2 (expirada) não deveria mais autorizar check-in retroativo.');
   });
 
   // --- Test 14: Marcar -> Cancelar -> Marcar de novo (regressão) ---

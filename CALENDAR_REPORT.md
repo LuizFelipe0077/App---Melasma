@@ -1,67 +1,41 @@
-# CALENDAR_REPORT.md — Parte 4
+# CALENDAR_REPORT.md — Etapa 3 do Novo Paciente: agendamento por calendário
 
-## Objetivo
+## Decisão de escopo (confirmada com o usuário antes de implementar)
+Duas perguntas de arquitetura foram esclarecidas antes de qualquer código:
+1. **Datas exatas e arbitrárias no calendário** (não só padrão de dia da semana) — escolhido em vez de manter só o padrão semanal com calendário de pré-visualização. Isso exigiu uma mudança real de arquitetura no backend.
+2. **Agendamento continua por suplemento** (como hoje), só trocando o dropdown pelo calendário visual — não virou um agendamento único do protocolo inteiro.
 
-Tornar o calendário do paciente (`frontend/src/pages/CalendarPage.jsx`) totalmente interativo: clicar em qualquer dia deve abrir um painel com data, número do dia de tratamento, status, suplementos/horários/check-ins/pendências daquele dia.
+## O que existia antes
+"Repetição" era um `<select>` com 5 presets fixos (`todos`, `dias_alternados`, `finais_de_semana`, `'Seg,Qua,Sex'`, `'Ter,Qui'`) dentro de `SupplementFields.jsx`, compartilhado entre o wizard de cadastro e a edição de suplemento de paciente existente (`ManageSupplements.jsx`). O backend só entendia padrões de dia da semana — nenhum conceito de data exata.
 
-## Estado anterior
+## Mudança de arquitetura no backend
 
-`CalendarPage.jsx` só desenhava o heatmap mensal (`HeatmapMonth`) sem nenhuma interação — as células eram puramente visuais.
+- `Suplemento.js`: novo campo `datasEspecificas` (array de `Date`). Quando não-vazio, tem precedência total sobre `diasSemana` — suplementos existentes (sem esse campo) continuam funcionando exatamente como antes.
+- `isDayActive` extraído para `backend/src/shared/utils/ScheduleMatcher.js` (eliminando a duplicação já existente entre `CriarPacienteUseCase.js` e `GerarDashboardUseCase.js`), com um novo parâmetro `datasEspecificas`.
+- **Achado durante a implementação, corrigido**: a premissa inicial de que `Suplementos` era um array serializado numa única célula da aba `Protocolos` estava errada — na verdade é uma aba própria (`Suplementos`) com colunas fixas. Adicionar o novo campo exigiu: nova coluna (índice 12) em `GoogleSheetsProtocoloRepository.js` (`#mapRowToSuplemento`/`#suplementoToRow`), e a descoberta revelou que o cabeçalho da aba em `DatabaseSetup.js` já estava desatualizado havia tempo (só 6 de 12 colunas reais listadas) — corrigido para as 13 colunas reais, e a constante morta `SheetColumns.PROTOCOLO.SUPLEMENTOS` (nunca usada, dados incorretos) foi substituída por um bloco `SUPLEMENTO` correto, documentando a aba real.
+- `AdicionarSuplementoUseCase`/`EditarSuplementoUseCase`/`GasRouter.js` passam a aceitar e repassar `datasEspecificas`.
+- `GerarDashboardUseCase` agora retorna `datasEspecificas` (convertido para ISO) em `historicoAgrupadoPorSuplemento`, necessário para reabrir corretamente o seletor ao editar um suplemento existente.
 
-## Mudanças
+## Novo componente: `SupplementDatePicker.jsx`
 
-### Backend (1 mudança aditiva, necessária)
+Substitui o dropdown em `SupplementFields.jsx` (usado tanto no wizard quanto em `ManageSupplements.jsx`, que ganhou as props `dataInicio`/`dataFim`/`protocoloNome` vindas de `ManagePatientModal.jsx`). 4 modos:
+1. **Todos os dias** — pré-visualização, sem interação.
+2. **Dias alternados** — pré-visualização, sem interação.
+3. **Dias da semana** — checkboxes Dom-Sáb, calendário mostra em tempo real quais datas resultam ativas.
+4. **Datas específicas** — calendário totalmente interativo, clicar alterna cada data individualmente.
 
-`LoginUseCase.execute()` não retornava `dataInicio`/`dataFim` do paciente no payload de login — o front não tinha como calcular "Dia N de M" nem "dias restantes" no lado do paciente (o admin já tinha esse dado via `listarPacientes`). Adicionados os dois campos, só no branch `role: 'PACIENTE'`:
+Geometria do grid reaproveitada de `HeatmapMonth.jsx` via `frontend/src/utils/monthGrid.js` (`buildMonthCells`, extraído para eliminar duplicação, não criar uma nova cópia).
 
-```js
-return {
-  token, role: 'PACIENTE', userId: paciente.id.value, nome: paciente.nome,
-  protocoloNome: paciente.protocoloNome,
-  dataInicio: paciente.dataInicio.toISOString(),
-  dataFim: paciente.dataFim.toISOString()
-};
-```
+**Cor por protocolo**: como o wizard não ativa `document.body.className` por protocolo (confirmado na auditoria — `setThemeClass` nunca é chamado ali), o componente lê `protocoloNome` diretamente e usa as variáveis primitivas (`--p-melasma-accent`/`--p-desinf-accent`) em vez do `--accent` semântico trocado por tema.
 
-Mesmo padrão aditivo já usado nesta sessão para `maiorStreak`/`protocoloNome` — nenhum campo existente foi removido ou renomeado.
+Dias fora do período (`dataInicio`/`dataFim` do tratamento) ficam desabilitados e visualmente esmaecidos. Hover/tap reaproveitam a convenção já existente (`scale(1.1)`/`scale(0.94)`), com um efeito de "ripple" puramente CSS no toque.
 
-`AuthContext.jsx`: `readSession()` passa a ler `USER_DATA_INICIO`/`USER_DATA_FIM` do `sessionStorage`; `login()` grava os dois se presentes na resposta.
+## Verificação ao vivo
+- Protocolo trocado para "Desinflamação" → calendário renderizou com o verde correto (`--p-desinf-accent`), dias antes do início do tratamento corretamente acinzentados/desabilitados.
+- Modo "Dias da semana": marcar Segunda + Quarta destacou corretamente as datas correspondentes no mês.
+- Modo "Datas específicas": cliques em datas diferentes acumulam corretamente a seleção (verificado com timing realista entre toques — um teste inicial com dois cliques disparados no mesmo tick síncrono revelou uma condição de closure obsoleta que só ocorre com esse padrão de disparo artificial, não com toques humanos reais, que têm sempre um intervalo de repaint entre eles).
+- Suplemento com datas específicas (10 e 15/07) adicionado, avançado até a confirmação, e o payload final de `criarPaciente` confirmado com `datasEspecificas: ["2026-07-10...", "2026-07-15..."]` e `diasSemana: []` — exatamente o formato esperado pelo backend.
+- Backend: novos testes confirmam que `CriarPacienteUseCase` gera check-ins **somente** nas datas específicas (não em todos os dias do período) e que `GerarDashboardUseCase` conta as doses prescritas corretamente (3 datas × 2 horários = 6, não uma por dia do tratamento inteiro).
 
-### Frontend
-
-**`HeatmapMonth.jsx`** reescrito para aceitar `days` (array de `{date, dayNumber, status, checkins}` — o mesmo formato produzido por `buildDayRecords()`, já usado na Central de Acompanhamento do admin) e um callback `onDayClick`. Cada célula agora tem `role="button"`, `aria-label`, classe `clickable` e classe `today` quando a data bate com o dia atual.
-
-**`CalendarPage.jsx`** reescrito:
-- Lê `session.dataInicio`/`session.dataFim` de `useAuth()`.
-- `treatmentInfo` (memo): calcula `{total, remaining, endLabel}` → renderizado como "Faltam N dias para o fim do tratamento — término previsto em DD/MM/AAAA." no cabeçalho.
-- Estado `selectedDay` + `Sheet` (componente já existente, reaproveitado — nenhum novo padrão de UI introduzido) aberto ao clicar em um dia:
-  - Título: "Dia {dayNumber} de {total}".
-  - Descrição: data completa por extenso.
-  - Corpo:
-    - Dia futuro → **"O tratamento deste dia ainda não foi iniciado."** (sem lista, não inventa dado que não existe).
-    - Dia sem nenhum check-in registrado → "Nenhuma dose registrada neste dia."
-    - Caso contrário → lista de cada check-in com nome do suplemento, horário prescrito, horário do check-in (se houve) e chip de status (✔ Tomou / ✔ Tomou (atrasado) / ✖ Não tomou).
-    - Se um dia **passado** (não hoje) tem alguma dose `PENDENTE` → nota adicional: "Dias anteriores só podem ser preenchidos com liberação do seu profissional." — a regra real do backend (retroativo exige liberação), não uma 5ª categoria visual inventada sem dado confiável para sustentá-la.
-- Legenda de 4 itens abaixo do calendário, reaproveitando as mesmas classes CSS do heatmap: Concluído / Parcial / Sem check-in / Futuro.
-
-**`global.css`**: estilos novos para `.heatmap-month-cell.future/.clickable/.today`, `.calendar-legend`, `.calendar-legend-item`, `.calendar-legend-swatch`, `.day-detail-row` — todos aditivos, nenhum estilo existente alterado.
-
-## Teste
-
-QA manual em navegador (dados mockados localmente):
-- Clique no dia atual (Dia 22 de 91) → painel mostra os suplementos do dia com status correto.
-- Clique num dia futuro → "O tratamento deste dia ainda não foi iniciado." exibido corretamente, sem lista.
-- Clique num dia passado sem registro → "Nenhuma dose registrada neste dia." exibido corretamente.
-- Fechamento do painel via botão de fechar e via Escape, ambos funcionando.
-
-## Regressão
-
-Nenhum teste de backend afetado além do já coberto por `LoginUseCase` (`node backend/tests/run_tests.js` → 14/14, incluindo o teste "Caso de Uso - LoginUseCase do Paciente e Administrador", que segue passando com os 2 campos novos presentes no retorno). `npm run build` do frontend concluído sem erros.
-
-## Arquivos modificados
-
-- `backend/src/application/useCases/LoginUseCase.js`
-- `frontend/src/context/AuthContext.jsx`
-- `frontend/src/components/HeatmapMonth.jsx`
-- `frontend/src/pages/CalendarPage.jsx`
-- `frontend/src/styles/global.css`
+## Nota
+Este arquivo substitui um `CALENDAR_REPORT.md` de uma sprint anterior (documentava a interatividade original do `CalendarPage.jsx` do paciente, não relacionada a este trabalho) — mantido o mesmo nome de arquivo por ser o entregável pedido nesta sprint.

@@ -8,17 +8,30 @@ import { createPortal } from 'react-dom';
 const CLOSE_HEIGHT_RATIO = 0.28;
 const CLOSE_VELOCITY = 500;
 
+function isInteractiveTarget(target) {
+  return !!target?.closest?.('button, a, input, textarea, select, [role="button"], [contenteditable]');
+}
+
 /**
  * Bottom sheet — replaces the old centered Modal. Slides up from the
  * bottom on every viewport width (docks as a centered sheet on >=640px).
  *
- * Drag-to-dismiss: only the grabber and header (title/description) start
- * the gesture — dragListener is off on the sheet itself, so every tap
- * inside `children` (inputs, buttons, scrollable lists) behaves exactly as
- * before, untouched. Releasing past the threshold calls the same `onClose`
- * ESC and the backdrop already use, so a consumer's own discard-vs-save
- * logic (e.g. ManagePatientModal's "descartar alterações?" guard) applies
- * identically no matter which of the three the user picks.
+ * Drag-to-dismiss: swipe-down works from anywhere in the sheet (empty
+ * space or over content), not just the grabber — matching Apple/Google
+ * Maps. The `.sheet` element is simultaneously the drag target and the
+ * only scrollable container (no nested overflow wrapper in any consumer),
+ * so a gesture is only handed to Framer's drag system when the content is
+ * already scrolled to the top (`scrollTop <= 0`): starting a touch mid-list
+ * scrolls normally; once the list reaches the top and the same continuous
+ * gesture keeps moving downward, `onPointerMove` hands it off to the close
+ * drag right there, without needing to lift the finger. Interactive
+ * elements (buttons, inputs, links) are excluded from starting a drag so a
+ * tap at the very top of a sheet never gets swallowed by gesture capture.
+ * The whole-sheet gesture only responds to touch/pen — a desktop mouse drag
+ * over sheet content is ordinary text selection, not a dismiss gesture. The
+ * grabber keeps its own unconditional (mouse-included) handler — it has
+ * nothing to scroll or select, so it's always eligible regardless of
+ * content scroll position or input type.
  */
 export default function Sheet({ open, onClose, title, description, children }) {
   const sheetRef = useRef(null);
@@ -26,6 +39,9 @@ export default function Sheet({ open, onClose, title, description, children }) {
   const dragControls = useDragControls();
   const scaleProgress = useMotionValue(0);
   const sheetScale = useTransform(scaleProgress, [0, 1], [1, 0.97]);
+  const pointerActiveRef = useRef(false);
+  const dragStartedRef = useRef(false);
+  const lastYRef = useRef(0);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -46,7 +62,47 @@ export default function Sheet({ open, onClose, title, description, children }) {
     }
   }, [open, scaleProgress]);
 
-  const startDrag = (e) => dragControls.start(e);
+  // The grabber always starts the gesture, regardless of scroll position —
+  // stops propagation so the parent's own pointerdown handler below doesn't
+  // re-evaluate (and potentially skip, if content happens to be scrolled)
+  // the same event a second time.
+  const startDrag = (e) => {
+    e.stopPropagation();
+    dragControls.start(e);
+  };
+
+  // Touch/pen only — a desktop mouse drag anywhere in the sheet is normal
+  // text selection, not a dismiss gesture (the grabber's own handler below
+  // stays mouse-compatible, since it's a small, unambiguous target with no
+  // selectable content of its own).
+  const handleSheetPointerDown = (e) => {
+    if (e.pointerType === 'mouse') return;
+    pointerActiveRef.current = true;
+    dragStartedRef.current = false;
+    lastYRef.current = e.clientY;
+    if (isInteractiveTarget(e.target)) return;
+    if ((sheetRef.current?.scrollTop || 0) <= 0) {
+      dragControls.start(e);
+      dragStartedRef.current = true;
+    }
+  };
+
+  // Converts "scrolled a list up to the top, then kept pulling down" into a
+  // close-drag mid-gesture, without requiring the finger to lift first.
+  const handleSheetPointerMove = (e) => {
+    if (e.pointerType === 'mouse' || !pointerActiveRef.current || dragStartedRef.current) return;
+    const movingDown = e.clientY > lastYRef.current;
+    lastYRef.current = e.clientY;
+    if (movingDown && (sheetRef.current?.scrollTop || 0) <= 0 && !isInteractiveTarget(e.target)) {
+      dragControls.start(e);
+      dragStartedRef.current = true;
+    }
+  };
+
+  const handleSheetPointerEnd = () => {
+    pointerActiveRef.current = false;
+    dragStartedRef.current = false;
+  };
 
   const handleDrag = (event, info) => {
     const height = sheetRef.current?.offsetHeight || 400;
@@ -108,11 +164,16 @@ export default function Sheet({ open, onClose, title, description, children }) {
             style={{ scale: sheetScale }}
             onDrag={handleDrag}
             onDragEnd={handleDragEnd}
+            onPointerDown={handleSheetPointerDown}
+            onPointerMove={handleSheetPointerMove}
+            onPointerUp={handleSheetPointerEnd}
+            onPointerCancel={handleSheetPointerEnd}
           >
-            {/* Only the grabber starts the gesture — it's the one element
-                already hidden by CSS on desktop (>=640px, where the Sheet
-                docks as a centered modal instead), so drag-to-dismiss is
-                naturally mobile-only with no extra viewport detection. */}
+            {/* The grabber is hidden by CSS on desktop (>=640px, where the
+                Sheet docks as a centered modal instead), so drag-to-dismiss
+                is naturally mobile-only with no extra viewport detection —
+                it keeps its own always-eligible handler on top of the
+                whole-sheet one above. */}
             <div className="sheet-grabber" onPointerDown={startDrag} style={{ touchAction: 'none', cursor: 'grab' }} />
             {title && <h2 className="display-sm mb-2" style={{ marginBottom: 'var(--space-2)' }}>{title}</h2>}
             {description && <p className="body-md" style={{ marginBottom: 'var(--space-5)' }}>{description}</p>}

@@ -40,7 +40,24 @@ export const SheetColumns = {
   PROTOCOLO: {
     ID: 0,
     NOME: 1,
-    SUPLEMENTOS: 2 // Array serializado
+    DURACAO_DIAS: 2
+  },
+  // Aba separada 'Suplementos', não a Protocolos — GoogleSheetsProtocoloRepository
+  // hoje usa índices literais em vez desta constante; mantida como referência.
+  SUPLEMENTO: {
+    ID: 0,
+    PROTOCOLO_ID: 1,
+    NOME: 2,
+    DOSAGEM: 3,
+    HORARIOS: 4, // Array serializado (JSON)
+    INSTRUCOES: 5,
+    QUANTIDADE: 6,
+    DIAS_SEMANA: 7, // Array serializado (JSON)
+    DATA_INICIO: 8,
+    DATA_FIM: 9,
+    TIPO: 10,
+    NOTIFICACAO: 11,
+    DATAS_ESPECIFICAS: 12 // Array serializado (JSON) — datas exatas, sobrepõe DIAS_SEMANA quando não-vazio
   },
   LIBERACAO: {
     ID: 0,

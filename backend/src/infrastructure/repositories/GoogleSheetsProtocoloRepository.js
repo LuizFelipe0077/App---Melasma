@@ -46,6 +46,14 @@ export class GoogleSheetsProtocoloRepository extends GoogleSheetsRepository {
       diasSemanaArray = ['todos'];
     }
 
+    let datasEspecificasArray = [];
+    try {
+      const raw = typeof r[12] === 'string' ? JSON.parse(r[12]) : r[12];
+      datasEspecificasArray = Array.isArray(raw) ? raw.map((d) => new Date(d)) : [];
+    } catch (e) {
+      datasEspecificasArray = [];
+    }
+
     return new Suplemento({
       id: new UUID(r[0]),
       protocoloId: new UUID(r[1]),
@@ -55,6 +63,7 @@ export class GoogleSheetsProtocoloRepository extends GoogleSheetsRepository {
       instrucoes: r[5],
       quantidade: r[6] !== undefined ? Number(r[6]) : 1,
       diasSemana: diasSemanaArray || ['todos'],
+      datasEspecificas: datasEspecificasArray,
       dataInicio: r[8] ? safeParseDate(r[8]) : new Date(),
       dataFim: r[9] ? safeParseDate(r[9]) : new Date(),
       tipo: r[10] || 'Outro',
@@ -146,7 +155,8 @@ export class GoogleSheetsProtocoloRepository extends GoogleSheetsRepository {
       formatDatePtBr(suplemento.dataInicio),
       formatDatePtBr(suplemento.dataFim),
       suplemento.tipo,
-      suplemento.notificacao
+      suplemento.notificacao,
+      JSON.stringify(suplemento.datasEspecificas.map((d) => d.toISOString()))
     ];
   }
 }
