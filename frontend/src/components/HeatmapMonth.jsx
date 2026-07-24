@@ -33,12 +33,13 @@ export default function HeatmapMonth({ year, month, days, onDayClick }) {
           ) : (
             <div
               key={cell.key}
-              className={`heatmap-month-cell ${cell.record?.status || ''}${onDayClick ? ' clickable' : ''}${cell.key === todayKey ? ' today' : ''}`}
+              className={`heatmap-month-cell ${cell.record?.status || ''}${onDayClick ? ' clickable' : ''}${cell.key === todayKey ? ' today' : ''}${cell.record?.released ? ' released' : ''}`}
               onClick={() => cell.record && onDayClick?.(cell.record)}
               role={onDayClick ? 'button' : undefined}
-              aria-label={`Dia ${cell.day}`}
+              aria-label={`Dia ${cell.day}${cell.record?.released ? ' — retroativo liberado' : ''}`}
             >
               {cell.day}
+              {cell.record?.released && <span className="heatmap-month-cell-badge" aria-hidden="true">🔓</span>}
             </div>
           )
         )}

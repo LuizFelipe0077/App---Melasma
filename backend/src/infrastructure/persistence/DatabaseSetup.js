@@ -43,9 +43,9 @@ export class DatabaseSetup {
         'ID', 'ID do Paciente', 'ID do Suplemento', 'Data/Hora Prevista',
         'Data/Hora Realizada', 'Status', 'Retroativo'
       ],
-      'PermissoesRetroativas': [
-        'ID', 'ID do Paciente', 'Horas Liberadas', 'Motivo',
-        'ID do Operador', 'Expira Em', 'Status', 'Criado Em'
+      'LiberacoesRetroativas': [
+        'ID', 'ID do Paciente', 'Data Liberada', 'Concedida Em', 'Expira Em',
+        'ID do Operador', 'Motivo', 'Status', 'Utilizada Em'
       ],
       'Gamificacao': [
         'ID', 'ID do Paciente', 'XP Total', 'Sequência Atual', 'Maior Sequência', 'Conquistas'

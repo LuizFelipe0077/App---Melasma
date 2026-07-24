@@ -188,7 +188,7 @@ export function mergeChronologicalEvents(days, notes, permissoes) {
 
   const permissoesByDay = new Map();
   for (const p of permissoes || []) {
-    const key = new Date(p.createdAt).toDateString();
+    const key = new Date(p.concedidaEm).toDateString();
     if (!permissoesByDay.has(key)) permissoesByDay.set(key, []);
     permissoesByDay.get(key).push({ kind: 'permissao', ...p });
   }

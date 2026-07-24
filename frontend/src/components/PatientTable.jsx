@@ -53,7 +53,7 @@ export default function PatientTable({ patients, onRowClick, onReleaseClick, onH
                 </button>
                 <button
                   className="btn btn-ghost btn-sm"
-                  onClick={(e) => { e.stopPropagation(); onReleaseClick(p.id); }}
+                  onClick={(e) => { e.stopPropagation(); onReleaseClick(p); }}
                 >
                   Liberar retroativo
                 </button>

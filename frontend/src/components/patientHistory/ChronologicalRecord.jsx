@@ -66,7 +66,11 @@ export default function ChronologicalRecord({ days }) {
                     {e.kind === 'permissao' && (
                       <>
                         <span className="record-event-icon">🔓</span>
-                        <span>Liberação retroativa concedida ({e.horasLiberadas}h) — {e.motivo}</span>
+                        <span>
+                          Liberação retroativa concedida para o dia {new Date(e.dataLiberada).toLocaleDateString('pt-BR')}
+                          {e.motivo && ` — ${e.motivo}`}
+                          {e.usadaEm ? ' · utilizada' : !e.ativa ? ' · expirou sem uso' : ''}
+                        </span>
                       </>
                     )}
                     {e.kind === 'quebra' && (
