@@ -368,7 +368,6 @@ textarea.field-input { resize: vertical; min-height: 90px; }
 .roster-row:last-child { border-bottom: none; }
 
 .roster-row-meta { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; row-gap: var(--space-2); }
-.roster-row-buttons { display: flex; align-items: center; gap: var(--space-2); }
 
 /* Protocol badge — always the protocol's own palette (terracotta/green),
    independent of whichever theme happens to be active on the page, since
@@ -379,7 +378,6 @@ textarea.field-input { resize: vertical; min-height: 90px; }
 @media (max-width: 640px) {
   .roster-row { flex-direction: column; align-items: stretch; }
   .roster-row-meta { justify-content: space-between; }
-  .roster-row-buttons { width: 100%; justify-content: flex-end; }
   .roster-row-info { padding-right: 90px; }
   .roster-row-protocol-chip {
     position: absolute; top: var(--space-4); right: var(--space-5);

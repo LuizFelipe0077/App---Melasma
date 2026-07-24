@@ -4,7 +4,6 @@ import { ApiClient } from '../api/apiClient.js';
 import StatChip from '../components/StatChip.jsx';
 import PatientTable from '../components/PatientTable.jsx';
 import RegisterPatientWizard from '../components/RegisterPatientWizard.jsx';
-import ReleaseModal from '../components/ReleaseModal.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 
 export default function AdminPatientsPage() {
@@ -17,7 +16,6 @@ export default function AdminPatientsPage() {
   const [search, setSearch] = useState('');
 
   const [registerOpen, setRegisterOpen] = useState(false);
-  const [releasePatient, setReleasePatient] = useState(null);
 
   const loadPatients = async () => {
     setLoading(true);
@@ -57,16 +55,6 @@ export default function AdminPatientsPage() {
     }
   };
 
-  const handleRelease = async (payload) => {
-    try {
-      await ApiClient.call('liberarRetroativo', payload);
-      showToast({ message: 'Liberação concedida.' });
-      setReleasePatient(null);
-    } catch (err) {
-      showError(`Erro ao liberar: ${err.message}`);
-    }
-  };
-
   const openHistory = (patient) => {
     navigate(`/admin/paciente/${patient.id}`, { state: { patient } });
   };
@@ -95,12 +83,11 @@ export default function AdminPatientsPage() {
         ) : error ? (
           <p className="empty-state">Erro ao carregar: {error.message}</p>
         ) : (
-          <PatientTable patients={filteredPatients} onRowClick={openHistory} onReleaseClick={setReleasePatient} />
+          <PatientTable patients={filteredPatients} onRowClick={openHistory} />
         )}
       </section>
 
       <RegisterPatientWizard open={registerOpen} onClose={() => setRegisterOpen(false)} onSubmit={handleCreatePatient} />
-      <ReleaseModal open={!!releasePatient} patientId={releasePatient?.id} patientName={releasePatient?.nome} onClose={() => setReleasePatient(null)} onSubmit={handleRelease} />
     </>
   );
 }
